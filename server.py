@@ -26,6 +26,8 @@ UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
 DB_NAME = os.getenv("DB_NAME")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True, mode=0o755)
+# SECURITY: Максимальный размер загружаемого файла (5MB)
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BACKEND_URL = os.getenv("BACKEND_URL")
@@ -162,8 +164,16 @@ def get_db_connection():
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
+# SECURITY: Whitelist разрешённых таблиц для защиты от SQL-инъекций
+ALLOWED_TABLES = ['work_experience', 'education']
+
 def fetch_list_from_db(conn, table_name, user_id):
-    # ... (код без изменений) ...
+    """
+    Универсальная функция для получения списка ...
+    """
+    # SECURITY: Whitelist проверка table_name
+    if table_name not in ALLOWED_TABLES:
+        raise ValueError(f"[SECURITY] Invalid table name: {table_name}")
     cursor = conn.cursor()
     cursor.execute(f"SELECT * FROM {table_name} WHERE user_id = ? ORDER BY id DESC", (user_id,))
     items = [dict(row) for row in cursor.fetchall()]
@@ -171,6 +181,9 @@ def fetch_list_from_db(conn, table_name, user_id):
 
 def save_list_to_db(conn, table_name, user_id, items_json, max_items):
     # ... (код БЕЗ ИЗМЕНЕНИЙ, т.к. лимит уже применяется здесь) ...
+    # SECURITY: Whitelist проверка table_name
+    if table_name not in ALLOWED_TABLES:
+        raise ValueError(f"[SECURITY] Invalid table name: {table_name}")
     cursor = conn.cursor()
     cursor.execute(f"DELETE FROM {table_name} WHERE user_id = ?", (user_id,))
     try:
@@ -294,6 +307,18 @@ def save_profile():
     if 'photo' in request.files:
         file = request.files['photo']
         if file and file.filename != '':
+            # SECURITY: Проверка MIME-типа (только изображения)
+            if not file.content_type or not file.content_type.startswith('image/'):
+                return jsonify({
+                    "ok": False,
+                    "error": "validation",
+                    "details": {"key": "error_invalid_file_type", "message": "Only images allowed"}
+                }), 400
+            # SECURITY: Проверка расширения файла
+            allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+            file_ext = os.path.splitext(file.filename)[1].lower()
+            if file_ext not in allowed_extensions:
+                return jsonify({"ok": False, "error": "Invalid file extension"}), 400
             filename = secure_filename(f"{user_id}.jpg")
             try:
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -832,4 +857,5 @@ def save_glass_preference():
 
 # --- Запуск приложения (без изменений) ---
 if __name__ == "__main__":
+    print("[SECURITY] Security fixes enabled: MAX_CONTENT_LENGTH, file MIME check, table whitelist")
     app.run("0.0.0.0", port=APP_PORT, threaded=True)
