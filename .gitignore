@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+env/
+venv/
+.Python
+*.egg
+*.egg-info/
+.distutils-build/
+.env
+.env.*
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# SQLite & Databases
+*.db
+*.sqlite3
+*.sqlite
+*.sqlite3-journal
+
+# Uploads, Attachments, User Content
+uploads/
+
+# Logs & Reports
+*.log
+*.out
+*.pid
+coverage/
+htmlcov/
+*.cover
+*.coverage
+*.coverage.*
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swo
+*.swp
+
+# OS/Filesystem
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Cache, Temporary
+__cache__/
+.cache/
+
+# Build, Dist
+build/
+dist/
+tmp/
+temp/
+*.bak
+*.~
+
+# Test files
+.test/
+tests/__pycache__/
+
+# Misc
+*.orig
+
+# Optional: Ignore TypeScript, front-end build (если есть)
+build-frontend/
+dist-frontend/
+*.tsbuildinfo
+public/
+
+# Optional: Docker
+.docker/
+Dockerfile*
+
+# Optional: Environment config (если хранишь секреты в .env.local/.env.prod)
+.env.local
+.env.prod

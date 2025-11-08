@@ -1,0 +1,563 @@
+/* css/profile.css */
+/* ОБНОВЛЕНО: Удалены дублирующиеся стили тегов */
+/* ОБНОВЛЕНО: Исправлена "тяжелая" max-height анимация */
+/* ОБНОВЛЕНО (Glass): Добавлены стили для "стеклянных" карточек */
+/* ✅ ИСПРАВЛЕНИЕ (Item 3): Изменены стили .fab-container и .fab-button */
+/* ✅ ИСПРАВЛЕНИЕ (Item 3, 2): .fab-container снова position: fixed */
+/* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container теперь position: absolute */
+/* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container снова position: fixed + z-index */
+
+/* --- КАРТОЧКА ПРОФИЛЯ (СВОЕГО И ЧУЖОГО) --- */
+.profile-card {
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    border-radius: 14px;
+    /* УДАЛЕНЫ БОКОВЫЕ ОТСТУПЫ, оставляем только вертикальный */
+    padding: 25px; 
+    text-align: center; width: 100%;
+    position: relative; padding-top: 60px;
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.detail-card-content {
+    /* Уменьшаем отступ сверху */
+    padding-top: 25px; 
+    /* Уменьшаем отступ снизу для FAB */
+    padding-bottom: 70px; 
+}
+/* Убеждаемся, что h2 под фото отображается */
+.detail-card-content h2#detail-username {
+    display: block;
+}
+
+.profile-card img#profile-avatar,
+.detail-avatar-container img#detail-avatar {
+    width: 100px;
+    height: 100px;
+    display: block;
+    border-radius: 50%;
+    border: 4px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.profile-card h2 {
+    /* Сбрасываем старые маржины */
+    margin: 0; 
+    font-size: 24px; font-weight: 600;
+    word-break: break-word;
+}
+.profile-card p#profile-bio,
+.profile-card p#detail-bio {
+    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+    /* Уменьшаем отступы вокруг био */
+    margin-top: 10px; 
+    margin-bottom: 10px;
+    min-height: 20px; line-height: 1.5; white-space: pre-wrap; opacity: 0.8;
+    text-align: center;
+}
+.profile-card p#profile-bio:empty,
+.profile-card p#detail-bio:empty {
+    display: none;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+.profile-avatar-container,
+.detail-avatar-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    margin-bottom: 15px;
+}
+
+
+/* === Секции Опыта и Образования в профиле === */
+.profile-section {
+    margin-top: 15px; 
+    text-align: left;
+    padding-top: 20px;
+    border-top: 1.5px solid var(--main-bg-color, #fff);
+    display: none;
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.profile-section:not(.is-empty) {
+    display: block;
+    min-height: 50px; /* Защита от "схлопывания" */
+}
+/* Уменьшаем отступы между блоками */
+.skills-container:not(.is-empty) + .profile-section:not(.is-empty),
+.show-more-skills-container + .profile-section:not(.is-empty),
+.skills-container.is-empty + .profile-section:not(.is-empty),
+.profile-stats-container + .skills-container.is-empty + .profile-section:not(.is-empty),
+.profile-stats-container + .skills-container:not(.is-empty) + .profile-section:not(.is-empty)
+{
+    margin-top: 15px;
+}
+body.theme-dark .profile-section { border-top-color: var(--secondary-bg-color); }
+body.theme-custom .profile-section { border-top-color: var(--main-bg-color); }
+.profile-section-title {
+    font-size: 18px; font-weight: 600; color: var(--main-text-color);
+    margin: 0 0 15px 0; opacity: 0.9;
+}
+.profile-item {
+    margin-bottom: 18px; padding-bottom: 18px;
+    border-bottom: 1px solid var(--main-bg-color, #fff);
+}
+.profile-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+body.theme-dark .profile-item { border-bottom-color: var(--secondary-bg-color); }
+body.theme-custom .profile-item { border-bottom-color: var(--main-bg-color); }
+.profile-item p { margin: 0; padding: 0; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+.item-title { font-size: 16px; font-weight: 600; color: var(--main-text-color); margin-bottom: 2px; }
+.item-subtitle { font-size: 15px; font-weight: 400; color: var(--main-text-color); opacity: 0.8; margin-bottom: 4px; }
+.item-period { font-size: 13px; font-weight: 400; color: var(--main-hint-color); opacity: var(--main-hint-opacity, 1); margin-bottom: 8px; }
+.item-description { font-size: 14px; font-weight: 400; color: var(--main-text-color); opacity: 0.7; }
+
+
+/* --- Ссылки --- */
+#profile-links, #detail-links {
+    margin-top: 15px; 
+    flex-direction: column; gap: 10px;
+    border-top: 1.5px solid var(--main-bg-color, #fff);
+    padding-top: 20px;
+    display: none;
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+#profile-links:not(.is-empty), #detail-links:not(.is-empty) {
+    display: flex;
+}
+/* Уменьшаем отступы */
+.skills-container:not(.is-empty) + #profile-links:not(.is-empty),
+.show-more-skills-container + #profile-links:not(.is-empty),
+.profile-section:not(.is-empty) + #profile-links:not(.is-empty),
+.skills-container.is-empty + .profile-section.is-empty + #profile-links:not(.is-empty),
+.profile-stats-container + .skills-container.is-empty + .profile-section.is-empty + #profile-links:not(.is-empty),
+.profile-stats-container + .skills-container:not(.is-empty) + #profile-links:not(.is-empty)
+{
+    margin-top: 15px;
+}
+body.theme-dark #profile-links,
+body.theme-dark #detail-links { border-top-color: var(--secondary-bg-color); }
+body.theme-custom #profile-links,
+body.theme-custom #detail-links { border-top-color: var(--main-bg-color); }
+
+/* ✅ ИСПРАВЛЕНИЕ (Item 5): Стили для кнопок-ссылок */
+.profile-link-button {
+    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+    padding: 12px 16px; border-radius: 10px; text-decoration: none;
+    color: var(--main-link-color, var(--tg-theme-link-color, #007aff));
+    font-weight: 500; font-size: 15px; display: flex;
+    align-items: center; gap: 10px; text-align: left; 
+    transition: transform 0.2s ease, background-color 0.3s, border-color 0.3s;
+    border: 1px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff)); /* Для темной/кастомной темы */
+}
+/* Переопределения для тем */
+body.theme-dark .profile-link-button,
+body.theme-custom .profile-link-button {
+    border-color: var(--secondary-bg-color);
+}
+.profile-link-button:active { 
+    transform: scale(0.98); 
+}
+.link-icon { font-size: 18px; flex-shrink: 0; }
+.link-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+/* --- БЛОК КНОПОК В СВОЕМ ПРОФИЛЕ --- */
+.profile-actions {
+    margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    border-top: 1.5px solid var(--main-bg-color, #fff); padding-top: 15px;
+}
+body.theme-dark .profile-actions { border-top-color: var(--secondary-bg-color); }
+body.theme-custom .profile-actions { border-top-color: var(--main-bg-color); }
+.profile-actions .action-button:last-child { grid-column: 1 / -1; }
+.contact-button { margin-top: 20px; width: 100%; }
+
+
+/* Оверлей флага */
+.flag-overlay {
+    position: absolute; bottom: -2px; right: -4px; width: 20px; height: 20px;
+    border-radius: 50%; background-color: var(--secondary-bg-color, #efefef);
+    border: 2px solid var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.flag-overlay img { width: 100%; height: 100%; object-fit: cover; }
+.detail-avatar-container .flag-overlay {
+    width: 28px; height: 28px; bottom: 2px; right: 2px; border-width: 3px;
+}
+
+/* --- НОВОЕ: Контейнер для h2 и статуса --- */
+.name-status-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px; /* Уменьшаем отступ под блоком */
+}
+
+/* --- СТАТУС ОНЛАЙН (КОМПАКТНЫЙ) --- */
+.profile-last-seen {
+    font-size: 14px; font-weight: 500; color: var(--main-button-color, #007aff);
+    margin: 0; 
+    min-height: 18px; display: flex; align-items: center;
+    justify-content: center; gap: 5px;
+}
+.profile-last-seen.compact-status {
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    /* Отступ СПРАВА, чтобы оттолкнуть ИМЯ (разместить слева) */
+    margin: 0 8px 0 0; 
+    width: auto; 
+    height: auto;
+}
+.profile-last-seen.compact-status .status-indicator {
+    width: 9px; 
+    height: 9px;
+}
+
+
+/* --- СТАТИСТИКА ПРОФИЛЯ --- */
+.profile-stats-container {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    border-top: none; /* <-- ИЗМЕНЕНИЕ */
+    border-bottom: none; /* <-- ИЗМЕНЕНИЕ */
+    padding: 0; /* <-- ИЗМЕНЕНИЕ */
+    margin: 10px 0 15px 0; /* <-- ИЗМЕНЕНИЕ (10px сверху, 15px снизу) */
+}
+body.theme-dark .profile-stats-container {
+     border-top-color: var(--secondary-bg-color);
+     border-bottom-color: var(--secondary-bg-color);
+}
+body.theme-custom .profile-stats-container {
+     border-top-color: var(--main-bg-color);
+     border-bottom-color: var(--main-bg-color);
+}
+.profile-card p#profile-bio:empty + .profile-stats-container,
+.profile-card p#detail-bio:empty + .profile-stats-container {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+.stat-item {
+    text-align: center;
+    cursor: pointer;
+    opacity: 0.9;
+    transition: opacity 0.2s ease;
+    flex-grow: 1; 
+    padding: 0 15px;
+    border-right: 1px solid var(--main-bg-color, #fff);
+}
+.stat-item:last-child {
+    border-right: none;
+}
+.stat-item:active { opacity: 0.7; }
+.stat-value {
+    display: block; font-size: 18px; font-weight: 600;
+    color: var(--main-text-color);
+}
+.stat-label {
+    display: block; font-size: 13px; font-weight: 400;
+    color: var(--main-hint-color);
+    opacity: var(--main-hint-opacity, 1);
+}
+body.theme-dark .stat-item { border-right-color: var(--secondary-bg-color); }
+body.theme-custom .stat-item { border-right-color: var(--main-bg-color); }
+
+
+/* --- ИСПРАВЛЕНИЕ: (Шаг 5) УДАЛЕНА АНИМАЦИЯ max-height --- */
+.skills-container {
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 8px; /* ГАРАНТИРУЕМ ПРОБЕЛЫ */
+    margin: 15px 0 0 0; 
+    overflow: hidden; 
+    display: none; /* Скрыто по умолчанию */
+
+    /* УДАЛЕН transition: max-height */
+}
+
+/* Показываем контейнер, если он не пустой */
+.skills-container:not(.is-empty) {
+    display: flex;
+}
+
+/* Отступ сверху (оставляем без изменений) */
+.profile-stats-container + .skills-container {
+     margin-top: 25px;
+}
+
+/* Начальная (свернутая) высота */
+.skills-container:not(.expanded) { 
+    max-height: 70px; /* Оставляем max-height, но БЕЗ transition */
+}
+
+/* Конечная (развернутая) высота */
+.skills-container.expanded { 
+    max-height: 1000px; /* Достаточно большое значение */
+}
+
+/* УДАЛЕНЫ БЛОКИ:
+   .skill-tag-fade-in
+   .skill-tag-fade-out
+   .skill-tag
+   (и их .dark, .custom)
+   Они теперь в /css/components/tags.css и /css/animations.css
+*/
+
+.show-more-skills-container {
+    display: flex; /* <-- ДОБАВЬ ЭТО */
+    justify-content: center; /* <-- ДОБАВЬ ЭТО */
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+.skills-container.is-empty + .show-more-skills-container {
+    display: none;
+}
+.show-more-skills-button {
+    background: none; border: none;
+    color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+    font-size: 14px; font-weight: 500; cursor: pointer; padding: 5px;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.show-more-skills-button .arrow { display: inline-block; }
+.show-more-skills-button .arrow::before {
+    content: '▼'; display: inline-block; transition: transform 0.3s ease;
+}
+.show-more-skills-button.less .arrow::before {
+    transform: rotate(180deg);
+}
+
+
+/* --- Плавающие Кнопки (FAB) --- */
+/* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container снова position: fixed */
+.fab-container {
+    position: fixed; /* БЫЛО: absolute */
+    bottom: 30px;    /* БЫЛО: 20px */
+    right: 20px;     /* БЫЛО: 16px */
+    z-index: 1001;   /* Выше, чем .react-sheet-content (z-index 1000) */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ИЗМЕНЕНИЕ: (№3) Стиль .fab-button изменен для SVG */
+.fab-button {
+    width: 56px; height: 56px; border-radius: 50%; border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer;
+    
+    /* Добавлено: Центрируем SVG внутри */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* ✅ ИСПРАВЛЕНИЕ (Item 3): Добавлен font-size для эмодзи */
+    font-size: 24px;
+    
+    /* ИЗМЕНЕНИЕ: (№3) Добавлен transition для background-color */
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+/* ИЗМЕНЕНИЕ: (№3) Добавлен этот блок */
+.fab-button svg {
+    /* ✅ ИСПРАВЛЕНИЕ (Item 3): Увеличен размер SVG (на всякий случай) */
+    width: 30px;
+    height: 30px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+/* (№3) Класс для управления анимацией смены иконки */
+.fab-button.is-swapping svg {
+    animation: iconSwapOut 0.2s ease forwards;
+}
+.fab-button.is-swapping svg.icon-new {
+    animation: iconSwapIn 0.2s ease 0.1s forwards;
+}
+
+.fab-button:active { transform: scale(0.92); }
+.fab-button.fab-primary {
+    background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+    color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
+}
+.fab-button.fab-secondary {
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+    opacity: 0.95;
+}
+.fab-button.fab-primary.is-unfollow {
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+}
+body.theme-dark .fab-button.fab-secondary,
+body.theme-dark .fab-button.fab-primary.is-unfollow {
+    background-color: #2c2c2e;
+    color: #ffffff;
+}
+body.theme-custom .fab-button.fab-secondary,
+body.theme-custom .fab-button.fab-primary.is-unfollow {
+     background-color: var(--secondary-bg-color);
+     color: var(--main-text-color);
+}
+
+
+/* === УЛУЧШЕНИЯ ДИЗАЙНА (ТЕМНАЯ ТЕМА) - Карточки в карточке === */
+body.theme-dark .profile-card p#profile-bio,
+body.theme-dark .profile-card p#detail-bio { opacity: 0.95; }
+body.theme-dark .item-subtitle { opacity: 0.9; }
+body.theme-dark .item-period { color: var(--main-hint-color); opacity: 0.8; }
+body.theme-dark .item-description { opacity: 0.85; }
+body.theme-dark .stat-label { opacity: 0.8; font-weight: 500; }
+body.theme-dark .stat-value { opacity: 1.0; }
+.profile-section, #profile-links, #detail-links {
+    /* Фон для эффекта вложенной карточки */
+    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+    border-radius: 12px; padding: 20px; margin-top: 15px;
+    border-top: none; padding-top: 20px;
+}
+.profile-section + .profile-section, .profile-section + #profile-links, .profile-section + #detail-links {
+    margin-top: 15px;
+}
+.profile-item { border-bottom: none; padding-bottom: 0; margin-bottom: 20px; }
+.profile-item:last-child { margin-bottom: 0; }
+.profile-section-title { margin: -5px 0 15px 0; font-size: 19px; opacity: 1.0; }
+
+/* --- FAB ДЛЯ ДВУХ КНОПОК (ИСПРАВЛЕНО) --- */
+.fab-main-container {
+    position: fixed;
+    bottom: 25px;
+    z-index: 100;
+    
+    /* Центрируем контейнер по горизонтали */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* Кнопки рядом друг с другом */
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    
+    /* Ограничиваем ширину контейнера */
+    max-width: calc(100% - 40px); /* 20px отступ с каждой стороны */
+}
+
+.fab-main-button {
+    /* ГЛАВНЫЙ ФИКС: Убираем width из .action-button */
+    width: auto !important; 
+    
+    /* Запрещаем растягивание */
+    flex-grow: 0;
+    flex-shrink: 1; /* Разрешаем сжатие на узких экранах */
+    flex-basis: auto;
+
+    /* Стили формы */
+    padding: 14px 24px;
+    border-radius: 28px; 
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+    
+    /* Анимация пульсации */
+    animation: fab-pulse-main 2.5s infinite ease-in-out;
+    text-align: center;
+    white-space: nowrap; /* Запрещаем перенос текста */
+}
+
+/* Задержка для второй кнопки */
+.fab-main-button:last-child {
+    animation-delay: -1.25s;
+}
+
+/* Новая keyframe для FAB (без transform, т.к. он уже используется для центрирования) */
+@keyframes fab-pulse-main {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+}
+
+/* Адаптив для узких экранов */
+@media (max-width: 400px) {
+    .fab-main-button {
+        padding: 12px 18px;
+        font-size: 15px;
+    }
+}
+
+/* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
+body.theme-glass-overlay .profile-card {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--glass-radius-main);
+}
+body.theme-glass-overlay .profile-section,
+body.theme-glass-overlay #profile-links, 
+body.theme-glass-overlay #detail-links {
+    background-color: var(--glass-bg-secondary);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: var(--glass-border);
+    border-radius: var(--glass-radius-nested);
+    border-top: none;
+}
+body.theme-glass-overlay .profile-item {
+    border-bottom: none;
+}
+body.theme-glass-overlay .profile-stats-container {
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+body.theme-glass-overlay .stat-item {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+body.theme-glass-overlay.theme-light .stat-item {
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+body.theme-glass-overlay .stat-item:last-child {
+    border-right: none;
+}
+/* ✅ ИСПРАВЛЕНИЕ (Item 5): Стили для "стеклянных" ссылок */
+body.theme-glass-overlay .profile-link-button {
+    background-color: var(--glass-bg-input);
+    border: var(--glass-border);
+    color: var(--main-text-color);
+    border-radius: 12px;
+}
+body.theme-glass-overlay .fab-button {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    color: var(--main-text-color);
+}
+body.theme-glass-overlay .fab-button.fab-primary {
+    background-color: var(--main-button-color);
+    color: var(--main-button-text-color);
+    border: none;
+}
+body.theme-glass-overlay .fab-button.fab-primary.is-unfollow {
+    background-color: var(--glass-bg);
+    color: var(--main-text-color);
+    border: var(--glass-border);
+}
+body.theme-glass-overlay .fab-main-button {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    color: var(--main-text-color);
+    border-radius: 30px;
+}
+body.theme-glass-overlay .fab-main-button:last-child {
+    background-color: var(--main-button-color);
+    color: var(--main-button-text-color);
+    border: none;
+}

@@ -1,0 +1,414 @@
+/* css/feed.css */
+/* ОБНОВЛЕНО: Удалены дублирующиеся стили тегов */
+/* ОБНОВЛЕНО (Glass): Добавлены "стеклянные" стили для карточек и поиска */
+/* ✅ НОВОЕ (Context Menu): Добавлены стили для кнопки "..." и поп-ап меню */
+/* ✅ ИСПРАВЛЕНИЕ #8: Добавлен отступ для карточки MyPostCard */
+/* ✅ ИСПРАВЛЕНИЕ (Item 1): Уменьшен gap в .feed-list с 15px до 12px */
+/* ✅ ИСПРАВЛЕНИЕ (Item 2): Изменены стили .feed-card-skills-more для выравнивания */
+
+/* --- ЛЕНТА --- */
+.feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* ✅ ИСПРАВЛЕНИЕ (Item 1): Уменьшен gap с 15px до 12px */
+    width: 100%;
+}
+
+/* --- СТИЛИ ДЛЯ ФИЛЬТРА ЛЕНТЫ --- */
+.feed-filter {
+    width: 100%;
+    margin-bottom: 8px;
+}
+#feed-search-input { /* ID используется и для ленты людей, и для постов */
+    width: 100%;
+    padding: 14px 18px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+    transition: border-color 0.2s ease-out, background-color 0.2s ease-out;
+}
+#posts-search-input { /* Отдельный ID для поля поиска в постах */
+    width: 100%;
+    padding: 14px 18px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+    transition: border-color 0.2s ease-out, background-color 0.2s ease-out;
+}
+
+#feed-search-input:focus,
+#posts-search-input:focus {
+    outline: none;
+    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+}
+
+/* --- Стили для Быстрых фильтров (в ленте людей и постов) --- */
+.quick-filters { /* Используется обоими React-компонентами */
+    margin-top: 0;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
+    width: 100%;
+    justify-content: flex-start;
+    min-width: 0;
+}
+/* УДАЛЕНЫ БЛОКИ:
+   .quick-filters .skill-tag
+   .quick-filters .skill-tag.is-selected
+   Они теперь .skill-tag--filter в /css/components/tags.css 
+*/
+.quick-filters::-webkit-scrollbar { height: 4px; }
+.quick-filters::-webkit-scrollbar-track { background: transparent; }
+.quick-filters::-webkit-scrollbar-thumb { background-color: var(--secondary-bg-color, #ccc); border-radius: 2px; }
+
+/* --- СТИЛИ ДЛЯ SKELETON-ЗАГРУЗКИ --- */
+.skeleton-card {
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    overflow: hidden;
+    position: relative; /* Для анимации */
+}
+/* Эффект "мерцания" */
+.skeleton-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        var(--main-bg-color, #ffffff) 50%,
+        transparent 100%
+    );
+    opacity: 0.15;
+    animation: shimmer 1.5s infinite linear;
+}
+.skeleton-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--main-bg-color, #ffffff);
+    flex-shrink: 0;
+    opacity: 0.3;
+}
+.skeleton-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.skeleton-line {
+    width: 100%;
+    height: 16px;
+    border-radius: 4px;
+    background-color: var(--main-bg-color, #ffffff);
+    opacity: 0.3;
+}
+.skeleton-line.short { width: 60%; }
+
+/* --- Стили для React-карточек (FeedCard в react-feed.js и PostCard в react-posts-feed.js) --- */
+/* Используется обоими компонентами */
+.react-feed-card {
+    /* Базовые стили для светлой темы и "Авто" */
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    border: 1px solid var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+    /* Плавная смена темы */
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+    /* ✅ ИСПРАВЛЕНИЕ #8: Отступ УБРАН отсюда и перенесен в .feed-list (gap)
+       и в MyPostCard (margin-bottom) */
+    /* margin-bottom: 15px; */
+}
+/* .react-feed-card:last-child { margin-bottom: 0; } */ /* <-- УДАЛЕНО */
+
+/* УДАЛЕН БЛОК:
+   .feed-card-skill (и его :hover, .dark, .custom)
+   Он теперь .skill-tag--display в /css/components/tags.css 
+*/
+
+
+/* --- Стили для контейнера навыков и "+X" (используется только в react-feed.js) --- */
+.feed-card-skills-container {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping *within* the line before overflow */
+    gap: 6px;
+    max-height: 2.3em; /* <-- ВОССТАНОВЛЕНО (подбери точное значение, ~1 строка) */
+    overflow: hidden; /* <-- ВОССТАНОВЛЕНО */
+    position: relative; /* Для позиционирования "+X" */
+    min-height: 1.5em; /* Можно оставить */
+    
+    /* ✅ ИСПРАВЛЕНИЕ (Item 2): Выравниваем элементы по центру */
+    align-items: center;
+}
+.feed-card-skills-more {
+    position: absolute;
+    right: 0;
+    /* ✅ ИСПРАВЛЕНИЕ (Item 2): Убрано 'bottom: 0' */
+    
+    /* ✅ ИСПРАВЛЕНИЕ (Item 2): Стили для имитации тега */
+    height: 28px; /* Match skill-tag height */
+    display: inline-flex;
+    align-items: center;
+    border-radius: 14px; /* Match skill-tag radius */
+    padding: 0 10px; /* Horizontal padding only */
+
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--main-hint-color);
+    background: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)); /* Match card background */
+    line-height: 1;
+    flex-shrink: 0;
+    
+    /* Плавный градиент для перекрытия (если нужно) */
+    padding-left: 15px;
+    background: linear-gradient(to right, 
+        transparent 0%, 
+        var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) 30%
+    );
+}
+
+/* Dark theme for +X */
+body.theme-dark .feed-card-skills-more {
+    background: linear-gradient(to right, 
+        transparent 0%, 
+        var(--secondary-bg-color, #2c2c2e) 30%
+    );
+}
+/* Custom theme for +X */
+body.theme-custom .feed-card-skills-more {
+    background: linear-gradient(to right, 
+        transparent 0%, 
+        var(--secondary-bg-color) 30%
+    );
+}
+
+/* УДАЛЕНЫ БЛОКИ:
+   body.theme-dark .quick-filters .skill-tag
+   body.theme-custom .quick-filters .skill-tag
+   (и их .is-selected)
+   Они теперь в /css/components/tags.css 
+*/
+
+/* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
+
+body.theme-glass-overlay .react-feed-card {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--glass-radius-nested); /* 16px */
+}
+
+body.theme-glass-overlay #feed-search-input,
+body.theme-glass-overlay #posts-search-input {
+    background-color: var(--glass-bg-input);
+    border: var(--glass-border);
+    color: var(--main-text-color);
+    border-radius: 12px;
+}
+body.theme-glass-overlay #feed-search-input:focus,
+body.theme-glass-overlay #posts-search-input:focus {
+    background-color: transparent;
+    border-color: var(--main-button-color);
+}
+body.theme-glass-overlay #feed-search-input::placeholder,
+body.theme-glass-overlay #posts-search-input::placeholder {
+    color: var(--main-text-color);
+    opacity: 0.7;
+}
+
+body.theme-glass-overlay .skeleton-card {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--glass-radius-nested);
+}
+body.theme-glass-overlay .skeleton-card::before {
+    /* Анимация мерцания для стекла */
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(255,255,255,0.1) 50%,
+        transparent 100%
+    );
+}
+body.theme-glass-overlay .skeleton-avatar,
+body.theme-glass-overlay .skeleton-line {
+    background-color: var(--glass-bg-secondary);
+    opacity: 0.8;
+}
+
+body.theme-glass-overlay .feed-card-skills-more {
+    color: var(--main-text-color);
+    opacity: 0.8;
+    background: linear-gradient(to right, 
+        transparent 0%, 
+        var(--glass-bg) 30%
+    );
+}
+
+/* --- ✅ НОВОЕ: Стили для Контекстного Меню Поста --- */
+
+.post-actions-button {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 5;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    
+    /* Стили по умолчанию (светлая/авто тема) */
+    background-color: var(--main-bg-color, #ffffff); /* ✅ ИЗМЕНЕНО: Фон стал светлее */
+    color: var(--main-hint-color, #999999);
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 1;
+    transition: background-color 0.3s, color 0.3s, opacity 0.2s, transform 0.2s, border-color 0.3s, box-shadow 0.3s;
+}
+.post-actions-button:active {
+    transform: scale(0.9);
+}
+
+.post-actions-menu {
+    position: absolute;
+    top: 48px; /* 12px (отступ кнопки) + 30px (высота кнопки) + 6px (отступ) */
+    right: 12px;
+    z-index: 10;
+    background-color: var(--main-bg-color, #fff);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 1px solid var(--secondary-bg-color, #efefef);
+    width: 180px;
+    overflow: hidden;
+    /* Для framer-motion */
+    transform-origin: top right;
+}
+
+.post-actions-menu-button {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--secondary-bg-color, #efefef);
+    text-align: left;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+.post-actions-menu-button:last-child {
+    border-bottom: none;
+}
+.post-actions-menu-button:hover {
+    background-color: var(--secondary-bg-color, #efefef);
+}
+
+.post-actions-menu-button.edit {
+    color: #34C759; /* Зеленый */
+}
+.post-actions-menu-button.delete {
+    color: #FF3B30; /* Красный */
+}
+
+
+/* --- Темная тема для Меню --- */
+body.theme-dark .post-actions-button {
+    background-color: var(--main-bg-color, #1c1c1d);
+    color: var(--main-hint-color, #98989e);
+}
+body.theme-dark .post-actions-menu {
+    background-color: #3a3a3c; /* Чуть светлее фона карточки */
+    border-color: rgba(255,255,255, 0.1);
+}
+body.theme-dark .post-actions-menu-button {
+    border-bottom-color: rgba(255,255,255, 0.1);
+}
+body.theme-dark .post-actions-menu-button:hover {
+    background-color: #4a4a4c;
+}
+body.theme-dark .post-actions-menu-button.edit {
+    color: #34C759;
+}
+body.theme-dark .post-actions-menu-button.delete {
+    color: #FF453A;
+}
+
+
+/* --- "Стекло" для Меню --- */
+body.theme-glass-overlay .post-actions-button {
+    background-color: var(--glass-bg-secondary);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: var(--glass-border);
+    color: var(--main-text-color);
+    opacity: 0.8;
+}
+body.theme-glass-overlay .post-actions-button.is-ios {
+    background-color: var(--glass-bg-ios-fallback-secondary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+body.theme-glass-overlay .post-actions-menu {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+}
+body.theme-glass-overlay .post-actions-menu.is-ios {
+    background-color: var(--glass-bg-ios-fallback);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+body.theme-glass-overlay .post-actions-menu-button {
+    border-bottom: var(--glass-border);
+    color: var(--main-text-color);
+}
+body.theme-glass-overlay .post-actions-menu-button:hover {
+    background-color: var(--glass-bg-secondary);
+}
+body.theme-glass-overlay .post-actions-menu-button.edit {
+    color: #34C759; /* Оставляем цветным */
+}
+body.theme-glass-overlay .post-actions-menu-button.delete {
+    color: #FF3B30; /* Оставляем цветным */
+}
+
+/* Темная тема + "Стекло" */
+body.theme-dark.theme-glass-overlay .post-actions-menu-button.edit {
+    color: #34C759;
+}
+body.theme-dark.theme-glass-overlay .post-actions-menu-button.delete {
+    color: #FF453A;
+}

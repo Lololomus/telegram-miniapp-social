@@ -1,0 +1,184 @@
+/* css/settings.css */
+/* ОБНОВЛЕНО (Glass): Добавлены стили для переключателя и "стеклянных" групп */
+
+/* --- СТИЛИ: ЭКРАН НАСТРОЕК --- */
+.settings-group {
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    border-radius: 12px; padding: 20px; margin-bottom: 15px;
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.settings-group label {
+    display: block; font-size: 14px;
+    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+    margin-bottom: 15px; opacity: var(--main-hint-opacity, 1);
+}
+.theme-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.theme-option-button {
+    padding: 12px; border: 1.5px solid var(--secondary-bg-color, #efefef); border-radius: 8px;
+    font-size: 15px; font-weight: 500; cursor: pointer;
+    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+    color: var(--main-text-color, var(--tg-theme-text-color, #000));
+    transition: background-color 0.2s, color 0.2s; text-align: center;
+}
+.theme-option-button.active {
+    background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+    color: var(--main-button-text-color, var(--tg-theme-button-text-color, #fff));
+    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+}
+
+.language-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.language-option-button {
+    padding: 12px;
+    border: 1.5px solid var(--secondary-bg-color, #efefef);
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+    color: var(--main-text-color, var(--tg-theme-text-color, #000));
+    transition: background-color 0.2s, color 0.2s;
+    text-align: center;
+}
+.language-option-button.active {
+    background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+    color: var(--main-button-text-color, var(--tg-theme-button-text-color, #fff));
+    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+}
+body.theme-dark .language-option-button {
+    border-color: #2c2c2e;
+}
+body.theme-dark .language-option-button.active {
+    background-color: #0a84ff;
+    color: #ffffff;
+}
+body.theme-custom .language-option-button {
+    border-color: var(--secondary-bg-color);
+}
+
+
+/* --- СТИЛИ: КАСТОМНАЯ ТЕМА --- */
+.color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.color-picker-row span { font-size: 16px; }
+input[type="color"] {
+    -webkit-appearance: none; -moz-appearance: none; appearance: none;
+    width: 60px; height: 35px; background-color: transparent;
+    border: 1.5px solid var(--secondary-bg-color, #efefef);
+    border-radius: 8px; cursor: pointer; padding: 0; overflow: hidden;
+}
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: none; border-radius: 8px; }
+input[type="color"]::-moz-color-swatch { border: none; border-radius: 8px; }
+
+/* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
+
+/* Контейнер-группа для переключателя */
+.glass-toggle-group {
+    /* (НОВОЕ) flex для выравнивания label и toggle */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Убираем отступ у label, т.к. он теперь flex-item */
+    margin-bottom: 15px; 
+    transition: transform 0.6s cubic-bezier(.36, .07, .19, .97);
+}
+.glass-toggle-group label {
+    margin-bottom: 0; /* Убираем отступ у label */
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--main-text-color);
+    opacity: 1;
+}
+.glass-toggle-group label::after {
+    content: "(Beta)";
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--main-hint-color);
+    opacity: var(--main-hint-opacity, 1);
+    margin-left: 6px;
+}
+
+/* Анимация "тряски" при ошибке (из animations.css) */
+.glass-toggle-group.input-shake {
+    animation: shake 0.6s cubic-bezier(.36, .07, .19, .97);
+}
+
+/* Сам переключатель (toggle switch) */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 51px;
+    height: 31px;
+    flex-shrink: 0;
+}
+.toggle-switch-checkbox {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.toggle-switch-label {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--secondary-bg-color);
+    border-radius: 34px;
+    transition: background-color 0.3s;
+}
+.toggle-switch-label::before {
+    position: absolute;
+    content: "";
+    height: 27px;
+    width: 27px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle-switch-checkbox:checked + .toggle-switch-label {
+    background-color: #34C759; /* Зеленый цвет iOS */
+}
+.toggle-switch-checkbox:checked + .toggle-switch-label::before {
+    transform: translateX(20px);
+}
+body.theme-dark .toggle-switch-label {
+    background-color: #444; /* Темный фон для выкл. */
+}
+
+/* Стили "Стекла" для групп настроек */
+body.theme-glass-overlay .settings-group {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--glass-radius-nested);
+}
+body.theme-glass-overlay .theme-option-button,
+body.theme-glass-overlay .language-option-button {
+    background-color: var(--glass-bg-input);
+    border: var(--glass-border);
+    color: var(--main-text-color);
+}
+body.theme-glass-overlay .theme-option-button.active,
+body.theme-glass-overlay .language-option-button.active {
+    background-color: var(--main-button-color);
+    color: var(--main-button-text-color);
+    border-color: var(--main-button-color);
+}
+body.theme-glass-overlay input[type="color"] {
+    border: var(--glass-border);
+}
+body.theme-glass-overlay .toggle-switch-label {
+    background-color: var(--glass-bg-input);
+    border: var(--glass-border);
+}
+body.theme-glass-overlay .toggle-switch-label::before {
+    background-color: rgba(255,255,255, 0.8);
+}

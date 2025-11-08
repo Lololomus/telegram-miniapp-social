@@ -1,0 +1,339 @@
+/* css/base.css */
+/* ОБНОВЛЕНО: Добавлены стили для "Тост"-уведомлений */
+/* ОБНОВЛЕНО (Glass): Добавлены стили для фона и сброса .screen */
+
+/* --- ГЛОБАЛЬНЫЕ СТИЛИ --- */
+* { box-sizing: border-box; }
+body {
+    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    margin: 0;
+    padding: 0; /* УДАЛЕН ГЛОБАЛЬНЫЙ PADDING */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    transition: background-color 0.3s, color 0.3s;
+    overflow-y: auto; /* РАЗРЕШАЕМ ПРОКРУТКУ */
+    /* НОВОЕ: Запрещаем прокрутку body, когда открыты модалки React */
+    /* (Будет управляться из react-posts-feed.js) */
+    position: relative; 
+}
+
+h1 { font-size: 24px; font-weight: 600; margin-bottom: 15px; text-align: center; }
+h2 { font-size: 20px; font-weight: 600; margin: 0 0 15px 0; text-align: center; }
+.screen {
+    width: 100%;
+    display: none;
+    padding: 20px; /* ДОБАВЛЕН PADDING ВНУТРЬ КАЖДОГО ЭКРАНА */
+    max-width: 600px;
+}
+
+/* Экран приветствия */
+#welcome-container.screen {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+}
+#welcome-container.screen[style*="display: block"],
+#welcome-container.screen[style*="display: flex"] {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+.welcome-card {
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    border-radius: 12px; padding: 30px; text-align: center; max-width: 400px; width: 100%;
+}
+.welcome-card h2 { margin-top: 0; font-size: 22px; }
+.welcome-card p {
+    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+    margin-top: 8px; line-height: 1.5; opacity: var(--main-hint-opacity, 1);
+}
+
+/* --- ЭКРАНЫ С ЗАГОЛОВКОМ --- */
+.feed-header, .form-header {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; margin-bottom: 20px;
+}
+.feed-header h1, .form-header h1 { margin: 0; text-align: left; }
+
+/* --- ЭКРАНЫ С ЗАГОЛОВКОМ (Кнопки Назад/Мой Профиль) --- */
+.header-button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #e9e9eb));
+    color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    /* УБРАНЫ flex и gap, т.к. иконки удалены */
+}
+
+.header-button:active {
+    transform: scale(0.98);
+}
+/* Стили для SVG и :hover svg УДАЛЕНЫ */
+
+
+/* --- Стили для хедера чужого профиля (новый дизайн) --- */
+.detail-header {
+    padding-bottom: 0;
+}
+.detail-header h1 {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 16px;
+    padding: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+    opacity: var(--main-hint-opacity, 1);
+    font-weight: 500;
+}
+
+/* --- Кнопки-иконки в хедере (стиль под Telegram) --- */
+.header-icon-button {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0; border: none;
+    border-radius: 50%;
+    background-color: transparent;
+    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.header-icon-button:active { transform: scale(0.95); }
+.header-icon-button svg { width: 20px; height: 20px; }
+body.theme-dark .header-icon-button {
+    background-color: transparent;
+    color: var(--main-text-color);
+}
+body.theme-custom .header-icon-button {
+    background-color: transparent;
+    color: var(--main-text-color);
+}
+
+
+/* --- ОБЩИЕ КНОПКИ --- */
+.action-button {
+    width: 100%; padding: 14px; border: none; border-radius: 8px;
+    background-color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
+    color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
+    font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s ease;
+}
+.action-button:active { transform: scale(0.98); }
+.action-button.secondary {
+    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #e9e9eb));
+    color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
+}
+
+/* --- СТИЛИ КНОПОК НАСТРОЕК, QR И ИКОНОК В ПРОФИЛЕ --- */
+.icon-button {
+    background: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    width: 40px; height: 40px; border-radius: 50%;
+    /* Стили для текста удалены (кроме qr-icon) */
+    display: inline-flex; align-items: center; justify-content: center;
+    text-align: center; padding: 0; cursor: pointer; position: absolute;
+    top: 15px; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.icon-button svg { width: 18px; height: 18px; }
+
+/* Позиционирование старых и новых иконок */
+.qr-icon {
+    left: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+}
+.settings-icon { right: 15px; }
+.icon-button.settings-icon svg { width: 20px; height: 20px; }
+.share-icon { left: 65px; }
+.edit-icon { right: 65px; }
+.share-icon svg, .edit-icon svg { width: 18px; height: 18px; stroke: currentColor; }
+
+/* --- СТИЛИ СТАТУСА ОНЛАЙН (ОБЩИЕ) --- */
+.status-indicator {
+    width: 9px; height: 9px; border-radius: 50%; background-color: #a0a0a0;
+    flex-shrink: 0; transition: background-color 0.3s ease;
+}
+.status-indicator.online { background-color: #34c759; }
+
+.sr-only { /* Для доступности */
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; white-space: nowrap;
+}
+
+/* --- 4. ПЛАВНОЕ "ПРОЯВЛЕНИЕ" АВАТАРОК --- */
+img[data-avatar] {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+}
+img[data-avatar="loaded"] {
+    opacity: 1;
+}
+
+/* CSS для FAB-кнопки "Создать пост" */
+.fab-create-post-container {
+    position: fixed;
+    bottom: 30px;
+    right: 20px;
+    z-index: 100;
+}
+
+/* Стилизуем select (выбор типа поста) как обычный инпут */
+select {
+    width: 100%; padding: 14px; border-radius: 10px; font-size: 16px;
+    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+    font-family: inherit;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="currentColor" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"></path></svg>');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 24px;
+}
+select:focus {
+    outline: none; border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+}
+
+/*
+   Этот дублирующийся блок .select УДАЛЕН.
+   Стили для .fab-create-post-container УДАЛЕНЫ (они уже есть выше).
+*/
+
+/* --- НОВЫЙ БЛОК: "Тост"-Уведомления --- */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 2000; /* Выше всего */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none; /* Контейнер не должен мешать кликам */
+    /* Для корректного позиционирования внутри .screen */
+    max-width: 560px; /* 600px - 40px padding */
+    margin: 0 auto;
+}
+
+.toast-item {
+    background-color: #2c2c2e; /* Темный фон по умолчанию */
+    color: #ffffff;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: toast-in 0.3s ease-out forwards;
+    pointer-events: auto; /* На сам тост можно нажать */
+}
+
+.toast-item.is-hiding {
+    animation: toast-out 0.3s ease-in forwards;
+}
+
+.toast-item.error {
+    background-color: #FF3B30; /* Яркий красный для ошибок */
+    color: #ffffff;
+}
+
+/* Адаптация под темы */
+body.theme-light .toast-item {
+    background-color: var(--secondary-bg-color, #efefef);
+    color: var(--main-text-color, #000000);
+}
+body.theme-light .toast-item.error {
+    background-color: #FF3B30;
+    color: #ffffff;
+}
+
+body.theme-custom .toast-item {
+    background-color: var(--secondary-bg-color);
+    color: var(--main-text-color);
+    /* Используем кастомные цвета, если фон слишком светлый/темный */
+    /* (можно усложнить, но пока так) */
+}
+body.theme-custom .toast-item.error {
+    background-color: #FF3B30;
+    color: #ffffff;
+}
+
+/* Анимации "Тоста" */
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+@keyframes toast-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+}
+/* --- КОНЕЦ НОВОГО БЛОКА --- */
+
+/* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
+
+/* 1. Фон-градиент */
+.glass-background {
+    display: none; /* Скрыт по умолчанию */
+    position: fixed;
+    inset: 0;
+    z-index: -1; /* Лежит под всем контентом */
+    /* Красивый градиент (можно настроить) */
+    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    background-size: 400% 400%;
+    animation: gradient-animation 20s ease infinite;
+    opacity: 0.8;
+}
+/* 2. Включаем фон, когда активен класс */
+body.has-glass-background .glass-background {
+    display: block;
+}
+
+/* 3. Сбрасываем фон экранов, когда "Стекло" включено */
+/* !important нужен, чтобы перебить inline-стиль display: block */
+body.theme-glass-overlay .screen {
+    background-color: transparent !important;
+}
+
+/* 4. Стили для кнопок-иконок в режиме "Стекло" */
+body.theme-glass-overlay .icon-button {
+    background: var(--glass-bg-secondary);
+    border: var(--glass-border);
+    backdrop-filter: blur(10px);
+    color: var(--main-text-color);
+}
+/* --- КОНЕЦ НОВОГО БЛОКА --- */

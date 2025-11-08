@@ -1,0 +1,189 @@
+/* css/animations.css */
+/* ОБНОВЛЕНО (Glass): Добавлена анимация градиента */
+
+/* --- 1. АНИМАЦИИ ПЕРЕХОДА МЕЖДУ ЭКРАНАМИ --- */
+/* Мы используем 'animation' вместо 'transition', 
+   т.к. 'transition' не работает с 'display: none'. */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Этот класс будет добавляться JS-ом к экрану при его показе */
+.screen-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+
+/* --- 2. АНИМАЦИЯ ПОЯВЛЕНИЯ СПИСКА В ЛЕНТЕ --- */
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Этот класс будет добавляться JS-ом к карточкам .feed-card */
+.feed-card-animate {
+    /* 'both' гарантирует, что стили 'from' применяются до начала анимации */
+    animation: slideInUp 0.4s ease-out both;
+}
+
+
+/* --- 3. АНИМАЦИЯ ОБРАТНОЙ СВЯЗИ В ФОРМАХ (Тряска) --- */
+
+@keyframes shake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-4px); }
+    40%, 60% { transform: translateX(4px); }
+}
+
+/* Этот класс будет добавляться JS-ом к полю ввода, если оно не заполнено */
+.input-shake {
+    animation: shake 0.6s cubic-bezier(.36, .07, .19, .97);
+}
+
+
+/* --- 4. АНИМАЦИЯ ПОЯВЛЕНИЯ МОДАЛЬНЫХ ОКОН --- */
+
+/* Плавное затемнение фона */
+@keyframes fadeInOverlay {
+    from { background-color: rgba(0, 0, 0, 0); }
+    to { background-color: rgba(0, 0, 0, 0.6); }
+}
+
+/* Плавное "выскакивание" контента */
+@keyframes scaleInModal {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Эти классы будут добавляться JS-ом */
+.modal-overlay-animate {
+    animation: fadeInOverlay 0.2s ease-out;
+}
+
+.modal-content-animate {
+    animation: scaleInModal 0.25s ease-out;
+}
+
+/* --- 6. АНИМАЦИЯ ПУЛЬСАЦИИ SKELETON-ЗАГЛУШКИ --- */
+@keyframes shimmer {
+    0% {
+        background-position: -400px 0;
+    }
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+/* --- 7. АНИМАЦИЯ СМЕНЫ ИКОНКИ (ДЛЯ КНОПКИ ПОДПИСАТЬСЯ) --- */
+@keyframes iconSwapIn {
+    from {
+        opacity: 0;
+        transform: rotateY(-90deg) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: rotateY(0) scale(1);
+    }
+}
+@keyframes iconSwapOut {
+    from {
+        opacity: 1;
+        transform: rotateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: rotateY(90deg) scale(0.8);
+    }
+}
+
+/* --- 8. АНИМАЦИЯ ПОЯВЛЕНИЯ ТЕГОВ НАВЫКОВ --- */
+@keyframes skillTagFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* --- 9. АНИМАЦИЯ ИСЧЕЗНОВЕНИЯ ТЕГОВ НАВЫКОВ --- */
+@keyframes skillTagFadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+/* --- 10. АНИМАЦИИ ДЛЯ КРЫШЕСНОСНОГО ЗАГРУЗЧИКА --- */
+
+/* Появление узла */
+@keyframes nodeAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Пульсация узла */
+@keyframes nodePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Рисование линии */
+@keyframes drawLine {
+    from { stroke-dashoffset: 100; } /* Начинаем с невидимой линии */
+    to { stroke-dashoffset: 0; }   /* Заканчиваем полностью видимой */
+}
+
+/* Исчезновение загрузчика */
+@keyframes loaderFadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+/* --- (НОВЫЙ БЛОК) Анимация для "Стеклянного" фона --- */
+@keyframes gradient-animation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
