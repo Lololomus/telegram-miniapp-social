@@ -15,12 +15,16 @@
 // ✅ ИСПРАВЛЕНИЕ #8: Кнопка "X" заменена на "плавающий" шеврон (v)
 // ✅ ИСПРАВЛЕНИЕ #8: Исправлена верстка кнопки "..." на карточке (MyPostCard)
 // ✅ ИСПРАВЛЕНИЕ #1, #2, #3, #4, #5: Исправлены отступы, позиция шеврона, наложения.
+// ✅ ИСПРАВЛЕНИЕ (Задача 3): Полностью переработан EditPostModal
+// ✅ ИСПРАВЛЕНИЕ (Задача 3, Попытка 3): Возвращаем TomSelect
 
-// ✅ ИЗМЕНЕНИЕ: Добавляем Suspense и memo
+// ✅ ИЗМЕНЕНИЕ: Добавляем Suspense, memo, useCallback
 import React, { useState, useEffect, useRef, useCallback, useLayoutEffect, Suspense, memo } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { createRoot } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/client/+esm';
 import { motion, AnimatePresence, useAnimation } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
+// --- ✅ НОВОЕ: Импортируем TomSelect ---
+import TomSelect from 'https://cdn.jsdelivr.net/npm/tom-select@2.2.2/+esm';
 const h = React.createElement;
 
 // --- ИМПОРТ ОБЩЕГО КОМПОНЕНТА ---
@@ -30,6 +34,7 @@ const ProfileSheet = React.lazy(() => import('./react-shared.js').then(module =>
 // --- Утилиты и окружение ---
 const tg = window.Telegram?.WebApp;
 const t = (k, d = {}) => {
+    // ✅ ИЗМЕНЕНИЕ (Задача 3): Добавлены ключи для модального окна
     const dict = {
         'feed_empty': 'Нет запросов', 'links': 'Ссылки', 'skills': 'Навыки',
         'experience': 'Опыт работы', 'education': 'Образование', 'present_time': 'по наст. время',
@@ -38,6 +43,14 @@ const t = (k, d = {}) => {
         'job_not_specified': 'Опыт не указан',
         'my_posts_title': 'Мои запросы',
         'feed_posts_title': 'Лента запросов',
+        // --- Новые ключи ---
+        'edit_post_title': 'Редактировать запрос',
+        'post_type_label': 'Тип запроса:',
+        'post_content_label': 'Краткое описание:',
+        'post_full_description_label': 'Полное описание (необязательно):',
+        'post_skills_label': 'Теги (навыки):',
+        'select_skills_button': 'Выбрать навыки',
+        'post_type_placeholder': 'Выберите тип запроса...' // <-- Для TomSelect
     };
     let s = dict[k] || k;
     Object.entries(d).forEach(([k, v]) => { s = s.replace(new RegExp(`{${k}}`, 'g'), v); });
@@ -45,6 +58,7 @@ const t = (k, d = {}) => {
 };
 
 async function postJSON(url, body) {
+// ... (остальной код без изменений) ...
     const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,6 +72,7 @@ async function postJSON(url, body) {
 
 // --- (ИЗМЕНЕНИЕ) Простая debounce-функция ---
 function useDebounce(value, delay) {
+// ... (остальной код без изменений) ...
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -73,6 +88,7 @@ function useDebounce(value, delay) {
 
 // --- Утилита форматирования времени ---
 function formatPostTime(timestamp) {
+// ... (остальной код без изменений) ...
     if (!timestamp) return '';
     
     try {
@@ -110,6 +126,7 @@ function formatPostTime(timestamp) {
 }
 
 const POPULAR_SKILLS = [
+// ... (остальной код без изменений) ...
     "Python", "JavaScript", "Java", "C#", "C++", "Go",
     "React", "Vue", "Angular", "Node.js", "Django", "Spring",
     "PostgreSQL", "MongoDB", "Docker", "Kubernetes", "Git", "Figma", "AWS"
@@ -118,6 +135,7 @@ const POPULAR_SKILLS = [
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
 function QuickFilterTags({ skills, selected, onToggle }) {
+// ... (остальной код без изменений) ...
     if (!skills || skills.length === 0) return null;
     return skills.map(skill => h('button', {
         key: skill,
@@ -127,6 +145,7 @@ function QuickFilterTags({ skills, selected, onToggle }) {
     }, skill));
 }
 function PhoneShell({ children }) {
+// ... (остальной код без изменений) ...
     return h('div', {
         style: {
             position: 'relative',
@@ -137,11 +156,13 @@ function PhoneShell({ children }) {
      }, children);
 }
 function TopSpacer() {
+// ... (остальной код без изменений) ...
     return h('div', { style: { height: '0px' } });
 }
 
 // Вариант карточки (анимация ПОЯВЛЕНИЯ/ИСЧЕЗНОВЕНИЯ)
 const cardVariants = isIOS 
+// ... (остальной код без изменений) ...
   ? {
       hidden: { opacity: 0 },
       visible: { 
@@ -169,6 +190,7 @@ const cardVariants = isIOS
 
 // (ИЗМЕНЕНИЕ) Новый вариант для stagger-анимации списка
 const listVariants = {
+// ... (остальной код без изменений) ...
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -183,6 +205,7 @@ const listVariants = {
 
 // ✅ НОВОЕ: Компонент кнопки "Закрыть" (дублируем из react-shared.js, т.к. это модуль)
 function CloseButton({ onClick, isIOS }) {
+// ... (остальной код без изменений) ...
     return h('button', {
         className: `react-sheet-close-button ${isIOS ? 'is-ios' : ''}`,
         onClick: onClick,
@@ -204,12 +227,65 @@ function CloseButton({ onClick, isIOS }) {
     );
 }
 
+// --- ✅ НОВЫЙ КОМПОНЕНТ: Обертка для TomSelect ---
+const TomSelectWrapper = ({ value, onChange, options, placeholder }) => {
+  const selectRef = useRef(null);
+  const tsInstanceRef = useRef(null);
+
+  useEffect(() => {
+    if (!selectRef.current) return;
+
+    // 1. Инициализируем TomSelect
+    tsInstanceRef.current = new TomSelect(selectRef.current, {
+      options: options,
+      placeholder: placeholder,
+      // preventOnBlur: true, // Может быть полезно в модалке
+      // openOnFocus: true,
+      create: false, // Запрещаем создание новых
+      selectOnTab: true,
+    });
+
+    // 2. Устанавливаем начальное значение (тихо)
+    tsInstanceRef.current.setValue(value, true); 
+
+    // 3. Добавляем слушатель
+    const tomSelectOnChange = (newValue) => {
+      onChange(newValue);
+    };
+    tsInstanceRef.current.on('change', tomSelectOnChange);
+
+    // 4. Очистка при размонтировании
+    return () => {
+      if (tsInstanceRef.current) {
+        tsInstanceRef.current.off('change', tomSelectOnChange);
+        tsInstanceRef.current.destroy();
+        tsInstanceRef.current = null;
+      }
+    };
+  }, []); // Пустой массив, запускаем 1 раз
+
+  // 5. Синхронизируем, если value пришло извне
+  useEffect(() => {
+    if (tsInstanceRef.current && tsInstanceRef.current.getValue() !== value) {
+      tsInstanceRef.current.setValue(value, true); // silent
+    }
+  }, [value]);
+
+  // Рендерим 'select', который TomSelect заменит
+  return h('select', { ref: selectRef });
+};
+// --- КОНЕЦ НОВОГО КОМПОНЕНТА ---
+
+
 // Модальное окно редактирования поста
+// ✅ ИСПРАВЛЕНИЕ (Задача 3): Полностью переработана верстка
+// ✅ ИСПРАВЛЕНИЕ (Задача 5): Заменен крестик на шеврон
 function EditPostModal({ post, onClose, onSave }) {
   const [postType, setPostType] = useState(post.post_type);
   const [content, setContent] = useState(post.content);
   const [fullDescription, setFullDescription] = useState(post.full_description || '');
   const [skillTags, setSkillTags] = useState((post.skill_tags || []).join(', '));
+  const [currentSkillsArray, setCurrentSkillsArray] = useState(post.skill_tags || []);
 
   // Блокируем прокрутку body при открытии модалки
   useEffect(() => {
@@ -229,6 +305,36 @@ function EditPostModal({ post, onClose, onSave }) {
     };
   }, []);
 
+  // ✅ НОВОЕ: Слушатель для получения тегов из app.js
+  useEffect(() => {
+    const handleSkillsUpdate = (event) => {
+        if (event.detail && Array.isArray(event.detail.skills)) {
+            console.log("EditPostModal: получены новые навыки", event.detail.skills);
+            setCurrentSkillsArray(event.detail.skills);
+            setSkillTags(event.detail.skills.join(', '));
+        }
+    };
+    document.addEventListener('skills-updated-for-post', handleSkillsUpdate);
+    return () => {
+        document.removeEventListener('skills-updated-for-post', handleSkillsUpdate);
+    };
+  }, []); // Пустой массив, вешаем 1 раз
+
+  // ✅ НОВОЕ: Обработчик клика по кнопке "Выбрать навыки"
+  const handleOpenSkillsModal = useCallback(() => {
+    console.log("EditPostModal: открываем модалку навыков");
+    if (tg?.HapticFeedback?.impactOccurred) {
+        tg.HapticFeedback.impactOccurred('light');
+    }
+    // Отправляем ивент, который слушает app.js
+    document.dispatchEvent(new CustomEvent('openSkillsModal', {
+        detail: {
+            source: 'editPostModal',
+            skills: currentSkillsArray
+        }
+    }));
+  }, [currentSkillsArray]); // Зависим от актуального списка навыков
+
   const handleSave = () => {
     if (!content.trim()) {
       tg.showAlert('Заполните краткое описание');
@@ -239,7 +345,8 @@ function EditPostModal({ post, onClose, onSave }) {
       post_type: postType,
       content: content.trim(),
       full_description: fullDescription.trim(),
-      skill_tags: skillTags.split(',').map(s => s.trim()).filter(Boolean)
+      // ✅ ИЗМЕНЕНИЕ: Берем навыки из state
+      skill_tags: currentSkillsArray 
     });
   };
 
@@ -267,154 +374,184 @@ function EditPostModal({ post, onClose, onSave }) {
       }
     }),
     
+    // --- ✅ ИЗМЕНЕНИЕ: Новая обертка для анимации и шеврона (как в PostDetailSheet) ---
     h(motion.div, {
-      // ✅ ИСПРАВЛЕНИЕ (Glass): Убран inline 'background', добавлен className
-      className: `react-sheet-content ${isIOS ? 'is-ios' : ''}`,
-      style: {
-        position: 'relative',
-        width: '100%',
-        maxHeight: '90vh',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        // background: 'var(--secondary-bg-color)', // <-- УДАЛЕНО
-        overflow: 'auto', // Прокрутка только внутри модалки
-        padding: '20px',
-        paddingBottom: 100
-      },
-      initial: { y: '100%' },
-      animate: { y: 0 },
-      exit: { y: '100%' },
-      onClick: (e) => e.stopPropagation()
-    },
-      // ✅ ИСПРАВЛЕНИЕ (Swipe): Добавлена кнопка "Закрыть"
-      h(CloseButton, { onClick: onClose, isIOS: isIOS }),
-
-      // ... остальной код модалки без изменений
-      h('h2', { style: { margin: '0 0 20px 0', fontSize: 20, fontWeight: 600 } }, 'Редактировать запрос'),
-      
-      h('div', { style: { marginBottom: 16 } },
-        h('label', { style: { display: 'block', marginBottom: 8, fontWeight: 500 } }, 'Тип запроса:'),
-        h('select', {
-          value: postType,
-          onChange: (e) => setPostType(e.target.value),
-          style: {
-            width: '100%',
-            padding: '12px',
-            borderRadius: 8,
-            border: '1px solid var(--main-hint-color)',
-            background: 'var(--main-bg-color)',
-            color: 'var(--main-text-color)',
-            fontSize: 15
-          }
-        },
-          h('option', { value: 'looking' }, '🤝 Ищу специалиста'),
-          h('option', { value: 'offering' }, '💼 Предлагаю услуги'),
-          h('option', { value: 'showcase' }, '🚀 Демонстрация')
-        )
-      ),
-      
-      h('div', { style: { marginBottom: 16 } },
-        h('label', { style: { display: 'block', marginBottom: 8, fontWeight: 500 } }, 'Краткое описание:'),
-        h('textarea', {
-          value: content,
-          onChange: (e) => setContent(e.target.value),
-          rows: 3,
-          style: {
-            width: '100%',
-            padding: '12px',
-            borderRadius: 8,
-            border: '1px solid var(--main-hint-color)',
-            background: 'var(--main-bg-color)',
-            color: 'var(--main-text-color)',
-            fontSize: 15,
-            resize: 'vertical'
-          }
-        })
-      ),
-      
-      h('div', { style: { marginBottom: 16 } },
-        h('label', { style: { display: 'block', marginBottom: 8, fontWeight: 500 } }, 'Полное описание:'),
-        h('textarea', {
-          value: fullDescription,
-          onChange: (e) => setFullDescription(e.target.value),
-          rows: 6,
-          style: {
-            width: '100%',
-            padding: '12px',
-            borderRadius: 8,
-            border: '1px solid var(--main-hint-color)',
-            background: 'var(--main-bg-color)',
-            color: 'var(--main-text-color)',
-            fontSize: 15,
-            resize: 'vertical'
-          }
-        })
-      ),
-      
-      h('div', { style: { marginBottom: 16 } },
-        h('label', { style: { display: 'block', marginBottom: 8, fontWeight: 500 } }, 'Теги:'),
-        h('input', {
-          type: 'text',
-          value: skillTags,
-          onChange: (e) => setSkillTags(e.target.value),
-          placeholder: 'Python, React, ...',
-          style: {
-            width: '100%',
-            padding: '12px',
-            borderRadius: 8,
-            border: '1px solid var(--main-hint-color)',
-            background: 'var(--main-bg-color)',
-            color: 'var(--main-text-color)',
-            fontSize: 15
-          }
-        })
-      ),
-      
-      h('div', {
-        // ✅ ИСПРАВЛЕНИЕ (Glass): Убран inline 'background', добавлен className
-        className: `react-sheet-footer ${isIOS ? 'is-ios' : ''}`,
         style: {
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: '16px 20px',
-          // background: 'var(--secondary-bg-color)', // <-- УДАЛЕНО
-          borderTop: '1px solid var(--main-hint-color)',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 12,
-          zIndex: 1
-        }
-      },
+            position: 'relative', 
+            width: '100%',
+            margin: '0 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center', 
+        },
+        // Анимация (y: '100%') теперь здесь
+        initial: { y: '100%' },
+        animate: { y: 0 },
+        exit: { y: '100%' },
+        transition: { 
+            type: 'spring', 
+            damping: 30, 
+            stiffness: 300 
+        },
+    },
+        // --- ✅ ИЗМЕНЕНИЕ: Добавлен Шеврон ---
         h('button', {
-          onClick: onClose,
+            className: `react-sheet-chevron-close ${isIOS ? 'is-ios' : ''}`,
+            onClick: onClose,
+            'aria-label': 'Закрыть',
+        }, 
+            // SVG "Шеврон вниз"
+            h('svg', { 
+                xmlns: 'http://www.w3.org/2000/svg', 
+                viewBox: '0 0 24 24', 
+                fill: 'none', 
+                stroke: 'currentColor', 
+                strokeWidth: '2.5', 
+                strokeLinecap: 'round', 
+                strokeLinejoin: 'round' 
+            },
+                h('polyline', { points: '6 9 12 15 18 9' })
+            )
+        ),
+    
+        // --- ✅ ИЗМЕНЕНИЕ: Этот div теперь отвечает только за контент и прокрутку ---
+        h('div', {
+          className: `react-sheet-content ${isIOS ? 'is-ios' : ''}`,
           style: {
-            padding: '14px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'var(--main-hint-color)',
-            color: 'var(--main-bg-color)',
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: 'pointer'
-          }
-        }, 'Отмена'),
-        h('button', {
-          onClick: handleSave,
-          style: {
-            padding: '14px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'var(--main-button-color)',
-            color: 'var(--main-button-text-color)',
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: 'pointer'
-          }
-        }, 'Сохранить')
-      )
-    )
+            position: 'relative',
+            width: '100%',
+            maxHeight: '90vh', // Ограничиваем высоту
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            overflow: 'auto', // Прокрутка только внутри модалки
+            padding: '20px',
+            // ✅ ИСПРАВЛЕНИЕ (Задача 4): Убран paddingBottom: 240
+            paddingBottom: '20px'
+          },
+          // Анимация УБРАНА отсюда
+          onClick: (e) => e.stopPropagation()
+        },
+          // --- ✅ ИЗМЕНЕНИЕ: CloseButton УДАЛЕН ---
+          /* h(CloseButton, { onClick: onClose, isIOS: isIOS }), */
+
+          // --- ✅ ИЗМЕНЕНИЕ: Полная переверстка ---
+          h('h2', { 
+              // Используем стили из profile.css
+              className: 'profile-section-title', 
+              style: { 
+                  textAlign: 'center', 
+                  margin: '0 0 20px 0', 
+                  fontSize: 20 
+              } 
+          }, t('edit_post_title')),
+          
+          // --- 1. TomSelect для Типа запроса ---
+          h('div', { className: 'form-group' },
+            h('label', null, t('post_type_label')),
+            h(TomSelectWrapper, {
+              value: postType,
+              onChange: setPostType, // Передаем set-функцию
+              placeholder: t('post_type_placeholder'),
+              options: [
+                { value: 'looking', text: t('post_type_looking') },
+                { value: 'offering', text: t('post_type_offering') },
+                { value: 'showcase', text: t('post_type_showcase') }
+              ]
+            })
+          ),
+          
+          // --- 2. Textarea для Краткого описания ---
+          h('div', { className: 'form-group' },
+            h('label', { htmlFor: 'edit-post-content' }, t('post_content_label')),
+            h('textarea', {
+              id: 'edit-post-content',
+              value: content,
+              onChange: (e) => setContent(e.target.value),
+              rows: 3,
+            })
+          ),
+          
+          // --- 3. Textarea для Полного описания ---
+          h('div', { className: 'form-group' },
+            h('label', { htmlFor: 'edit-post-full' }, t('post_full_description_label')),
+            h('textarea', {
+              id: 'edit-post-full',
+              value: fullDescription,
+              onChange: (e) => setFullDescription(e.target.value),
+              rows: 6,
+            })
+          ),
+          
+          // --- 4. Кнопка для выбора Тегов ---
+          h('div', { className: 'form-group' },
+            h('label', null, t('post_skills_label')),
+            h('div', { 
+                className: 'skills-input-group',
+                onClick: handleOpenSkillsModal // Вся группа кликабельна
+            },
+                h('input', {
+                  type: 'text',
+                  value: skillTags, // Показываем теги через запятую
+                  readOnly: true, // Запрещаем ввод
+                  placeholder: t('select_skills_button'),
+                }),
+                h('button', {
+                    type: 'button',
+                    className: 'skills-input-button', // из form.css
+                    'aria-label': t('select_skills_button')
+                },
+                    // SVG из index.html
+                    h('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true', focusable: 'false' },
+                        h('path', { d: 'M10 7h8M10 12h8M10 17h8', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round' }),
+                        h('circle', { cx: '6', cy: '7', r: '1.5', fill: 'currentColor' }),
+                        h('circle', { cx: '6', cy: '12', r: '1.5', fill: 'currentColor' }),
+                        h('circle', { cx: '6', cy: '17', r: '1.5', fill: 'currentColor' })
+                    )
+                )
+            )
+          ),
+          // --- КОНЕЦ ПЕРЕВЕРСТКИ ---
+
+          // --- ✅ ИЗМЕНЕНИЕ: Кнопки теперь являются частью контента ---
+          h('div', {
+            className: `react-sheet-footer ${isIOS ? 'is-ios' : ''}`,
+            style: {
+              // УБРАНЫ: position, bottom, left, right, zIndex, borderTop, paddingTop
+              marginTop: '20px', // <-- Оставляем только отступ сверху
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 12
+            }
+          },
+            h('button', {
+              onClick: onClose,
+              style: {
+                padding: '14px',
+                borderRadius: 8,
+                border: 'none',
+                background: 'var(--main-hint-color)',
+                color: 'var(--main-bg-color)',
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: 'pointer'
+              }
+            }, 'Отмена'),
+            h('button', {
+              onClick: handleSave,
+              style: {
+                padding: '14px',
+                borderRadius: 8,
+                border: 'none',
+                background: 'var(--main-button-color)',
+                color: 'var(--main-button-text-color)',
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: 'pointer'
+              }
+            }, 'Сохранить')
+          )
+        ) // --- Конец .react-sheet-content
+    ) // --- Конец новой motion.div-обертки
   );
 }
 
@@ -424,6 +561,7 @@ function EditPostModal({ post, onClose, onSave }) {
 // ✅ ИСПРАВЛЕНИЕ #3: Возвращен styleOverride с paddingRight
 // ✅ ИСПРАВЛЕНИЕ #3 (НОВЫЙ ФИКС): Убран styleOverride, передаем prop
 const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpenPostSheet, onEdit, onDelete }) {
+// ... (остальной код без изменений) ...
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const postKey = post.post_id || `temp-post-${Math.random()}`;
@@ -550,6 +688,7 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
 // ✅ ИСПРАВЛЕНИЕ #1: Возвращаем marginBottom
 // ✅ ИСПРАВЛЕНИЕ #3, #5: Принимаем showActionsSpacer
 const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPostSheet, onTagClick, disableClick = false, styleOverride = {}, showActionsSpacer = false }) {
+// ... (остальной код без изменений) ...
     const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
     const { content = 'Нет описания', post_type = 'default', skill_tags = [], created_at } = post;
     const avatar = author.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
@@ -708,6 +847,7 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
         ),
         
         h('p', { 
+// ... (остальной код без изменений) ...
             style: { 
                 margin: 0, 
                 fontSize: 15, 
@@ -724,6 +864,7 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
         }, content),
         
         skill_tags.length > 0 && h('div', { 
+// ... (остальной код без изменений) ...
             style: { 
                 display: 'flex', 
                 flexWrap: 'wrap', 
@@ -744,6 +885,7 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
 }); // ✅ НОВОЕ: Закрываем React.memo
 
 function PostsList({ posts, onOpenProfile, onOpenPostSheet, onTagClick, isMyPosts, onEditPost, onDeletePost, containerRef }) {
+// ... (остальной код без изменений) ...
   
   return h(motion.div, {
     ref: containerRef,
@@ -795,6 +937,7 @@ function PostsList({ posts, onOpenProfile, onOpenPostSheet, onTagClick, isMyPost
 // ✅ ИСПРАВЛЕНИЕ #2: Рефакторинг верстки для "плавающего" шеврона
 // ✅ ИСПРАВЛЕНИЕ #4: Убран лишний padding-bottom
 function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDelete }) {
+// ... (остальной код без изменений) ...
     const sheetRef = useRef(null);
     const [isDragging, setIsDragging] = useState(false);
     
@@ -822,6 +965,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
     */
     
     return h(motion.div, { 
+// ... (остальной код без изменений) ...
         style: { 
             position: 'fixed', 
             inset: 0, 
@@ -836,6 +980,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
         transition: { duration: 0.2 }
     },
         h(motion.div, { 
+// ... (остальной код без изменений) ...
             onClick: onClose, 
             style: {
                 position: 'absolute', 
@@ -851,6 +996,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
         // ✅ ИСПРАВЛЕНИЕ #2: Новая внешняя обертка
         // Она анимируется и позволяет шеврону "выйти"
         h(motion.div, {
+// ... (остальной код без изменений) ...
             style: {
                 position: 'relative', // Для позиционирования шеврона
                 width: '100%',
@@ -874,6 +1020,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
             // ✅ ИСПРАВЛЕНИЕ #8: Заменяем "X" на "Шеврон"
             // Он теперь дочерний элемент новой обертки
             h('button', {
+// ... (остальной код без изменений) ...
                 className: `react-sheet-chevron-close ${isIOS ? 'is-ios' : ''}`,
                 onClick: onClose,
                 'aria-label': 'Закрыть',
@@ -895,6 +1042,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
             // ✅ ИСПРАВЛЕНИЕ #2: Это старый .react-sheet-content
             // Он теперь отвечает за скролл и фон
             h('div', {
+// ... (остальной код без изменений) ...
                 ref: sheetRef,
                 className: `react-sheet-content ${isIOS ? 'is-ios' : ''}`,
                 style: { 
@@ -915,6 +1063,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                 } },
                     // ИСПРАВЛЕНИЕ: Новая структура - аватар и тег на одной линии
                     h('div', { 
+// ... (остальной код без изменений) ...
                         style: { 
                             display: 'flex',
                             alignItems: 'flex-start',
@@ -925,6 +1074,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                     },
                         // АВТОР (слева)
                         h('button', {
+// ... (остальной код без изменений) ...
                             onClick: (e) => {
                                 e.stopPropagation();
                                 onOpenProfile(author);
@@ -943,6 +1093,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                             }
                         },
                             h('div', { 
+// ... (остальной код без изменений) ...
                                 style: { 
                                     height: 48, 
                                     width: 48, 
@@ -953,6 +1104,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                                 } 
                             },
                                 h('img', { 
+// ... (остальной код без изменений) ...
                                     src: avatar, 
                                     alt: '', 
                                     // ✅ НОВОЕ: Добавляем lazy loading
@@ -962,6 +1114,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                             ),
                             h('div', { style: { flex: 1, minWidth: 0 } },
                                 h('div', { 
+// ... (остальной код без изменений) ...
                                     style: { 
                                         fontWeight: 600, 
                                         fontSize: 16, 
@@ -969,6 +1122,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                                     } 
                                 }, author.first_name || 'User'),
                                 timeAgo && h('div', { 
+// ... (остальной код без изменений) ...
                                     style: { 
                                         fontSize: 14, 
                                         color: 'var(--main-hint-color)', 
@@ -980,6 +1134,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                         
                         // ТЕГ (справа, на той же линии)
                         h('div', { 
+// ... (остальной код без изменений) ...
                             style: { 
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -1000,6 +1155,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                     
                     // КРАТКОЕ ОПИСАНИЕ
                     h('div', { 
+// ... (остальной код без изменений) ...
                         style: { 
                             background: 'var(--main-bg-color)',
                             borderRadius: 12,
@@ -1008,6 +1164,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                         }
                     },
                         h('h3', { 
+// ... (остальной код без изменений) ...
                             style: { 
                                 margin: '0 0 12px 0', 
                                 fontSize: 17, 
@@ -1016,6 +1173,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                             } 
                         }, 'Краткое описание'),
                         h('p', { 
+// ... (остальной код без изменений) ...
                             style: { 
                                 margin: 0, 
                                 fontSize: 15, 
@@ -1028,6 +1186,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                     
                     // ПОЛНОЕ ОПИСАНИЕ
                     full_description && full_description.trim() && h('div', { 
+// ... (остальной код без изменений) ...
                         style: { 
                             background: 'var(--main-bg-color)',
                             borderRadius: 12,
@@ -1036,6 +1195,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                         }
                     },
                         h('h3', { 
+// ... (остальной код без изменений) ...
                             style: { 
                                 margin: '0 0 12px 0', 
                                 fontSize: 17, 
@@ -1044,6 +1204,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                             } 
                         }, 'Подробное описание'),
                         h('p', { 
+// ... (остальной код без изменений) ...
                             style: { 
                                 margin: 0, 
                                 fontSize: 15, 
@@ -1056,6 +1217,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                     
                     // ТЕГИ
                     skill_tags && skill_tags.length > 0 && h('div', { 
+// ... (остальной код без изменений) ...
                         style: { 
                             background: 'var(--main-bg-color)',
                             borderRadius: 12,
@@ -1064,6 +1226,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                         }
                     },
                         h('h3', { 
+// ... (остальной код без изменений) ...
                             style: { 
                                 margin: '0 0 12px 0', 
                                 fontSize: 17, 
@@ -1072,6 +1235,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                             } 
                         }, 'Навыки'),
                         h('div', { 
+// ... (остальной код без изменений) ...
                             style: { 
                                 display: 'flex', 
                                 flexWrap: 'wrap', 
@@ -1091,6 +1255,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                     
                     // ДЕЙСТВИЯ
                     h('div', { 
+// ... (остальной код без изменений) ...
                         style: { 
                             display: 'grid',
                             gap: 10,
@@ -1099,6 +1264,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                     },
                         // Кнопки редактирования/удаления (только для своих постов)
                         isMyPost && h('div', {
+// ... (остальной код без изменений) ...
                             style: {
                                 display: 'grid',
                                 gridTemplateColumns: '1fr 1fr',
@@ -1107,6 +1273,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                             }
                         },
                             h('button', {
+// ... (остальной код без изменений) ...
                                 className: 'action-button secondary',
                                 onClick: () => {
                                     onEdit(post);
@@ -1123,6 +1290,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                                 }
                             }, '✏️ Редактировать'),
                             h('button', {
+// ... (остальной код без изменений) ...
                                 className: 'action-button',
                                 onClick: () => {
                                     onDelete(post);
@@ -1139,6 +1307,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                         ),
                         
                         h('button', {
+// ... (остальной код без изменений) ...
                             className: 'action-button',
                             onClick: () => onOpenProfile(author),
                             style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }
@@ -1163,6 +1332,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
 
 // --- НОВЫЙ КОМПОНЕНТ: Анимированное FAB меню ---
 function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
+// ... (остальной код без изменений) ...
     const [isOpen, setIsOpen] = useState(false);
     
     const toggleMenu = useCallback(() => {
@@ -1188,6 +1358,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
     ];
     
     return h('div', {
+// ... (остальной код без изменений) ...
         style: {
             position: 'fixed',
             bottom: 0,
@@ -1199,6 +1370,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
     },
         // Backdrop (затемнение)
         h(AnimatePresence, null,
+// ... (остальной код без изменений) ...
             isOpen && h(motion.div, {
                 key: 'backdrop',
                 initial: { opacity: 0 },
@@ -1217,6 +1389,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
         
         // Меню кнопок
         h('div', {
+// ... (остальной код без изменений) ...
             style: {
                 position: 'relative',
                 padding: '0 20px 30px',
@@ -1229,6 +1402,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
         },
             // Опции меню (появляются снизу вверх)
             h(AnimatePresence, null,
+// ... (остальной код без изменений) ...
                 isOpen && menuItems.map((item, index) => 
                     h(motion.div, {
                         key: item.label,
@@ -1259,6 +1433,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
                     },
                         // Лейбл (слева)
                         h(motion.div, {
+// ... (остальной код без изменений) ...
                             initial: { opacity: 0, x: 20 },
                             animate: { 
                                 opacity: 1, 
@@ -1273,6 +1448,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
                             }
                         },
                             h('div', {
+// ... (остальной код без изменений) ...
                                 style: {
                                     display: 'inline-block',
                                     background: 'var(--secondary-bg-color, #2c2c2e)',
@@ -1288,6 +1464,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
                         
                         // Кнопка (справа)
                         h(motion.button, {
+// ... (остальной код без изменений) ...
                             onClick: () => handleAction(item.action),
                             whileHover: { scale: 1.05 },
                             whileTap: { scale: 0.95 },
@@ -1313,6 +1490,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
             
             // Главная FAB кнопка (всегда видима)
             h(motion.button, {
+// ... (остальной код без изменений) ...
                 onClick: toggleMenu,
                 animate: { 
                     rotate: isOpen ? 45 : 0,
@@ -1341,6 +1519,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
 
 // ✅ НОВОЕ: Простой Suspense fallback (скопирован из react-feed.js)
 function ProfileFallback() {
+// ... (остальной код без изменений) ...
     return h('div', {
         style: {
             position: 'fixed',
@@ -1370,6 +1549,7 @@ const quickFiltersHost = document.getElementById('posts-quick-filters');
 if (!quickFiltersHost) { console.warn("REACT Posts: Host element #posts-quick-filters not found!"); }
 
 function App({ mountInto, overlayHost }) {
+// ... (остальной код без изменений) ...
   const [cfg, setCfg] = useState(null);
   const [posts, setPosts] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -1398,11 +1578,13 @@ function App({ mountInto, overlayHost }) {
   
   
   const handleBackToAllPosts = useCallback(() => {
+// ... (остальной код без изменений) ...
     console.log("Back to all posts");
     document.dispatchEvent(new CustomEvent('show-all-posts'));
   }, []);
   
   useEffect(() => { 
+// ... (остальной код без изменений) ...
     inputRef.current = document.getElementById('posts-search-input'); 
     statusFilterInputRef.current = document.getElementById('posts-status-filter-input');
     
@@ -1419,6 +1601,7 @@ function App({ mountInto, overlayHost }) {
   }, [handleBackToAllPosts]);
 
   const fetchPosts = useCallback(async () => {
+// ... (остальной код без изменений) ...
     if (!cfg?.backendUrl) return; 
     console.log("REACT Posts: Fetching posts...");
     try {
@@ -1437,6 +1620,7 @@ function App({ mountInto, overlayHost }) {
 
 // (ИСПРАВЛЕНО) Читаем конфиг из window (без изменений)
   useEffect(() => {
+// ... (остальной код без изменений) ...
     (async () => {
         try {
             if (!window.__CONFIG) {
@@ -1460,6 +1644,7 @@ function App({ mountInto, overlayHost }) {
   // --- (ИСПРАВЛЕНИЕ) ---
   // Слушатель смены режима (теперь также слушает 'skills' и 'status')
   useEffect(() => {
+// ... (остальной код без изменений) ...
     const handleSetMode = (event) => {
         if (!event.detail) return;
 
@@ -1500,6 +1685,7 @@ function App({ mountInto, overlayHost }) {
 
   // Управление UI (заголовок и кнопки) (без изменений)
   useEffect(() => {
+// ... (остальной код без изменений) ...
     const titleEl = document.querySelector('#posts-feed-container h1[data-i18n-key="feed_posts_title"]');
     const backToProfileBtn = document.getElementById('back-to-profile-from-posts-button');
     const backToAllBtn = document.getElementById('back-to-all-posts-button');
@@ -1519,6 +1705,7 @@ function App({ mountInto, overlayHost }) {
 
   // --- (ИЗМЕНЕНИЕ) Главный useEffect фильтрации по DEBOUNCED-значениям ---
   useEffect(() => {
+// ... (остальной код без изменений) ...
     const qLower = debouncedSearchQuery.toLowerCase(); 
     const terms = qLower.replace(/,/g, ' ').split(' ').map(s => s.trim()).filter(Boolean);
     const selectedSkillsLower = debouncedSelectedSkills.map(s => s.toLowerCase());
@@ -1555,6 +1742,7 @@ function App({ mountInto, overlayHost }) {
 
   // --- (ИЗМЕНЕНИЕ) useEffect слушателя инпута ---
   useEffect(() => {
+// ... (остальной код без изменений) ...
     const input = inputRef.current; 
     if (!input) return;
     
@@ -1590,6 +1778,7 @@ function App({ mountInto, overlayHost }) {
 
   // (ВОССТАНОВЛЕНА ФУНКЦИЯ) (без изменений)
   useEffect(() => {
+// ... (остальной код без изменений) ...
     const skillButton = document.getElementById('open-skills-modal-button-posts'); if (!skillButton) return;
     const handleClick = () => { const event = new CustomEvent('openSkillsModal', { detail: { source: 'postsFeed', skills: selectedSkills } }); document.dispatchEvent(event); };
     skillButton.addEventListener('click', handleClick); return () => skillButton.removeEventListener('click', handleClick);
@@ -1597,6 +1786,7 @@ function App({ mountInto, overlayHost }) {
 
   // (ИЗМЕНЕНИЕ) onToggleSkill теперь обновляет state
   const onToggleSkill = useCallback((skill) => {
+// ... (остальной код без изменений) ...
     const lowerSkill = skill.toLowerCase(); let newSelectedSkills;
     const isSelected = selectedSkills.some(s => s.toLowerCase() === lowerSkill);
     if (isSelected) { newSelectedSkills = selectedSkills.filter(s => s.toLowerCase() !== lowerSkill); } 
@@ -1620,6 +1810,7 @@ function App({ mountInto, overlayHost }) {
 
   // (Без изменений)
   const handleOpenProfile = useCallback(async (author) => {
+// ... (остальной код без изменений) ...
     if (!author || !author.user_id) { console.error("REACT Posts: Invalid author data:", author); return; }
     if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light');
     setPostToShow(null);
@@ -1631,34 +1822,40 @@ function App({ mountInto, overlayHost }) {
 
   const handleCloseProfile = useCallback(() => { setProfileToShow(null); }, []);
   const handleOpenPostSheet = useCallback((post) => {
+// ... (остальной код без изменений) ...
     if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('medium');
     setPostToShow(post);
   }, []);
   const handleClosePostSheet = useCallback(() => { setPostToShow(null); }, []);
 
   const handleCreatePost = useCallback(() => {
+// ... (остальной код без изменений) ...
     console.log("FAB: Create post clicked");
     const createBtn = document.getElementById('create-post-button');
     if (createBtn) createBtn.click();
   }, []);
 
   const handleMyPosts = useCallback(() => {
+// ... (остальной код без изменений) ...
     console.log("FAB: My posts clicked");
     document.dispatchEvent(new CustomEvent('show-my-posts'));
   }, []);
 
   const handleSaved = useCallback(() => {
+// ... (остальной код без изменений) ...
     console.log("FAB: Saved clicked");
     tg.showAlert('Сохраненное - в разработке');
   }, []);
 
   const handleSubscriptions = useCallback(() => {
+// ... (остальной код без изменений) ...
     console.log("FAB: Subscriptions clicked");
     tg.showAlert('Лента подписок - в разработке');
   }, []);
 
   // Новые обработчики для редактирования/удаления
   const handleEditPost = useCallback((post) => {
+// ... (остальной код без изменений) ...
     console.log("Edit post:", post.post_id);
     setEditingPost(post);
     setPostToShow(null);
@@ -1666,6 +1863,7 @@ function App({ mountInto, overlayHost }) {
 
   // (ВОССТАНОВЛЕНА ФУНКЦИЯ) (без изменений)
   const handleDeletePost = useCallback(async (post) => {
+// ... (остальной код без изменений) ...
     if (tg?.showConfirm) {
         tg.showConfirm("Удалить этот запрос?", async (ok) => {
             if (!ok) return;
@@ -1709,6 +1907,7 @@ function App({ mountInto, overlayHost }) {
 
   // (ВОССТАНОВЛЕНА ФУНКЦИЯ) (без изменений)
   const handleSaveEdit = useCallback(async (postData) => {
+// ... (остальной код без изменений) ...
     try {
       const resp = await postJSON(`${cfg.backendUrl}/api/update-post`, {
         initData: tg?.initData,
@@ -1735,6 +1934,7 @@ function App({ mountInto, overlayHost }) {
   }, [cfg, editingPost, fetchPosts]);
 
   return h('div', { style: { padding: '0 12px 12px' } },
+// ... (остальной код без изменений) ...
     
     h(PostsList, { 
       posts: filtered, 
@@ -1749,6 +1949,7 @@ function App({ mountInto, overlayHost }) {
     
     // ✅ НОВОЕ: Оборачиваем модалки в Suspense
     h(Suspense, { fallback: h(ProfileFallback) },
+// ... (остальной код без изменений) ...
         h(AnimatePresence, null, 
           profileToShow && h(ProfileSheet, { key: `profile-${profileToShow.user_id}`, user: profileToShow, onClose: handleCloseProfile }),
           postToShow && h(PostDetailSheet, { 
@@ -1770,6 +1971,7 @@ function App({ mountInto, overlayHost }) {
     ),
     
     h(FABMenu, {
+// ... (остальной код без изменений) ...
       onCreatePost: handleCreatePost,
       onMyPosts: handleMyPosts,
       onSaved: handleSaved,
@@ -1783,6 +1985,7 @@ function App({ mountInto, overlayHost }) {
 // --- Монтирование ---
 window.REACT_FEED_POSTS = true;
 function mountReactPostsFeed() {
+// ... (остальной код без изменений) ...
   // ✅ ИСПРАВЛЕНИЕ: Убрана лишняя 'S' во флаге. Было REACT_FEEDS_POSTS
   if (!window.REACT_FEED_POSTS) { 
        console.warn("REACT Posts: Global flag window.REACT_FEED_POSTS is false. Skipping mount.");

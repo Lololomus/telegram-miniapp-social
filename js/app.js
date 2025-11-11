@@ -2,13 +2,17 @@
 // ОБНОВЛЕНО: Добавлена обработка ошибок валидации через showToast
 // ОБНОВЛЕНО: Удален счетчик "Группы"
 // ОБНОВЛЕНО (Glass): Добавлена логика переключателя "Стекла"
+// УДАЛЕНО: Вся логика "Last Seen" и "Nationality"
+// ОБНОВЛЕНО (Задача 2): Добавлена валидация `validateDynamicLists`
+// ОБНОВЛЕНО (Задача 3): Добавлена логика для `skillsModalSource: 'editPostModal'`
 
 // --- ИМПОРТ МОДУЛЕЙ ---
 import { loadTranslations, t, supportedLangs } from './i18n.js';
-import { getLuminance, shadeColor, formatLastSeen } from './utils.js';
+// import { getLuminance, shadeColor, formatLastSeen } from './utils.js'; // УДАЛЕНО formatLastSeen
+import { getLuminance, shadeColor } from './utils.js'; // (utils.js был почищен)
 // (НОВОЕ) Импортируем applyGlass
 import { applyTheme, updateThemeButtons, applyGlass } from './theme.js';
-import { initCountrySelector, updateCountryListText, getTomSelectInstance, preloadFlags } from './countries.js?v=2';
+// import { initCountrySelector, updateCountryListText, getTomSelectInstance, preloadFlags } from './countries.js?v=2'; // УДАЛЕНО
 import * as api from './api.js';
 // ИСПРАВЛЕНО: v=1.4
 import * as ui  from './ui-helpers.js?v=1.4';
@@ -72,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form: {
             nameField: document.getElementById('name-field'),
             bioField: document.getElementById('bio-field'),
-            nationalityField: document.getElementById('nationality-field'),
+            // nationalityField: document.getElementById('nationality-field'), // УДАЛЕНО
             skillsField: document.getElementById('skills-field'),
             photoInput: document.getElementById('photo-input'),
             avatarPreview: document.getElementById('avatar-preview'),
@@ -127,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             avatar: document.getElementById('detail-avatar'),
             avatarContainer: document.querySelector('.detail-avatar-container'),
             username: document.getElementById('detail-username'),
-            lastSeen: document.getElementById('detail-last-seen'), // НОВОЕ ПОЛЕ
+            // lastSeen: document.getElementById('detail-last-seen'), // УДАЛЕНО
             bio: document.getElementById('detail-bio'),
             experienceContainer: document.getElementById('detail-experience'),
             educationContainer: document.getElementById('detail-education'),
@@ -213,14 +217,52 @@ document.addEventListener('DOMContentLoaded', () => {
         let lang = localStorage.getItem('userLanguage'); if (lang && supportedLangs.includes(lang)) { return lang; } lang = tg.initDataUnsafe?.user?.language_code; if (lang) { lang = lang.split('-')[0]; if (supportedLangs.includes(lang)) { return lang; } } return 'ru';
     }
     function updateUIText() {
-        document.documentElement.lang = state.currentLang; document.querySelectorAll('[data-i18n-key]').forEach(element => { const key = element.dataset.i18nKey; if (element.closest('template') || element.id === 'profile-skills-toggle' || element.id === 'detail-skills-toggle' || element.id === 'show-qr-button') { return; } element.textContent = t(key); }); document.querySelectorAll('[data-i18n-placeholder]').forEach(element => { if (element.closest('template')) { return; } if (element.id === 'nationality-field') { const tsInstance = getTomSelectInstance(); if (tsInstance && !tsInstance.getValue()) { tsInstance.settings.placeholder = t('nationality_placeholder_tomselect'); if (tsInstance.control_input) tsInstance.control_input.placeholder = t('nationality_placeholder_tomselect'); } } else { element.placeholder = t(element.dataset.i18nPlaceholder); } }); if (tg.MainButton.isVisible) { if (elements.formContainer.style.display === 'block') { tg.MainButton.setText(t('save_button')); } else if (elements.postModal.modal.style.display === 'block') { tg.MainButton.setText(t('publish')); } } document.title = t('my_profile'); if (elements.settings.langBtnRu) elements.settings.langBtnRu.classList.toggle('active', state.currentLang === 'ru'); if (elements.settings.langBtnEn) elements.settings.langBtnEn.classList.toggle('active', state.currentLang === 'en'); [elements.profile.skillsToggleBtn, elements.detail.skillsToggleBtn].forEach(toggleButton => { if (toggleButton && toggleButton.style.display !== 'none') { const textSpan = toggleButton.querySelector('span:not(.arrow)'); if(textSpan) { const isLess = toggleButton.classList.contains('less'); textSpan.textContent = t(isLess ? 'skills_show_less' : 'skills_show_more'); } } }); if (elements.skills.modal.style.display !== 'none') { UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, (skill) => { if (state.selectedSkills.includes(skill)) { state.selectedSkills = state.selectedSkills.filter(s => s !== skill); } else { state.selectedSkills.push(skill); } UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, arguments.callee); }); } updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t); [elements.form.linkTemplate, elements.form.experienceTemplate, elements.form.educationTemplate].forEach(template => { if (template) { template.content.querySelectorAll('[data-i18n-key]').forEach(el => el.textContent = t(el.dataset.i18nKey)); template.content.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = t(el.dataset.i18nPlaceholder)); } }); [elements.form.linksContainer, elements.form.experienceContainer, elements.form.educationContainer].forEach(container => { if(container) { container.querySelectorAll('[data-i18n-key]').forEach(el => el.textContent = t(el.dataset.i18nKey)); container.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = t(el.dataset.i18nPlaceholder)); } });
+        document.documentElement.lang = state.currentLang; document.querySelectorAll('[data-i18n-key]').forEach(element => { const key = element.dataset.i18nKey; if (element.closest('template') || element.id === 'profile-skills-toggle' || element.id === 'detail-skills-toggle' || element.id === 'show-qr-button') { return; } element.textContent = t(key); }); document.querySelectorAll('[data-i18n-placeholder]').forEach(element => { if (element.closest('template')) { return; } 
+        // (УДАЛЕНО) Блок if (element.id === 'nationality-field')
+        element.placeholder = t(element.dataset.i18nPlaceholder); 
+    }); if (tg.MainButton.isVisible) { if (elements.formContainer.style.display === 'block') { tg.MainButton.setText(t('save_button')); } else if (elements.postModal.modal.style.display === 'block') { tg.MainButton.setText(t('publish')); } } document.title = t('my_profile'); if (elements.settings.langBtnRu) elements.settings.langBtnRu.classList.toggle('active', state.currentLang === 'ru'); if (elements.settings.langBtnEn) elements.settings.langBtnEn.classList.toggle('active', state.currentLang === 'en'); [elements.profile.skillsToggleBtn, elements.detail.skillsToggleBtn].forEach(toggleButton => { if (toggleButton && toggleButton.style.display !== 'none') { const textSpan = toggleButton.querySelector('span:not(.arrow)'); if(textSpan) { const isLess = toggleButton.classList.contains('less'); textSpan.textContent = t(isLess ? 'skills_show_less' : 'skills_show_more'); } } }); if (elements.skills.modal.style.display !== 'none') { UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, (skill) => { if (state.selectedSkills.includes(skill)) { state.selectedSkills = state.selectedSkills.filter(s => s !== skill); } else { state.selectedSkills.push(skill); } UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, arguments.callee); }); } 
+        // (УДАЛЕНО) updateCountryListText(...)
+        [elements.form.linkTemplate, elements.form.experienceTemplate, elements.form.educationTemplate].forEach(template => { if (template) { template.content.querySelectorAll('[data-i18n-key]').forEach(el => el.textContent = t(el.dataset.i18nKey)); template.content.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = t(el.dataset.i18nPlaceholder)); } }); [elements.form.linksContainer, elements.form.experienceContainer, elements.form.educationContainer].forEach(container => { if(container) { container.querySelectorAll('[data-i18n-key]').forEach(el => el.textContent = t(el.dataset.i18nKey)); container.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = t(el.dataset.i18nPlaceholder)); } });
     }
 
     // --- ОСНОВНЫЕ ФУНКЦИИ ЛОГИКИ ---
     let linksManager, experienceManager, educationManager;
     console.log('UI exports:', Object.keys(UI));
 
-/**
+    // --- ИНИЦИАЛИЗАЦИЯ TomSelect ДЛЯ ТИПА ЗАПРОСА ---
+    let postTypeSelectInstance = null;
+
+    function initPostTypeSelect() {
+    if (postTypeSelectInstance) {
+        postTypeSelectInstance.destroy();
+    }
+    
+    postTypeSelectInstance = new TomSelect('#post-type-select', {
+        create: false, // Запрещаем создавать новые опции
+        allowEmptyOption: false,
+        placeholder: t('select_post_type'),
+        render: {
+        option: function(data, escape) {
+            // Рендерим опцию с эмодзи
+            return '<div class="tomselect-option-with-emoji">' + 
+                escape(data.text) + 
+                '</div>';
+        },
+        item: function(data, escape) {
+            // Рендерим выбранный элемент с эмодзи
+            return '<div class="tomselect-item-with-emoji">' + 
+                escape(data.text) + 
+                '</div>';
+        }
+        },
+        onInitialize: function() {
+        // Устанавливаем z-index для dropdown
+        this.dropdown.style.zIndex = '1002';
+        }
+    });
+    }
+
+    /**
      * Загружает основной профиль пользователя (с UI.showSpinner)
      */
     async function loadProfileData() {
@@ -282,13 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.form.nameField.value = state.currentUserProfile.first_name || tg.initDataUnsafe?.user?.first_name || '';
                 elements.form.bioField.value = state.currentUserProfile.bio || '';
                 
-                if (state.tomSelectInstance) {
-                    try {
-                        state.tomSelectInstance.setValue(state.currentUserProfile.nationality_code || '', true);
-                    } catch (e) {
-                        console.error("⚠️ Error setting nationality:", e);
-                    }
-                }
+                // (УДАЛЕНО) Блок if (state.tomSelectInstance)
                 
                 try {
                     const skills = state.currentUserProfile.skills ? JSON.parse(state.currentUserProfile.skills) : [];
@@ -331,9 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.allViews, 
                     elements.spinner, 
                     tg, 
-                    t, 
-                    getTomSelectInstance, 
-                    () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t)
+                    t
                 );
                 
             } else {
@@ -346,9 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.allViews, 
                     elements.spinner, 
                     tg, 
-                    t, 
-                    getTomSelectInstance, 
-                    () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t)
+                    t
                 );
             }
             
@@ -366,9 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.allViews, 
                 elements.spinner, 
                 tg, 
-                t, 
-                getTomSelectInstance, 
-                () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t)
+                t
             );
             
         } finally {
@@ -380,14 +410,39 @@ document.addEventListener('DOMContentLoaded', () => {
      * Загружает профиль другого пользователя (с UI.showSpinner)
      */
     async function loadTargetUserProfile(targetUserId) {
-        UI.showSpinner(elements.spinner, elements.allViews); try { console.log(`📥 loadTargetUserProfile: loading user ${targetUserId}`); const data = await api.loadTargetUserProfile(tg.initData, targetUserId); if (data.ok) { state.currentViewedUserId = data.profile.user_id; console.log(`👤 loadTargetUserProfile: showing profile for ${targetUserId}`); UI.showUserDetailView(data.profile, elements.detail, state.CONFIG, t, (ts) => formatLastSeen(ts, t), (container, skills, btn) => UI.renderSkillTags(container, skills, btn, t), state.currentUserProfile.user_id); UI.showView(elements.userDetailContainer, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t)); } else { console.warn(`⚠️ loadTargetUserProfile: User ${targetUserId} not found.`); UI.showToast(t('error_profile_not_found'), true); await loadProfileData(); } } catch (error) { console.error(`❌ Error /get-user-by-id for ${targetUserId}:`, error); UI.showToast(t('error_load_profile_generic'), true); await loadProfileData(); } finally { UI.hideSpinner(elements.spinner); }
+        UI.showSpinner(elements.spinner, elements.allViews); try { console.log(`📥 loadTargetUserProfile: loading user ${targetUserId}`); const data = await api.loadTargetUserProfile(tg.initData, targetUserId); if (data.ok) { state.currentViewedUserId = data.profile.user_id; console.log(`👤 loadTargetUserProfile: showing profile for ${targetUserId}`); 
+        // (УДАЛЕНО) formatLastSeen
+        UI.showUserDetailView(
+            data.profile, 
+            elements.detail, 
+            state.CONFIG, 
+            t, 
+            (container, skills, btn) => UI.renderSkillTags(container, skills, btn, t), 
+            state.currentUserProfile.user_id
+        ); 
+        UI.showView(elements.userDetailContainer, elements.allViews, elements.spinner, tg, t); } else { console.warn(`⚠️ loadTargetUserProfile: User ${targetUserId} not found.`); UI.showToast(t('error_profile_not_found'), true); await loadProfileData(); } } catch (error) { console.error(`❌ Error /get-user-by-id for ${targetUserId}:`, error); UI.showToast(t('error_load_profile_generic'), true); await loadProfileData(); } finally { UI.hideSpinner(elements.spinner); }
     }
 
     /**
      * Сохраняет данные профиля (с анимацией "тряски")
      */
     async function saveProfileData() {
-        tg.MainButton.showProgress(); const formData = new FormData(); formData.append('initData', tg.initData); elements.form.nameField.classList.remove('input-shake'); const nameToSave = elements.form.nameField.value.trim(); 
+        tg.MainButton.showProgress();
+
+        // --- НОВАЯ ВАЛИДАЦИЯ ДИНАМИЧЕСКИХ СПИСКОВ ---
+        const listValidationErrorKey = validateDynamicLists();
+        if (listValidationErrorKey) {
+            tg.MainButton.hideProgress();
+            UI.showToast(t(listValidationErrorKey), true);
+            // Прерываем сохранение
+            return; 
+        }
+        // --- КОНЕЦ ВАЛИДАЦИИ ---
+
+        const formData = new FormData(); 
+        formData.append('initData', tg.initData); 
+        elements.form.nameField.classList.remove('input-shake'); 
+        const nameToSave = elements.form.nameField.value.trim(); 
         
         // --- ИЗМЕНЕНИЕ ЗДЕСЬ (ИСПРАВЛЕНИЕ БАГА) ---
         if (!nameToSave) { 
@@ -399,7 +454,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } 
         // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
-        formData.append('first_name', nameToSave || tg.initDataUnsafe?.user?.first_name || ''); formData.append('bio', elements.form.bioField.value.trim()); const linksData = linksManager?.getItemsData ? linksManager.getItemsData() : []; for (let i = 0; i < 5; i++) { formData.append(`link${i + 1}`, linksData[i] || ''); } const experienceData = experienceManager?.getItemsData ? experienceManager.getItemsData() : []; formData.append('experience', JSON.stringify(experienceData)); const educationData = educationManager?.getItemsData ? educationManager.getItemsData() : []; formData.append('education', JSON.stringify(educationData)); formData.append('nationality_code', getTomSelectInstance()?.getValue() || ''); const skillsArray = elements.form.skillsField.value.split(',').map(s => s.trim()).filter(s => s); formData.append('skills', JSON.stringify(skillsArray)); if (state.selectedFile) formData.append('photo', state.selectedFile); formData.append('lang', state.currentLang);
+        formData.append('first_name', nameToSave || tg.initDataUnsafe?.user?.first_name || ''); formData.append('bio', elements.form.bioField.value.trim()); const linksData = linksManager?.getItemsData ? linksManager.getItemsData() : []; for (let i = 0; i < 5; i++) { formData.append(`link${i + 1}`, linksData[i] || ''); } const experienceData = experienceManager?.getItemsData ? experienceManager.getItemsData() : []; formData.append('experience', JSON.stringify(experienceData)); const educationData = educationManager?.getItemsData ? educationManager.getItemsData() : []; formData.append('education', JSON.stringify(educationData)); 
+        // (УДАЛЕНО) formData.append('nationality_code', ...)
+        const skillsArray = elements.form.skillsField.value.split(',').map(s => s.trim()).filter(s => s); formData.append('skills', JSON.stringify(skillsArray)); if (state.selectedFile) formData.append('photo', state.selectedFile); formData.append('lang', state.currentLang);
         
         try { 
             // 'api.js' (из Шага 13.4) "выбросит" ошибку, если 'response.ok === false'
@@ -411,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await loadTargetUserProfile(state.targetUserIdFromLink); 
                 state.targetUserIdFromLink = null; 
             } else if (state.isRegistered) { 
-                UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t)); 
+                UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t); 
             } 
         } catch (error) { 
             console.error('Error saving profile:', error); 
@@ -435,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Загружает ленту профилей
      */
     async function loadFeedData() {
-        UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+        UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t);
         elements.feed.searchInput.value = '';
         // Сбрасываем React-фильтры
         document.dispatchEvent(new CustomEvent('set-feed-mode', {
@@ -447,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Загружает ленту запросов (постов)
      */
     async function loadPostsFeedData() {
-        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t);
         elements.posts.searchInput.value = '';
         // Сбрасываем React-фильтры
         document.dispatchEvent(new CustomEvent('set-posts-feed-mode', {
@@ -459,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Загружает ленту ТОЛЬКО своих запросов
      */
     async function loadMyPostsFeedData() {
-        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t);
         elements.posts.searchInput.value = '';
         
         // (ИСПРАВЛЕНО) Отправляем React-компоненту команду
@@ -477,7 +534,11 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.postModal.contentField.value = '';
         elements.postModal.fullDescriptionField.value = ''; // Очищаем новое поле
         elements.postModal.skillsField.value = '';
-        UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+
+        // Инициализируем TomSelect
+        initPostTypeSelect();
+
+        UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t);
         // Кнопка управляется из showView
     }
 
@@ -529,6 +590,45 @@ document.addEventListener('DOMContentLoaded', () => {
             tg.MainButton.hideProgress();
         }
     }
+
+    /**
+     * НОВАЯ ФУНКЦИЯ: Валидация блоков "Опыт" и "Образование"
+     * @returns {string|null} Ключ ошибки i18n или null, если все в порядке
+     */
+    function validateDynamicLists() {
+        // 1. Валидация Опыта
+        const expItems = elements.form.experienceContainer.querySelectorAll('.dynamic-item');
+        for (const item of expItems) {
+            const jobTitle = item.querySelector('.experience-job-title')?.value.trim();
+            const company = item.querySelector('.experience-company')?.value.trim();
+            
+            // Если хотя бы одно поле заполнено, но не оба
+            if ((jobTitle || company) && (!jobTitle || !company)) {
+                return 'error_experience_incomplete';
+            }
+        }
+
+        // 2. Валидация Образования
+        const eduItems = elements.form.educationContainer.querySelectorAll('.dynamic-item');
+        for (const item of eduItems) {
+            const institution = item.querySelector('.education-institution')?.value.trim();
+            // Проверяем, заполнено ли *хоть что-то* еще
+            const degree = item.querySelector('.education-degree')?.value.trim();
+            const fieldOfStudy = item.querySelector('.education-field-of-study')?.value.trim();
+            const startDate = item.querySelector('.education-start-date')?.value.trim();
+            const endDate = item.querySelector('.education-end-date')?.value.trim();
+            
+            const anyOtherFieldFilled = degree || fieldOfStudy || startDate || endDate;
+
+            // Если заполнено что-то, кроме заведения, а само заведение - нет
+            if (anyOtherFieldFilled && !institution) {
+                return 'error_education_incomplete';
+            }
+        }
+        
+        return null; // Все в порядке
+    }
+
 
 // ✅ ИСПРАВЛЕНИЕ #1: Промисифицированная загрузка React
 async function loadReactIslands() {
@@ -621,9 +721,29 @@ function loadScript(src, retries = 3) {
             state.selectedSkills = [...skills];
             modalSelectedStatus = null;
             const statusContainer = elements.skills.statusFilterContainer;
-            if (state.skillsModalSource === 'postsFeed') {
+            
+            // --- (ИЗМЕНЕНИЕ) ---
+            // Теперь показываем фильтр статусов И для 'postsFeed', И для 'editPostModal'
+            if (state.skillsModalSource === 'postsFeed' || state.skillsModalSource === 'editPostModal') {
                 statusContainer.style.display = 'block';
-                const currentStatusKey = elements.posts.postsStatusFilterInput.value || null;
+                
+                let currentStatusKey = null;
+                // Ищем ключ в зависимости от источника
+                if (state.skillsModalSource === 'postsFeed') {
+                    currentStatusKey = elements.posts.postsStatusFilterInput.value || null;
+                } else if (state.skillsModalSource === 'editPostModal') {
+                    // Источник 'editPostModal' не фильтрует по статусу,
+                    // поэтому currentStatusKey остается null.
+                    // Но мы можем захотеть скрыть этот блок, если он не нужен в окне редактирования.
+                    // Пока оставим его видимым, но неактивным.
+                    // ---
+                    // ОБНОВЛЕНИЕ: Давайте скроем его для 'editPostModal', т.к. там нет фильтра
+                    statusContainer.style.display = 'none';
+                    if(state.skillsModalSource === 'postsFeed') {
+                         statusContainer.style.display = 'block';
+                    }
+                }
+
                 const statuses = [
                     { key: 'looking', text: t('post_type_looking') },
                     { key: 'offering', text: t('post_type_offering') },
@@ -677,7 +797,7 @@ function loadScript(src, retries = 3) {
             // --- ИСПРАВЛЕНИЕ #1 (Конец) ---
             
             elements.skills.modal.classList.remove('screen-fade-in');
-            UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+            UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t);
         });
 
         // --- (ИЗМЕНЕНИЕ) ---
@@ -691,7 +811,7 @@ function loadScript(src, retries = 3) {
             // ... (код без изменений) ...
             elements.form.nameField.value = tg.initDataUnsafe?.user?.first_name || t('default_user_name');
             elements.form.bioField.value = '';
-            if (state.tomSelectInstance) { state.tomSelectInstance.clear(); }
+            // (УДАЛЕНО) if (state.tomSelectInstance) { state.tomSelectInstance.clear(); }
             elements.form.skillsField.value = '';
             const previewImg = elements.form.avatarPreview;
             previewImg.src = 'https://t.me/i/userpic/320/null.jpg';
@@ -700,7 +820,7 @@ function loadScript(src, retries = 3) {
             if (linksManager?.renderItems) linksManager.renderItems([]);
             if (experienceManager?.renderItems) experienceManager.renderItems([]);
             if (educationManager?.renderItems) educationManager.renderItems([]);
-            UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+            UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t);
         });
 
         if (elements.profile.viewFeedButton) elements.profile.viewFeedButton.addEventListener('click', loadFeedData);
@@ -751,14 +871,14 @@ function loadScript(src, retries = 3) {
                 );
                 // --- ИСПРАВЛЕНИЕ #2 (Конец) ---
                 
-                UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+                UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t);
             });
         }
         
         if (elements.feed.backToProfileButton) elements.feed.backToProfileButton.addEventListener('click', loadProfileData);
         if (elements.form.backToProfileFromEditButton) elements.form.backToProfileFromEditButton.addEventListener('click', loadProfileData);
         if (elements.detail.headerBackButton) elements.detail.headerBackButton.addEventListener('click', loadFeedData);
-        if (elements.profile.logoutButton) elements.profile.logoutButton.addEventListener('click', () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t)));
+        if (elements.profile.logoutButton) elements.profile.logoutButton.addEventListener('click', () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t));
         if (elements.detail.headerActionsButton) {
             elements.detail.headerActionsButton.addEventListener('click', () => {
                 // ИСПОЛЬЗУЕМ TOAST
@@ -819,7 +939,7 @@ function loadScript(src, retries = 3) {
                 }
             });
         }
-        if (elements.profile.settingsButton) elements.profile.settingsButton.addEventListener('click', () => UI.showView(elements.settingsContainer, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t)));
+        if (elements.profile.settingsButton) elements.profile.settingsButton.addEventListener('click', () => UI.showView(elements.settingsContainer, elements.allViews, elements.spinner, tg, t));
         if (elements.settings.backToProfileFromSettingsButton) elements.settings.backToProfileFromSettingsButton.addEventListener('click', loadProfileData);
         if (elements.settings.langBtnRu) elements.settings.langBtnRu.addEventListener('click', () => setLanguage('ru'));
         if (elements.settings.langBtnEn) elements.settings.langBtnEn.addEventListener('click', () => setLanguage('en'));
@@ -1023,7 +1143,7 @@ function loadScript(src, retries = 3) {
                 // --- ИСПРАВЛЕНИЕ #3 (Конец) ---
 
                 elements.skills.modal.classList.remove('screen-fade-in');
-                UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+                UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t);
             });
         }
         
@@ -1040,25 +1160,33 @@ function loadScript(src, retries = 3) {
                 // Этот код слушает React (react-posts-feed.js)
              });
         }
-        
+        if (elements.postModal.closeButton) {
+        elements.postModal.closeButton.addEventListener('click', () => {
+            if (postTypeSelectInstance) {
+            postTypeSelectInstance.destroy();
+            postTypeSelectInstance = null;
+            }
+            loadPostsFeedData();
+        });
+        }        
         // (ИЗМЕНЕНИЕ) Этот слушатель 'saveButton' полностью заменен
         if (elements.skills.saveButton) {
             elements.skills.saveButton.addEventListener('click', () => {
                 if (state.skillsModalSource === 'form') {
                     elements.form.skillsField.value = state.selectedSkills.join(', ');
                     tg.MainButton.show();
-                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t);
 
                 } else if (state.skillsModalSource === 'postModal') {
                      elements.postModal.skillsField.value = state.selectedSkills.join(', ');
-                    UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+                    UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t);
 
                 } else if (state.skillsModalSource === 'feed') {
                    // ИСПОЛЬЗУЕМ React Event
                    document.dispatchEvent(new CustomEvent('set-feed-mode', {
                        detail: { skills: state.selectedSkills }
                    }));
-                   UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+                   UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t);
 
                 } else if (state.skillsModalSource === 'postsFeed') {
                     
@@ -1070,10 +1198,25 @@ function loadScript(src, retries = 3) {
                        }
                    }));
                     
-                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t);
 
+                // --- (НОВЫЙ БЛОК) ---
+                } else if (state.skillsModalSource === 'editPostModal') {
+                    // 1. Отправляем событие, которое слушает React
+                    document.dispatchEvent(new CustomEvent('skills-updated-for-post', {
+                       detail: { skills: state.selectedSkills }
+                    }));
+                    // 2. Возвращаем пользователя в модальное окно (которое HTML, но React в нем живет)
+                    // (Примечание: React сам управляет своим внутренним UI,
+                    // но мы должны показать HTML-контейнер, в котором он живет)
+                    
+                    // --- ИСПРАВЛЕНИЕ: Мы должны вернуться в #posts-feed-container,
+                    // --- а React modal (EditPostModal) уже должен быть открыт.
+                    // --- UI.showView скроет #skills-modal и покажет #posts-feed-container
+                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t);
+                    
                 } else {
-                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t);
                 }
             });
         }
@@ -1085,25 +1228,25 @@ function loadScript(src, retries = 3) {
                     targetView = elements.feedContainer;
                 } else if (state.skillsModalSource === 'postModal') {
                     targetView = elements.postModal.modal;
+                // --- (НОВЫЙ БЛОК) ---
+                } else if (state.skillsModalSource === 'editPostModal') {
+                    // Возвращаемся в ленту постов, где открыто модальное окно React
+                    targetView = elements.posts.container;
                 } else if (state.skillsModalSource === 'postsFeed') {
                     targetView = elements.posts.container;
                 } else {
                     targetView = elements.formContainer;
                 }
-                UI.showView(targetView, elements.allViews, elements.spinner, tg, t, getTomSelectInstance, () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t));
+                UI.showView(targetView, elements.allViews, elements.spinner, tg, t);
             });
         }
     } // Конец функции setupEventListeners
     
-    // --- Пинг Статуса ---
-    async function updateOnlineStatus() {
-        if (!state.CONFIG.backendUrl) { return; }
-        try { await api.updateOnlineStatus(tg.initData); }
-        catch (error) { console.error('Ping error (non-critical):', error); }
-    }
+    // (УДАЛЕНО) Пинг Статуса
+    // async function updateOnlineStatus() { ... }
 
-// ✅ ИСПРАВЛЕНИЕ #3: Главная функция main с правильным порядком
-async function main() {
+    // ✅ ИСПРАВЛЕНИЕ #3: Главная функция main с правильным порядком
+    async function main() {
     UI.showSpinner(elements.spinner, elements.allViews);
     try {
         // 1. Язык
@@ -1127,22 +1270,9 @@ async function main() {
         await loadReactIslands(); // AWAIT!!!
         console.log("✅ React-островки загружены");
 
-        // 4. Страны
-        console.log("⏳ Загрузка стран...");
-        const countryData = await initCountrySelector(
-            elements.form.nationalityField, 
-            state.currentLang, 
-            t, 
-            () => tg.MainButton.show()
-        );
-        state.tomSelectInstance = countryData.instance; 
-        state.ALL_COUNTRIES = countryData.countries; 
-        state.flagsPreloadPromise = preloadFlags(state.ALL_COUNTRIES);
-        console.log("✅ Страны загружены");
-
-        // 5. Первый пинг
-        await updateOnlineStatus();
-        setInterval(updateOnlineStatus, 60000);
+        // 4. (УДАЛЕНО) Страны
+        
+        // 5. (УДАЛЕНО) Пинг
         
         // 6. События
         setupEventListeners();
@@ -1168,13 +1298,11 @@ async function main() {
                 elements.allViews, 
                 elements.spinner, 
                 tg, 
-                t, 
-                getTomSelectInstance, 
-                () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t)
+                t
             ); 
             elements.form.nameField.value = tg.initDataUnsafe?.user?.first_name || ''; 
             elements.form.bioField.value = ''; 
-            if(state.tomSelectInstance) state.tomSelectInstance.clear(); 
+            // (УДАЛЕНО) if(state.tomSelectInstance) state.tomSelectInstance.clear(); 
             elements.form.skillsField.value = ''; 
             if (linksManager?.renderItems) linksManager.renderItems([]); 
             if (experienceManager?.renderItems) experienceManager.renderItems([]); 
@@ -1197,9 +1325,7 @@ async function main() {
             elements.allViews, 
             elements.spinner, 
             tg, 
-            t, 
-            getTomSelectInstance, 
-            () => updateCountryListText(state.tomSelectInstance, state.ALL_COUNTRIES, state.currentLang, t)
+            t
         );
     }
 }

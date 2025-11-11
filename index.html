@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n-key="my_profile">Мой профиль</title>
 
+    <!-- ✅ ИЗМЕНЕНИЕ: TomSelect CSS РАСКОММЕНТИРОВАН -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <!-- ИСПРАВЛЕНО: v=1.3 -->
     <link rel="stylesheet" href="/css/style.css?v=1.3">
@@ -45,10 +46,9 @@
             <label for="bio-field" data-i18n-key="bio_label">О себе:</label>
             <textarea id="bio-field" data-i18n-placeholder="bio_placeholder"></textarea>
         </div>
-        <div class="form-group">
-            <label for="nationality-field" data-i18n-key="nationality_label_new">Национальность:</label>
-            <input type="text" id="nationality-field" data-i18n-placeholder="nationality_placeholder_tomselect_new">
-        </div>
+        
+        <!-- (УДАЛЕНО) Блок <div class="form-group"> для nationality-field -->
+        
         <div class="form-group">
             <label for="skills-field" data-i18n-key="skills_label">Ключевые навыки:</label>
             <div class="skills-input-group">
@@ -211,10 +211,10 @@
         </div>
         <div class="profile-card detail-card-content">
             <div class="detail-avatar-container"><img id="detail-avatar" src="https://t.me/i/userpic/320/null.jpg" alt="Avatar"></div>
-            <div class="name-status-container">
-                <div id="detail-last-seen" class="profile-last-seen compact-status"><span class="status-indicator"></span></div>
-                <h2 id="detail-username"></h2>
-            </div>
+            
+            <!-- (ИСПРАВЛЕНО) Удалена обертка .name-status-container -->
+            <h2 id="detail-username"></h2>
+            
             <p id="detail-bio"></p>
             <div id="detail-stats" class="profile-stats-container">
                 <div class="stat-item" id="detail-followers"><span class="stat-value">0</span><span class="stat-label" data-i18n-key="followers">Подписчики</span></div>
@@ -314,43 +314,48 @@
         </div>
     </div>
     
-    <!-- Модальное окно создания поста -->
+    <!-- Модалка создания запроса -->
     <div id="create-post-modal" class="screen" style="display: none;">
-        <div class="form-header">
-            <h1 data-i18n-key="create_post_title">Новый запрос</h1>
-            <button id="close-post-modal-button" class="header-button" data-i18n-key="cancel">Отмена</button>
-        </div> 
-    
-        <div class="form-group">
-            <label data-i18n-key="post_type_label">Тип запроса:</label>
-            <select id="post-type-select">
-                <option value="looking" data-i18n-key="post_type_looking">🤝 Ищу специалиста</option>
-                <option value="offering" data-i18n-key="post_type_offering">💼 Предлагаю услуги</option>
-                <option value="showcase" data-i18n-key="post_type_showcase">🚀 Демонстрация</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="post-content-field" data-i18n-key="post_content_label">Краткое описание:</label>
-            <textarea id="post-content-field" rows="3" data-i18n-placeholder="post_content_placeholder" placeholder="Напишите краткое описание (будет видно в ленте)"></textarea>
-        </div>
-
-        <div class="form-group">
-            <label for="post-full-description-field" data-i18n-key="post_full_description_label">Полное описание (необязательно):</label>
-            <textarea id="post-full-description-field" rows="6" data-i18n-placeholder="post_full_description_placeholder" placeholder="Подробное описание проекта, требований, условий..."></textarea>
-        </div>
-
-        <div class="form-group">
-            <label for="post-skills-field" data-i18n-key="post_skills_label">Теги (навыки):</label>
-            <div class="skills-input-group">
-                <input type="text" id="post-skills-field" data-i18n-placeholder="skills_placeholder_posts">
-                <button type="button" id="open-skills-modal-from-post" class="skills-input-button">
-                    <svg viewBox="0 0 24 24"><path d="M10 7h8M10 12h8M10 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><circle cx="6" cy="7" r="1.5" fill="currentColor"></circle><circle cx="6" cy="12" r="1.5" fill="currentColor"></circle><circle cx="6" cy="17" r="1.5" fill="currentColor"></circle></svg>
-                </button>
-            </div>
-        </div>
+    <div class="form-header">
+        <h1 data-i18n-key="newpost">Новый запрос</h1>
+        <button id="close-post-modal-button" class="header-button" data-i18n-key="cancel">Отмена</button>
     </div>
-    <!-- Конец Модального окна создания поста -->
+
+    <!-- ✅ НОВАЯ ОБЁРТКА ДЛЯ ПРОКРУТКИ -->
+    <div class="form-content">
+        <div class="form-group">
+        <label for="post-type-select" data-i18n-key="posttype">Тип запроса:</label>
+        <select id="post-type-select">
+            <option value="looking">🤝 Ищу специалиста</option>
+            <option value="offering">💼 Предлагаю услуги</option>
+            <option value="showcase">🚀 Демонстрация</option>
+        </select>
+        </div>
+
+        <div class="form-group">
+        <label for="post-content-field" data-i18n-key="postbriefdescription">Краткое описание:</label>
+        <textarea id="post-content-field" rows="3" data-i18n-key-placeholder="postcontentplaceholder"></textarea>
+        </div>
+
+        <div class="form-group">
+        <label for="post-full-description-field" data-i18n-key="postfulldescription">Полное описание (необязательно):</label>
+        <textarea id="post-full-description-field" rows="5" data-i18n-key-placeholder="postfulldescriptionplaceholder"></textarea>
+        </div>
+
+        <div class="form-group">
+        <label for="post-skills-field" data-i18n-key="posttags">Теги (навыки):</label>
+        <input type="text" id="post-skills-field" readonly data-i18n-key-placeholder="postskillsplaceholder" />
+        <button type="button" id="select-post-skills-button" class="action-button secondary" data-i18n-key="selectskillsbutton">
+            Выбрать навыки
+        </button>
+        </div>
+    </div><!-- .form-content -->
+
+    <div class="fab-modal-save-container">
+        <button id="save-post-button" class="action-button" data-i18n-key="publish">Опубликовать</button>
+    </div>
+    </div>
+    <!-- /Модалка создания запроса -->
 
 
     <!-- --- Шаблоны --- -->

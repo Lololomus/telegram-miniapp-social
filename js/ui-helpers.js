@@ -1,6 +1,8 @@
 // js/ui-helpers.js
 // Все UI-функции для работы с DOM
 // ОБНОВЛЕНО: Добавлена функция showToast и исправлены классы тегов
+// УДАЛЕНО: Логика "Last Seen" и "Flag Overlay"
+// УДАЛЕНО: Параметры getTomSelectInstance и updateCountryCallback из showView
 
 /**
  * Показывает спиннер загрузки
@@ -23,7 +25,7 @@ export function hideSpinner(spinner) {
 /**
  * Показывает указанный экран, скрывая остальные
  */
-export function showView(targetView, allViews, spinner, tg, t, getTomSelectInstance, updateCountryCallback) {
+export function showView(targetView, allViews, spinner, tg, t) {
     hideSpinner(spinner);
     allViews?.forEach(view => {
         if (view) view.style.display = 'none';
@@ -45,9 +47,14 @@ export function showView(targetView, allViews, spinner, tg, t, getTomSelectInsta
         tg.MainButton.hide();
     }
     
-    // Обновляем TomSelect если нужно
-    if (updateCountryCallback) {
-        setTimeout(updateCountryCallback, 50);
+    if (targetView) {
+    // ✅ ИСПРАВЛЕНИЕ: Для модалок используем flex
+    if (targetView.id === 'skills-modal' || targetView.id === 'create-post-modal') {
+        targetView.style.display = 'flex';
+    } else {
+        targetView.style.display = 'block';
+    }
+    targetView.classList.add('screen-fade-in');
     }
 }
 
@@ -164,7 +171,7 @@ export function showProfileView(profile, elements, CONFIG, t, renderSkillTagsFun
 /**
  * Показывает детальный профиль другого пользователя
  */
-export function showUserDetailView(profile, elements, CONFIG, t, formatLastSeenFunc, renderSkillTagsFunc, viewerId) {
+export function showUserDetailView(profile, elements, CONFIG, t, /* formatLastSeenFunc, */ renderSkillTagsFunc, viewerId) {
     if (!elements || !profile) return;
     
     console.log('👤 showUserDetailView:', profile);
@@ -184,17 +191,8 @@ export function showUserDetailView(profile, elements, CONFIG, t, formatLastSeenF
         }
     }
     
-    // Статус онлайн
-    if (elements.lastSeen && formatLastSeenFunc) {
-        const statusInfo = formatLastSeenFunc(profile.last_seen, t);
-        const statusIndicator = elements.lastSeen.querySelector('.status-indicator');
-        
-        if (statusIndicator) {
-            statusIndicator.classList.toggle('online', statusInfo.isOnline);
-        }
-        
-        // (Логика для statusText удалена, т.к. ее нет в HTML)
-    }
+    // (УДАЛЕНО) Статус онлайн
+    // if (elements.lastSeen && formatLastSeenFunc) { ... }
     
     // Аватар
     if (elements.avatar) {
@@ -205,22 +203,8 @@ export function showUserDetailView(profile, elements, CONFIG, t, formatLastSeenF
         initAvatarFader(elements.avatar); // Используем хелпер
     }
     
-    // Флаг страны
-    if (elements.avatarContainer && profile.nationality_code) {
-        let flagOverlay = elements.avatarContainer.querySelector('.flag-overlay');
-        if (!flagOverlay) {
-            flagOverlay = document.createElement('div');
-            flagOverlay.className = 'flag-overlay';
-            elements.avatarContainer.appendChild(flagOverlay);
-        }
-        flagOverlay.innerHTML = `<img src="/flags/${profile.nationality_code.toLowerCase()}.svg" alt="${profile.nationality_code}">`;
-    } else if (elements.avatarContainer) {
-        // Убедимся, что флаг удален, если национальность не указана
-        const flagOverlay = elements.avatarContainer.querySelector('.flag-overlay');
-        if (flagOverlay) {
-            flagOverlay.remove();
-        }
-    }
+    // (УДАЛЕНО) Флаг страны
+    // if (elements.avatarContainer && profile.nationality_code) { ... }
     
     // Навыки
     if (elements.skillsContainer && renderSkillTagsFunc) {

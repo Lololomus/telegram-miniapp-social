@@ -6,6 +6,7 @@
 /* ✅ ИСПРАВЛЕНИЕ (Item 3, 2): .fab-container снова position: fixed */
 /* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container теперь position: absolute */
 /* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container снова position: fixed + z-index */
+/* УДАЛЕНО: Стили .flag-overlay, .profile-last-seen, .name-status-container */
 
 /* --- КАРТОЧКА ПРОФИЛЯ (СВОЕГО И ЧУЖОГО) --- */
 .profile-card {
@@ -147,6 +148,9 @@ body.theme-custom #detail-links { border-top-color: var(--main-bg-color); }
     align-items: center; gap: 10px; text-align: left; 
     transition: transform 0.2s ease, background-color 0.3s, border-color 0.3s;
     border: 1px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff)); /* Для темной/кастомной темы */
+    
+    /* --- ИСПРАВЛЕНИЕ 1 (НОВОЕ) --- */
+    min-width: 0; /* Позволяем самой кнопке сжиматься */
 }
 /* Переопределения для тем */
 body.theme-dark .profile-link-button,
@@ -157,7 +161,13 @@ body.theme-custom .profile-link-button {
     transform: scale(0.98); 
 }
 .link-icon { font-size: 18px; flex-shrink: 0; }
-.link-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-text { 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+    /* --- ИСПРАВЛЕНИЕ 2 (ОСТАЕТСЯ) --- */
+    min-width: 0; /* Позволяем тексту сжиматься внутри кнопки */
+}
 
 
 /* --- БЛОК КНОПОК В СВОЕМ ПРОФИЛЕ --- */
@@ -171,47 +181,14 @@ body.theme-custom .profile-actions { border-top-color: var(--main-bg-color); }
 .contact-button { margin-top: 20px; width: 100%; }
 
 
-/* Оверлей флага */
-.flag-overlay {
-    position: absolute; bottom: -2px; right: -4px; width: 20px; height: 20px;
-    border-radius: 50%; background-color: var(--secondary-bg-color, #efefef);
-    border: 2px solid var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.flag-overlay img { width: 100%; height: 100%; object-fit: cover; }
-.detail-avatar-container .flag-overlay {
-    width: 28px; height: 28px; bottom: 2px; right: 2px; border-width: 3px;
-}
+/* (УДАЛЕНО) Оверлей флага */
+/* .flag-overlay { ... } */
 
-/* --- НОВОЕ: Контейнер для h2 и статуса --- */
-.name-status-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 5px; /* Уменьшаем отступ под блоком */
-}
+/* --- (УДАЛЕНО) Контейнер для h2 и статуса --- */
+/* .name-status-container { ... } */
 
-/* --- СТАТУС ОНЛАЙН (КОМПАКТНЫЙ) --- */
-.profile-last-seen {
-    font-size: 14px; font-weight: 500; color: var(--main-button-color, #007aff);
-    margin: 0; 
-    min-height: 18px; display: flex; align-items: center;
-    justify-content: center; gap: 5px;
-}
-.profile-last-seen.compact-status {
-    display: flex; 
-    align-items: center;
-    justify-content: center;
-    /* Отступ СПРАВА, чтобы оттолкнуть ИМЯ (разместить слева) */
-    margin: 0 8px 0 0; 
-    width: auto; 
-    height: auto;
-}
-.profile-last-seen.compact-status .status-indicator {
-    width: 9px; 
-    height: 9px;
-}
+/* --- (УДАЛЕНО) СТАТУС ОНЛАЙН (КОМПАКТНЫЙ) --- */
+/* .profile-last-seen { ... } */
 
 
 /* --- СТАТИСТИКА ПРОФИЛЯ --- */

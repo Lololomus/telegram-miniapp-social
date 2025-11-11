@@ -1,6 +1,8 @@
 # server.py
 # ОБНОВЛЕНО: Добавлена валидация на стороне сервера
 # ОБНОВЛЕНО (Glass): Добавлен эндпоинт /api/save-glass-preference
+# УДАЛЕНО: Эндпоинты /update-status, /flags/, /countries.json
+# УДАЛЕНО: Логика last_seen и nationality_code
 
 import sqlite3
 import hmac
@@ -90,17 +92,12 @@ def serve_css(filename):
 def serve_js(filename):
     return send_from_directory(os.path.join(APP_ROOT, 'js'), filename)
 
-@app.route('/flags/<path:filename>')
-def serve_flag(filename):
-    return send_from_directory(os.path.join(APP_ROOT, 'flags'), filename, mimetype='image/svg+xml')
+# (УДАЛЕНО) @app.route('/flags/<path:filename>')
+# (УДАЛЕНО) @app.route('/countries.json')
 
 @app.route('/locales/<path:filename>')
 def serve_locales(filename):
     return send_from_directory(os.path.join(APP_ROOT, 'locales'), filename)
-
-@app.route('/countries.json')
-def serve_countries():
-    return send_from_directory(APP_ROOT, 'countries.json')
 
 # --- Маршруты API (без изменений) ---
 @app.route('/config')
@@ -336,7 +333,7 @@ def save_profile():
         bio = request.form.get("bio")
         skills_json = request.form.get("skills", "[]") # JSON строка
         lang = request.form.get("lang", "ru")
-        nationality_code = request.form.get("nationality_code")
+        # nationality_code = request.form.get("nationality_code") # УДАЛЕНО
         links = {f'link{i}': request.form.get(f'link{i}') for i in range(1, 6)}
         experience_json = request.form.get("experience", "[]")
         education_json = request.form.get("education", "[]")
@@ -380,18 +377,19 @@ def save_profile():
         # ЗАМЕЧАНИЕ: Поле 'is_glass_enabled' здесь НЕ трогаем,
         # т.к. оно управляется отдельным эндпоинтом.
         
-        profile_fields = (first_name, bio, links['link1'], links['link2'], links['link3'], links['link4'], links['link5'], photo_path, skills_json, lang, nationality_code, user_id)
+        # (УДАЛЕНО) nationality_code из кортежа
+        profile_fields = (first_name, bio, links['link1'], links['link2'], links['link3'], links['link4'], links['link5'], photo_path, skills_json, lang, user_id)
         if exists:
             cursor.execute('''
                 UPDATE profiles
-                SET first_name = ?, bio = ?, link1 = ?, link2 = ?, link3 = ?, link4 = ?, link5 = ?, photo_path = ?, skills = ?, language_code = ?, nationality_code = ?
+                SET first_name = ?, bio = ?, link1 = ?, link2 = ?, link3 = ?, link4 = ?, link5 = ?, photo_path = ?, skills = ?, language_code = ?
                 WHERE user_id = ?
-            ''', profile_fields)
+            ''', profile_fields) # (УДАЛЕНО) nationality_code = ?
         else:
             cursor.execute('''
-                INSERT INTO profiles (first_name, bio, link1, link2, link3, link4, link5, photo_path, skills, language_code, nationality_code, user_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', profile_fields)
+                INSERT INTO profiles (first_name, bio, link1, link2, link3, link4, link5, photo_path, skills, language_code, user_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', profile_fields) # (УДАЛЕНО) nationality_code
 
         # 2. Сохраняем опыт (лимит 10)
         save_list_to_db(conn, 'work_experience', user_id, experience_json, VALIDATION_LIMITS['experience_count'])
@@ -474,23 +472,7 @@ def save_custom_theme():
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
-@app.route("/update-status", methods=["POST"])
-def update_status():
-    # ... (код без изменений) ...
-    data = request.json
-    user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
-    if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        last_seen_iso = datetime.now(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
-        cursor.execute("UPDATE profiles SET last_seen = ? WHERE user_id = ?", (last_seen_iso, user_id))
-        conn.commit()
-        conn.close()
-        return jsonify({"ok": True})
-    except Exception as e:
-        if 'conn' in locals() and conn: conn.close()
-        return jsonify({"ok": False, "error": str(e)}), 500
+# (УДАЛЕНО) @app.route("/update-status", methods=["POST"])
 
 @app.route("/get-telegram-user-info", methods=["POST"])
 def get_telegram_user_info():
@@ -527,9 +509,10 @@ def get_all_profiles():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        # (УДАЛЕНО) p.last_seen, p.nationality_code из SELECT
         cursor.execute('''
             SELECT
-                p.user_id, p.first_name, p.bio, p.photo_path, p.last_seen, p.skills, p.language_code, p.nationality_code,
+                p.user_id, p.first_name, p.bio, p.photo_path, p.skills, p.language_code,
                 we.job_title,
                 we.company
             FROM profiles p

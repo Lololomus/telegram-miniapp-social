@@ -1,6 +1,8 @@
 /* css/base.css */
 /* ОБНОВЛЕНО: Добавлены стили для "Тост"-уведомлений */
 /* ОБНОВЛЕНО (Glass): Добавлены стили для фона и сброса .screen */
+/* УДАЛЕНО: Стили .status-indicator */
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 1): Добавлены стили для <select> */
 
 /* --- ГЛОБАЛЬНЫЕ СТИЛИ --- */
 * { box-sizing: border-box; }
@@ -167,12 +169,9 @@ body.theme-custom .header-icon-button {
 .edit-icon { right: 65px; }
 .share-icon svg, .edit-icon svg { width: 18px; height: 18px; stroke: currentColor; }
 
-/* --- СТИЛИ СТАТУСА ОНЛАЙН (ОБЩИЕ) --- */
-.status-indicator {
-    width: 9px; height: 9px; border-radius: 50%; background-color: #a0a0a0;
-    flex-shrink: 0; transition: background-color 0.3s ease;
-}
-.status-indicator.online { background-color: #34c759; }
+/* (УДАЛЕНО) --- СТИЛИ СТАТУСА ОНЛАЙН (ОБЩИЕ) --- */
+/* .status-indicator { ... } */
+/* .status-indicator.online { ... } */
 
 .sr-only { /* Для доступности */
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -197,23 +196,8 @@ img[data-avatar="loaded"] {
 }
 
 /* Стилизуем select (выбор типа поста) как обычный инпут */
-select {
-    width: 100%; padding: 14px; border-radius: 10px; font-size: 16px;
-    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-    font-family: inherit;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url('data:image/svg+xml;utf8,<svg fill="currentColor" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"></path></svg>');
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    background-size: 24px;
-}
-select:focus {
-    outline: none; border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-}
+/* ✅ ИЗМЕНЕНИЕ: Этот блок будет стилизован глобально */
+/* select { ... } */
 
 /*
    Этот дублирующийся блок .select УДАЛЕН.

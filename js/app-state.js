@@ -1,4 +1,5 @@
 // js/app-state.js
+// УДАЛЕНО: state.ALL_COUNTRIES, state.flagsPreloadPromise, state.tomSelectInstance
 
 /**
  * Глобальное состояние приложения
@@ -14,9 +15,9 @@ export const state = {
     skillsModalSource: 'form',
     isRegistered: false,
     currentLang: 'ru',
-    ALL_COUNTRIES: [],
-    flagsPreloadPromise: null,
-    tomSelectInstance: null,
+    // ALL_COUNTRIES: [], // УДАЛЕНО
+    // flagsPreloadPromise: null, // УДАЛЕНО
+    // tomSelectInstance: null, // УДАЛЕНО
     selectedSkills: [],
 };
 

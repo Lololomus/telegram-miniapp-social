@@ -1,4 +1,6 @@
 # serv_create.py
+# УДАЛЕНО: Колонки last_seen и nationality_code
+
 import sqlite3
 import os
 from dotenv import load_dotenv
@@ -23,10 +25,10 @@ CREATE TABLE IF NOT EXISTS profiles (
     photo_path TEXT,
     theme TEXT DEFAULT 'auto',
     custom_theme TEXT DEFAULT NULL,
-    last_seen DATETIME DEFAULT NULL,
+    -- last_seen DATETIME DEFAULT NULL, (УДАЛЕНО)
     skills TEXT DEFAULT NULL,
     language_code TEXT DEFAULT 'ru',
-    nationality_code TEXT DEFAULT NULL,
+    -- nationality_code TEXT DEFAULT NULL, (УДАЛЕНО)
     
     -- --- НОВОЕ ПОЛЕ ---
     is_glass_enabled INTEGER DEFAULT 0
@@ -46,10 +48,10 @@ columns_to_check = [
     ('photo_path', 'TEXT'),
     ('theme', 'TEXT DEFAULT "auto"'),
     ('custom_theme', 'TEXT DEFAULT NULL'),
-    ('last_seen', 'DATETIME DEFAULT NULL'),
+    # ('last_seen', 'DATETIME DEFAULT NULL'), (УДАЛЕНО)
     ('skills', 'TEXT DEFAULT NULL'),
     ('language_code', 'TEXT DEFAULT "ru"'),
-    ('nationality_code', 'TEXT DEFAULT NULL'),
+    # ('nationality_code', 'TEXT DEFAULT NULL'), (УДАЛЕНО)
     ('is_glass_enabled', 'INTEGER DEFAULT 0')
 ]
 cursor.execute("PRAGMA table_info(profiles)")

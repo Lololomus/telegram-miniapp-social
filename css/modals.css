@@ -5,6 +5,8 @@
 /* ✅ ИСПРАВЛЕНИЕ (Swipe): Добавлены стили для кнопки "Закрыть" */
 /* ✅ ИСПРАВЛЕНИЕ #8: Добавлены стили для "плавающего" шеврона */
 /* ✅ ИСПРАВЛЕНИЕ #2: Добавлен .overflow-visible-sheet */
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Полностью переработан #skills-modal для исправления прокрутки */
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 4): Удален фон у .react-sheet-footer */
 
 /* --- СТИЛИ: МОДАЛЬНОЕ ОКНО QR-КОДА --- */
 .modal-overlay {
@@ -29,22 +31,55 @@
 .modal-content .action-button.secondary { margin-top: 15px; }
 
 /* --- Стили для модального окна навыков --- */
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Меняем позиционирование и убираем padding */
 #skills-modal {
-    display: none; flex-direction: column; height: 100%;
+    display: none; 
+    flex-direction: column; 
+    /* height: 100%; */ /* <-- УДАЛЕНО */
+    
+    /* --- ДОБАВЛЕНО --- */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* Используем dvh (dynamic viewport height) для мобильных, с фоллбэком на vh */
+    height: 100dvh; 
+    height: 100vh; /* Фоллбэк */
+    z-index: 1001; /* Выше, чем .react-sheet-content (1000) */
+    padding: 0; /* <-- УБИРАЕМ PADDING, который был у .screen */
+    /* --- КОНЕЦ --- */
+    
     background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
     transition: background-color 0.3s;
 }
+/* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
+
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Добавляем padding сюда */
+#skills-modal .form-header {
+    padding: 20px 20px 10px 20px;
+    margin-bottom: 0; /* Убираем, т.к. фильтр будет следующим */
+    flex-shrink: 0; /* Не сжимать заголовок */
+}
+
 #skills-modal-list-container {
-    flex-grow: 1; overflow-y: auto; padding: 0; border-radius: 10px;
-    margin-bottom: 20px;
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    border: none; margin-left: -5px; margin-right: -5px;
-    transition: background-color 0.3s;
+  flex-grow: 1;
+  overflow-y: auto;
+  border-radius: 10px;
+  padding: 0 20px;
+  margin: 0;
+  min-height: 0; /* ВАЖНО для flex-grow в Safari */
+  padding-bottom: 120px; /* Увеличиваем, чтобы контент не заходил под кнопку */
+  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+  border: none;
+  transition: background-color 0.3s;
 }
 
 /* --- Стили для ВЫБОРА навыков (в модальном окне) --- */
 .skill-category {
-    margin-bottom: 20px; padding: 0 15px;
+    /* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Убираем padding отсюда */
+    margin-bottom: 20px; 
+    padding: 0;
 }
 .skill-category:last-child { margin-bottom: 0; }
 .skill-category-title {
@@ -91,20 +126,15 @@
     transform: none; 
 }
 
-/* Добавляем отступ снизу для списка навыков, чтобы он не залезал под кнопку */
-#skills-modal-list-container {
-    /* 100px = высота кнопки (70px) + отступ (30px) */
-    padding-bottom: 100px;
-}
-
-
 /* --- Стили для нового фильтра статусов --- */
 .status-filter-group {
-    padding: 0 15px; /* Синхронизируем с .skill-category */
+    /* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Добавляем padding сюда */
+    padding: 0 20px; /* Синхронизируем с .form-header */
     margin-bottom: 15px;
     border-bottom: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
     padding-bottom: 20px;
     transition: border-color 0.3s;
+    flex-shrink: 0; /* Не сжимать фильтр */
 }
 .status-filter-group-title {
     font-size: 15px;
@@ -202,10 +232,54 @@ body.theme-glass-overlay .modal-content {
     border-radius: var(--glass-radius-main);
 }
 
+/* --- Стили для модалки создания запроса --- */
+#create-post-modal {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100dvh;
+  height: 100vh; /* Фоллбэк */
+  z-index: 1001;
+  padding: 0;
+  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+  transition: background-color 0.3s;
+}
+
+#create-post-modal .form-header {
+  padding: 20px 20px 10px 20px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+#create-post-modal .form-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px;
+  padding-bottom: 120px; /* Отступ снизу, чтобы контент не заходил под кнопку */
+  min-height: 0;
+}
+
 body.theme-glass-overlay #skills-modal,
 body.theme-glass-overlay #create-post-modal {
     background-color: transparent; /* Сам экран прозрачный */
 }
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Добавляем фон контейнеру */
+body.theme-glass-overlay #skills-modal {
+    background-color: var(--main-bg-color); /* Используем фоновый цвет темы */
+}
+body.theme-glass-overlay.theme-light.theme-glass-overlay #skills-modal {
+    background-color: var(--main-bg-color); /* #ffffff */
+}
+body.theme-glass-overlay.theme-dark.theme-glass-overlay #skills-modal {
+    background-color: var(--main-bg-color); /* #1c1c1d */
+}
+/* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
+
+
 body.theme-glass-overlay #skills-modal-list-container {
     background-color: transparent;
 }
@@ -250,11 +324,13 @@ body.theme-glass-overlay .action-button.fab-modal-save {
     background-color: var(--secondary-bg-color, #efefef);
     transition: background-color 0.3s;
 }
+
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 4): Блок .react-sheet-footer УДАЛЕН */
+/*
 .react-sheet-footer {
-    /* Стили по умолчанию (светлая/авто тема) */
-    background-color: var(--secondary-bg-color, #efefef);
-    transition: background-color 0.3s, border-color 0.3s;
+    ...
 }
+*/
 
 /* ✅ ИСПРАВЛЕНИЕ #2: Убрано. overflow: visible теперь ставится инлайн в JS
 .overflow-visible-sheet {
@@ -264,8 +340,8 @@ body.theme-glass-overlay .action-button.fab-modal-save {
 
 
 /* Темная тема */
-body.theme-dark .react-sheet-content,
-body.theme-dark .react-sheet-footer {
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 4): Правило изменено, .react-sheet-footer удален */
+body.theme-dark .react-sheet-content {
     background-color: var(--secondary-bg-color, #2c2c2e);
 }
 
@@ -279,12 +355,7 @@ body.theme-glass-overlay .react-sheet-content {
     border-right: var(--glass-border);
     box-shadow: var(--glass-shadow);
 }
-body.theme-glass-overlay .react-sheet-footer {
-    background-color: var(--glass-bg-secondary);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border-top: var(--glass-border);
-}
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 4): Блок body.theme-glass-overlay .react-sheet-footer УДАЛЕН */
 
 /* Оптимизация для iOS (без размытия) */
 body.theme-glass-overlay .react-sheet-content.is-ios {
@@ -292,11 +363,7 @@ body.theme-glass-overlay .react-sheet-content.is-ios {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
 }
-body.theme-glass-overlay .react-sheet-footer.is-ios {
-    background-color: var(--glass-bg-ios-fallback-secondary);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 4): Блок body.theme-glass-overlay .react-sheet-footer.is-ios УДАЛЕН */
 
 /* ✅ НОВОЕ: Стили для кнопки "Закрыть" (крестик) */
 .react-sheet-close-button {
@@ -460,4 +527,55 @@ body.theme-glass-overlay .react-sheet-chevron-close.is-ios {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
 }
-/* --- КОНЕЦ НОВОГО БЛОКА --- */
+
+/* --- Стили для TomSelect в модалке создания запроса --- */
+#post-type-select + .ts-wrapper {
+  width: 100%;
+}
+
+#post-type-select + .ts-wrapper .ts-control {
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 16px;
+  color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+#post-type-select + .ts-wrapper .ts-dropdown {
+  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+  border: 1.5px solid var(--secondary-bg-color, #efefef);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 1002 !important;
+}
+
+.tomselect-option-with-emoji,
+.tomselect-item-with-emoji {
+  padding: 8px 12px;
+  font-size: 15px;
+}
+
+body.theme-dark #post-type-select + .ts-wrapper .ts-control {
+  background-color: var(--secondary-bg-color, #2c2c2e);
+  color: var(--main-text-color, #ffffff);
+}
+
+body.theme-dark #post-type-select + .ts-wrapper .ts-dropdown {
+  background-color: var(--secondary-bg-color, #2c2c2e);
+  border-color: var(--main-bg-color, #1c1c1d);
+}
+
+body.theme-glass-overlay #post-type-select + .ts-wrapper .ts-control {
+  background-color: var(--glass-bg-input);
+  border: var(--glass-border);
+}
+
+body.theme-glass-overlay #post-type-select + .ts-wrapper .ts-dropdown {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}

@@ -1,6 +1,8 @@
 // js/i18n.js
 // ОБНОВЛЕНО: Добавлен новый ключ 'error_name_empty'
 // ОБНОВЛЕНО (Glass): Добавлены ключи 'glass_mode_label' и 'glass_mode_error'
+// УДАЛЕНО: 'nationality_placeholder_tomselect'
+// ОБНОВЛЕНО (Задача 3): Добавлен ключ 'select_skills_button'
 
 let translations = {};
 export const supportedLangs = ['ru', 'en'];
@@ -18,8 +20,8 @@ export async function loadTranslations(lang) {
         if (!response.ok) throw new Error(`Failed to load ${lang}.json`);
         translations = await response.json();
         
-        // Фоллбэк
-        translations['nationality_placeholder_tomselect'] = translations['nationality_placeholder_tomselect'] || "Выберите страну...";
+        // Фоллбэк (УДАЛЕН)
+        // translations['nationality_placeholder_tomselect'] = translations['nationality_placeholder_tomselect'] || "Выберите страну...";
         
     } catch (error) {
         console.error('Error loading translations:', error);
@@ -59,6 +61,15 @@ const fallbackTranslations = {
     'error_post_content_too_long': "Краткое описание слишком длинное (макс. {limit} симв.)",
     'error_post_full_description_too_long': "Полное описание слишком длинное (макс. {limit} симв.)",
     'error_post_skills_too_long': "Список тегов для поста слишком длинный.",
+    
+    // --- (НОВЫЕ КЛЮЧИ - Задача 2) ---
+    'error_experience_incomplete': "Блок 'Опыт работы' заполнен не полностью. Укажите и Должность, и Компанию.",
+    'error_education_incomplete': "Блок 'Образование' заполнен не полностью. Укажите Учебное заведение.",
+    // --- (КОНЕЦ) ---
+
+    // --- (НОВЫЙ КЛЮЧ - Задача 3) ---
+    'select_skills_button': "Выбрать навыки",
+    // --- (КОНЕЦ) ---
     
     // --- (НОВЫЕ КЛЮЧИ ДЛЯ "СТЕКЛА") ---
     'glass_mode_label': "Режим 'Стекло' (Beta)",

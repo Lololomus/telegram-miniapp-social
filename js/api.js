@@ -1,6 +1,7 @@
 // js/api.js
 // ОБНОВЛЕНО: Добавлена функция handleResponse для "пробрасывания" ошибок валидации
 // ОБНОВЛЕНО (Glass): Добавлена функция saveGlassPreference
+// УДАЛЕНО: Функция updateOnlineStatus
 
 let CONFIG = {};
 
@@ -99,20 +100,10 @@ export async function loadFeedData(initData) {
 }
 
 /**
+ * (УДАЛЕНО)
  * Пингует сервер для обновления статуса "онлайн"
  */
-export async function updateOnlineStatus(initData) {
-    try {
-        await fetch(`${CONFIG.backendUrl}/update-status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ initData: initData })
-        });
-    } catch (e) {
-        // Пинг - не критичная ошибка, просто логируем
-        console.warn("Ping error (non-critical):", e);
-    }
-}
+// export async function updateOnlineStatus(initData) { ... }
 
 /**
  * Сохраняет выбранный язык
