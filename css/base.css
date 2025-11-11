@@ -6,21 +6,31 @@
 
 /* --- ГЛОБАЛЬНЫЕ СТИЛИ --- */
 * { box-sizing: border-box; }
+/* ✅ Safe Area для fullscreen режима */
+:root {
+    /* Вычисляем safe area из Telegram API */
+    --safe-area-inset-top: env(safe-area-inset-top, 0px);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 body {
+    /* ДОБАВЬ padding-top для безопасной зоны */
+    padding-top: var(--safe-area-inset-top);
+    padding-bottom: var(--safe-area-inset-bottom);
+    
+    /* Остальные стили body (уже есть) */
     background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
     color: var(--main-text-color, var(--tg-theme-text-color, #000000));
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     margin: 0;
-    padding: 0; /* УДАЛЕН ГЛОБАЛЬНЫЙ PADDING */
+    padding: 0; /* ← ЗАМЕНИ ЭТО НА padding-top/bottom выше */
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
     transition: background-color 0.3s, color 0.3s;
-    overflow-y: auto; /* РАЗРЕШАЕМ ПРОКРУТКУ */
-    /* НОВОЕ: Запрещаем прокрутку body, когда открыты модалки React */
-    /* (Будет управляться из react-posts-feed.js) */
-    position: relative; 
+    overflow-y: auto;
+    position: relative;
 }
 
 h1 { font-size: 24px; font-weight: 600; margin-bottom: 15px; text-align: center; }

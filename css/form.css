@@ -1,6 +1,8 @@
 /* css/form.css */
 /* ОБНОВЛЕНО (Glass): Добавлены "стеклянные" стили для полей */
-/* ✅ ИЗМЕНЕНИЕ: Возвращаем стили TomSelect */
+/* --- ИЗМЕНЕНИЕ: Полностью удалены стили TomSelect --- */
+/* --- ИЗМЕНЕНИЕ: Добавлены стили для нативного <select> --- */
+/* --- ИЗМЕНЕНИЕ: Добавлены стили для <option> --- */
 
 /* --- ФОРМА РЕДАКТИРОВАНИЯ --- */
 /* ... (Основные стили без изменений) ... */
@@ -13,8 +15,8 @@
     transition: color 0.3s;
 }
 
-/* ✅ ИЗМЕНЕНИЕ: Убираем 'select' отсюда, т.к. TomSelect его скроет */
-input, textarea {
+/* --- ИЗМЕНЕНИЕ: Добавляем 'select' в этот список --- */
+input, textarea, select {
     width: 100%; padding: 14px; border-radius: 10px; font-size: 16px;
     border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
     background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
@@ -23,77 +25,47 @@ input, textarea {
     resize: vertical;
 }
 
+/* --- НОВЫЙ БЛОК: Стилизация <select> --- */
+select {
+    /* Убираем стандартную стрелку */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    
+    /* Добавляем свою стрелку (для светлой темы) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999999' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px 16px;
+    padding-right: 40px; /* Место для стрелки */
+}
+/* --- НОВЫЙ БЛОК: Стилизация <option> (опций) --- */
+select option {
+    background: var(--main-bg-color, #ffffff);
+    color: var(--main-text-color, #000000);
+    padding: 8px; /* Этот стиль может не работать, но мы пытаемся */
+}
+/* --- КОНЕЦ НОВОГО БЛОКА --- */
+
+/* Стрелка для темной темы */
+body.theme-dark select {
+     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2398989e' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+}
+/* --- КОНЕЦ НОВОГО БЛОКА --- */
+
+
 input::placeholder, textarea::placeholder {
     color: var(--main-hint-color, #999999);
     opacity: 0.7;
 }
-/* ✅ ИЗМЕНЕНИЕ: Убираем 'select:focus' */
-input:focus, textarea:focus {
+/* --- ИЗМЕНЕНИЕ: Добавляем 'select:focus' --- */
+input:focus, textarea:focus, select:focus {
     outline: none; border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
 }
 textarea { min-height: 80px; }
 
 
-/* --- ✅ НОВЫЙ БЛОК: Стилизация TomSelect --- */
-/* Стилизуем TomSelect, чтобы он был похож на input/textarea */
-.ts-control {
-    padding: 14px;
-    border-radius: 10px !important; /* !important чтобы перебить inline-стили TomSelect */
-    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-    font-family: inherit;
-    font-size: 16px;
-    transition: border-color 0.2s ease, background-color 0.3s, color 0.3s;
-    box-shadow: none !important; /* Убираем тень TomSelect по умолчанию */
-    line-height: 1.2; /* Для корректной высоты */
-}
-.ts-control.focus {
-    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important;
-    box-shadow: none !important; /* Убираем тень TomSelect по умолчанию */
-}
-/* Стили для плейсхолдера */
-.ts-control .placeholder {
-    color: var(--main-hint-color, #999999);
-    opacity: 0.7;
-    font-size: 16px; /* Убедимся, что плейсхолдер того же размера */
-}
-/* Стили для введенного текста/выбранного элемента */
-.ts-control > input {
-    font-family: inherit;
-    font-size: 16px;
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000)) !important;
-    /* TomSelect добавляет свой padding, сбрасываем его, т.к. он на .ts-control */
-    padding: 0 !important; 
-    line-height: 1.2 !important;
-    top: 14px !important; /* Выравниваем по вертикали */
-}
-.ts-control .item {
-    font-family: inherit;
-    font-size: 16px;
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-    padding: 0;
-    display: inline-flex; /* Для правильного отображения эмодзи */
-    align-items: center;
-    line-height: 1.2;
-}
-/* Выпадающий список */
-.ts-dropdown {
-    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    background: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    border-radius: 10px;
-    margin-top: 5px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-.ts-dropdown .option {
-    font-size: 16px;
-    padding: 12px 14px;
-}
-.ts-dropdown .option:hover, .ts-dropdown .option.active {
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-}
-/* --- КОНЕЦ БЛОКА TomSelect --- */
+/* --- ИЗМЕНЕНИЕ: Весь блок стилей TomSelect (около 60 строк) УДАЛЕН --- */
 
 
 /* --- ЗАГРУЗКА ФОТО --- */
@@ -332,200 +304,47 @@ input[type="text"]:disabled {
 /* === КОНЕЦ СТИЛЕЙ ДЛЯ ДИНАМИЧЕСКИХ СЕКЦИЙ === */
 
 /* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
-body.theme-glass-overlay input,
-body.theme-glass-overlay textarea,
-body.theme-glass-overlay select {
+/* --- ИЗМЕНЕНИЕ: TomSelect удален, правила для <select> добавлены --- */
+body.theme-dark.theme-glass-overlay input,
+body.theme-dark.theme-glass-overlay textarea,
+body.theme-dark.theme-glass-overlay select,
+body.theme-light.theme-glass-overlay input,
+body.theme-light.theme-glass-overlay textarea,
+body.theme-light.theme-glass-overlay select {
     background-color: var(--glass-bg-input) !important;
     border: var(--glass-border) !important;
     color: var(--main-text-color);
     border-radius: 12px;
 }
-body.theme-glass-overlay input:focus,
-body.theme-glass-overlay textarea:focus,
-body.theme-glass-overlay select:focus {
+body.theme-dark.theme-glass-overlay input:focus,
+body.theme-dark.theme-glass-overlay textarea:focus,
+body.theme-dark.theme-glass-overlay select:focus,
+body.theme-light.theme-glass-overlay input:focus,
+body.theme-light.theme-glass-overlay textarea:focus,
+body.theme-light.theme-glass-overlay select:focus {
     background-color: transparent;
     border-color: var(--main-button-color);
 }
-body.theme-glass-overlay input::placeholder,
-body.theme-glass-overlay textarea::placeholder {
+body.theme-dark.theme-glass-overlay input::placeholder,
+body.theme-dark.theme-glass-overlay textarea::placeholder,
+body.theme-light.theme-glass-overlay input::placeholder,
+body.theme-light.theme-glass-overlay textarea::placeholder {
     color: var(--main-text-color);
     opacity: 0.7;
 }
 
-/* ✅ НОВЫЙ БЛОК: TomSelect для "Стекла" */
-body.theme-glass-overlay .ts-control {
-    background-color: var(--glass-bg-input);
-    border: var(--glass-border);
-    color: var(--main-text-color);
-    border-radius: 12px !important;
+/* --- ИЗМЕНЕНИЕ: Стили для стрелки <select> в режиме "Стекло" --- */
+body.theme-light.theme-glass-overlay select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill-opacity='0.7' fill='%23000000' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
 }
-body.theme-glass-overlay .ts-control.focus {
-    background-color: transparent;
-    border-color: var(--main-button-color) !important;
+body.theme-dark.theme-glass-overlay select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill-opacity='0.7' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
 }
-body.theme-glass-overlay .ts-control .placeholder {
-    color: var(--main-text-color);
-    opacity: 0.7;
-}
-body.theme-glass-overlay .ts-control > input,
-body.theme-glass-overlay .ts-control .item {
-    color: var(--main-text-color) !important;
-}
-body.theme-glass-overlay .ts-dropdown {
-    background-color: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: var(--glass-border);
-    box-shadow: var(--glass-shadow);
-}
-body.theme-glass-overlay .ts-dropdown .option:hover,
-body.theme-glass-overlay .ts-dropdown .option.active {
-    background-color: var(--glass-bg-secondary);
-}
-/* --- КОНЕЦ БЛОКА TomSelect (Стекло) --- */
+/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */
 
-/* Переопределения для светлой темы */
-body.theme-light .ts-control {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  border-color: #e5e5e7 !important;
-}
 
-body.theme-light .ts-control .placeholder,
-body.theme-light .ts-control > input {
-  color: #8e8e93 !important;
-}
+/* --- ИЗМЕНЕНИЕ: Все блоки TomSelect (около 150 строк) УДАЛЕНЫ --- */
 
-body.theme-light .ts-dropdown {
-  background-color: #ffffff !important;
-  border-color: #e5e5e7 !important;
-  color: #000000 !important;
-}
-
-body.theme-light .ts-dropdown .option {
-  color: #000000 !important;
-}
-
-body.theme-light .ts-dropdown .option:hover,
-body.theme-light .ts-dropdown .option.active {
-  background-color: #f2f2f7 !important;
-  color: #000000 !important;
-}
-
-/* Переопределения для темной темы */
-body.theme-dark .ts-control {
-  background-color: #2c2c2e !important;
-  color: #ffffff !important;
-  border-color: #48484a !important;
-}
-
-body.theme-dark .ts-control .placeholder,
-body.theme-dark .ts-control > input {
-  color: #8e8e93 !important;
-}
-
-body.theme-dark .ts-dropdown {
-  background-color: #2c2c2e !important;
-  border-color: #48484a !important;
-  color: #ffffff !important;
-}
-
-body.theme-dark .ts-dropdown .option {
-  color: #ffffff !important;
-}
-
-body.theme-dark .ts-dropdown .option:hover,
-body.theme-dark .ts-dropdown .option.active {
-  background-color: #3c3c3e !important;
-  color: #ffffff !important;
-}
-
-/* Для стеклянной темы (если включена) */
-body.theme-glass-overlay .ts-control {
-  background-color: var(--glass-bg-input, rgba(255, 255, 255, 0.1)) !important;
-  color: var(--main-text-color, #000000) !important;
-  border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.2)) !important;
-  backdrop-filter: blur(10px);
-}
-
-body.theme-glass-overlay .ts-dropdown {
-  background-color: var(--glass-bg, rgba(255, 255, 255, 0.1)) !important;
-  color: var(--main-text-color, #000000) !important;
-  border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.2)) !important;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-body.theme-glass-overlay.theme-light .ts-control,
-body.theme-glass-overlay.theme-light .ts-dropdown {
-  color: #000000 !important;
-}
-
-body.theme-glass-overlay.theme-dark .ts-control,
-body.theme-glass-overlay.theme-dark .ts-dropdown {
-  color: #ffffff !important;
-}
-
-/* Фикс: Убираем multiline input под тегами TomSelect */
-.ts-wrapper .ts-control {
-  flex-wrap: nowrap !important; /* Однострочный: теги в ряд, без переноса */
-  overflow-x: auto; /* Горизонтальный скролл если тегов много */
-  min-height: 40px; /* Фиксированная высота, без растяжки */
-  padding: 8px 12px; /* Компактный padding */
-  scrollbar-width: none; /* Скрываем скроллбар на Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-}
-
-.ts-wrapper .ts-control::-webkit-scrollbar {
-  display: none; /* Скрываем на Chrome/Safari */
-}
-
-.ts-wrapper .ts-control > .item {
-  margin-right: 4px; /* Минимальный зазор между тегами */
-  flex-shrink: 0; /* Теги не сжимаются */
-}
-
-.ts-wrapper .ts-control > input {
-  order: -1; /* Input в начало, перед тегами */
-  flex-shrink: 0;
-  min-width: 0; /* Не растягивает */
-  padding: 0 4px; /* Минимальный padding */
-  background: none;
-  border: none;
-  outline: none;
-  font-size: inherit;
-  color: inherit;
-}
-
-/* Скрываем input когда не в фокусе (если теги уже выбраны) */
-.ts-wrapper:not(.ts-dropdown-open) .ts-control > input,
-.ts-wrapper .ts-control.has-items > input {
-  display: none !important; /* Полностью скрываем input если теги есть и не typing */
-  opacity: 0;
-  width: 0;
-  height: 0;
-  padding: 0;
-  margin: 0;
-}
-
-/* Placeholder только когда input visible */
-.ts-wrapper .ts-control .placeholder {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  opacity: 0.7;
-}
-
-.ts-wrapper:not(.ts-dropdown-open) .ts-control .placeholder {
-  display: none; /* Placeholder уходит когда input hidden */
-}
-
-/* Для модалки (если TomSelect там используется, напр. в post-type) */
-#create-post-modal .ts-wrapper .ts-control {
-  min-height: 44px; /* Чуть выше для touch */
-}
 
 /* Кнопка "Навыки" */
 body.theme-glass-overlay .skills-input-button {
@@ -581,99 +400,4 @@ body.theme-glass-overlay input[type="text"]:disabled {
     background-color: var(--glass-bg-input) !important;
     border-color: var(--glass-border) !important;
     opacity: 0.5;
-}
-
-/* Переопределения для TomSelect: фикс цветов в темах */
-body.theme-light .ts-control {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  border-color: #e5e5e7 !important;
-}
-
-body.theme-light .ts-control .placeholder,
-body.theme-light .ts-control > input {
-  color: #8e8e93 !important;
-}
-
-body.theme-light .ts-dropdown {
-  background-color: #ffffff !important;
-  border-color: #e5e5e7 !important;
-  color: #000000 !important;
-}
-
-body.theme-light .ts-dropdown .option {
-  color: #000000 !important;
-}
-
-body.theme-light .ts-dropdown .option:hover,
-body.theme-light .ts-dropdown .option.active {
-  background-color: #f2f2f7 !important;
-  color: #000000 !important;
-}
-
-body.theme-dark .ts-control {
-  background-color: #2c2c2e !important;
-  color: #ffffff !important;
-  border-color: #48484a !important;
-}
-
-body.theme-dark .ts-control .placeholder,
-body.theme-dark .ts-control > input {
-  color: #8e8e93 !important;
-}
-
-body.theme-dark .ts-dropdown {
-  background-color: #2c2c2e !important;
-  border-color: #48484a !important;
-  color: #ffffff !important;
-}
-
-body.theme-dark .ts-dropdown .option {
-  color: #ffffff !important;
-}
-
-body.theme-dark .ts-dropdown .option:hover,
-body.theme-dark .ts-dropdown .option.active {
-  background-color: #3c3c3e !important;
-  color: #ffffff !important;
-}
-
-/* Убираем input под тегами: однострочный control */
-.ts-wrapper .ts-control {
-  flex-wrap: nowrap !important;
-  overflow-x: auto;
-  min-height: 40px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.ts-wrapper .ts-control::-webkit-scrollbar {
-  display: none;
-}
-
-.ts-wrapper .ts-control > .item {
-  margin-right: 4px;
-  flex-shrink: 0;
-}
-
-.ts-wrapper .ts-control > input {
-  order: -1;
-  flex-shrink: 0;
-  min-width: 0;
-  padding: 0 4px;
-  background: none;
-  border: none;
-  outline: none;
-  font-size: inherit;
-  color: inherit;
-}
-
-.ts-wrapper:not(.ts-dropdown-open) .ts-control > input,
-.ts-wrapper .ts-control.has-items > input {
-  display: none !important;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  padding: 0;
-  margin: 0;
 }

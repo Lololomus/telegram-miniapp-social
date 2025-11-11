@@ -3,6 +3,7 @@
 // ОБНОВЛЕНО: Добавлена функция showToast и исправлены классы тегов
 // УДАЛЕНО: Логика "Last Seen" и "Flag Overlay"
 // УДАЛЕНО: Параметры getTomSelectInstance и updateCountryCallback из showView
+// ✅ ИСПРАВЛЕНИЕ (Задача 4): MainButton (FAB) больше не показывается для create-post-modal
 
 /**
  * Показывает спиннер загрузки
@@ -39,10 +40,11 @@ export function showView(targetView, allViews, spinner, tg, t) {
     if (targetView?.id === 'form-container') {
         tg.MainButton.setText(t('save_button'));
         tg.MainButton.show();
-    } else if (targetView?.id === 'create-post-modal') {
+    // ✅ ИСПРАВЛЕНИЕ: Убираем показ MainButton для модалки постов
+    /* } else if (targetView?.id === 'create-post-modal') {
         // НОВОЕ: Показываем кнопку и на форме создания поста
         tg.MainButton.setText(t('publish')); // Нужен перевод 'publish'
-        tg.MainButton.show();
+        tg.MainButton.show(); */
     } else {
         tg.MainButton.hide();
     }

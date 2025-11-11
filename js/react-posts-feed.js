@@ -17,14 +17,18 @@
 // ✅ ИСПРАВЛЕНИЕ #1, #2, #3, #4, #5: Исправлены отступы, позиция шеврона, наложения.
 // ✅ ИСПРАВЛЕНИЕ (Задача 3): Полностью переработан EditPostModal
 // ✅ ИСПРАВЛЕНИЕ (Задача 3, Попытка 3): Возвращаем TomSelect
+// ✅ ИСПРАВЛЕНИЕ (Задача 4): Кнопки в EditPostModal откреплены от низа
+// ✅ ИСПРАВЛЕНИЕ (Задача 5): Крестик в EditPostModal заменен на Шеврон
+// ✅ ИСПРАВЛЕНИЕ (Задача 6): Убран click() по невидимой кнопке, заменен на CustomEvent
+// --- ИЗМЕНЕНИЕ: Полностью удалена логика TomSelect ---
 
 // ✅ ИЗМЕНЕНИЕ: Добавляем Suspense, memo, useCallback
 import React, { useState, useEffect, useRef, useCallback, useLayoutEffect, Suspense, memo } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { createRoot } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/client/+esm';
 import { motion, AnimatePresence, useAnimation } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-// --- ✅ НОВОЕ: Импортируем TomSelect ---
-import TomSelect from 'https://cdn.jsdelivr.net/npm/tom-select@2.2.2/+esm';
+// --- ✅ ИЗМЕНЕНИЕ: УДАЛЕН TomSelect ---
+// import TomSelect from 'https://cdn.jsdelivr.net/npm/tom-select@2.2.2/+esm';
 const h = React.createElement;
 
 // --- ИМПОРТ ОБЩЕГО КОМПОНЕНТА ---
@@ -227,54 +231,13 @@ function CloseButton({ onClick, isIOS }) {
     );
 }
 
-// --- ✅ НОВЫЙ КОМПОНЕНТ: Обертка для TomSelect ---
+// --- ✅ ИЗМЕНЕНИЕ: Компонент TomSelectWrapper УДАЛЕН ---
+/*
 const TomSelectWrapper = ({ value, onChange, options, placeholder }) => {
-  const selectRef = useRef(null);
-  const tsInstanceRef = useRef(null);
-
-  useEffect(() => {
-    if (!selectRef.current) return;
-
-    // 1. Инициализируем TomSelect
-    tsInstanceRef.current = new TomSelect(selectRef.current, {
-      options: options,
-      placeholder: placeholder,
-      // preventOnBlur: true, // Может быть полезно в модалке
-      // openOnFocus: true,
-      create: false, // Запрещаем создание новых
-      selectOnTab: true,
-    });
-
-    // 2. Устанавливаем начальное значение (тихо)
-    tsInstanceRef.current.setValue(value, true); 
-
-    // 3. Добавляем слушатель
-    const tomSelectOnChange = (newValue) => {
-      onChange(newValue);
-    };
-    tsInstanceRef.current.on('change', tomSelectOnChange);
-
-    // 4. Очистка при размонтировании
-    return () => {
-      if (tsInstanceRef.current) {
-        tsInstanceRef.current.off('change', tomSelectOnChange);
-        tsInstanceRef.current.destroy();
-        tsInstanceRef.current = null;
-      }
-    };
-  }, []); // Пустой массив, запускаем 1 раз
-
-  // 5. Синхронизируем, если value пришло извне
-  useEffect(() => {
-    if (tsInstanceRef.current && tsInstanceRef.current.getValue() !== value) {
-      tsInstanceRef.current.setValue(value, true); // silent
-    }
-  }, [value]);
-
-  // Рендерим 'select', который TomSelect заменит
-  return h('select', { ref: selectRef });
+  // ... (код удален) ...
 };
-// --- КОНЕЦ НОВОГО КОМПОНЕНТА ---
+*/
+// --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
 
 // Модальное окно редактирования поста
@@ -447,17 +410,19 @@ function EditPostModal({ post, onClose, onSave }) {
           
           // --- 1. TomSelect для Типа запроса ---
           h('div', { className: 'form-group' },
-            h('label', null, t('post_type_label')),
-            h(TomSelectWrapper, {
+            h('label', { htmlFor: 'edit-post-type-select' }, t('post_type_label')),
+            // --- ✅ ИЗМЕНЕНИЕ: Заменяем TomSelectWrapper на обычный <select> ---
+            h('select', {
+              id: 'edit-post-type-select',
               value: postType,
-              onChange: setPostType, // Передаем set-функцию
-              placeholder: t('post_type_placeholder'),
-              options: [
-                { value: 'looking', text: t('post_type_looking') },
-                { value: 'offering', text: t('post_type_offering') },
-                { value: 'showcase', text: t('post_type_showcase') }
-              ]
-            })
+              onChange: (e) => setPostType(e.target.value)
+              // Стилизация будет добавлена в form.css
+            },
+              h('option', { value: 'looking' }, t('post_type_looking')),
+              h('option', { value: 'offering' }, t('post_type_offering')),
+              h('option', { value: 'showcase' }, t('post_type_showcase'))
+            )
+            // --- КОНЕЦ ИЗМЕНЕНИЯ ---
           ),
           
           // --- 2. Textarea для Краткого описания ---
@@ -516,8 +481,7 @@ function EditPostModal({ post, onClose, onSave }) {
           h('div', {
             className: `react-sheet-footer ${isIOS ? 'is-ios' : ''}`,
             style: {
-              // УБРАНЫ: position, bottom, left, right, zIndex, borderTop, paddingTop
-              marginTop: '20px', // <-- Оставляем только отступ сверху
+              // ✅ ИСПРАВЛЕНИЕ (Задача 4): УБРАНЫ: position, bottom, left, right, zIndex, borderTop, paddingTop, marginTop
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: 12
@@ -1828,11 +1792,12 @@ function App({ mountInto, overlayHost }) {
   }, []);
   const handleClosePostSheet = useCallback(() => { setPostToShow(null); }, []);
 
+  // ✅ ИСПРАВЛЕНИЕ (Задача 6): Отправляем CustomEvent вместо .click()
   const handleCreatePost = useCallback(() => {
-// ... (остальной код без изменений) ...
     console.log("FAB: Create post clicked");
-    const createBtn = document.getElementById('create-post-button');
-    if (createBtn) createBtn.click();
+    // const createBtn = document.getElementById('create-post-button');
+    // if (createBtn) createBtn.click();
+    document.dispatchEvent(new CustomEvent('openCreatePostModal'));
   }, []);
 
   const handleMyPosts = useCallback(() => {

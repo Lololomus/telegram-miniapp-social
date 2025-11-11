@@ -5,6 +5,12 @@
 // УДАЛЕНО: Вся логика "Last Seen" и "Nationality"
 // ОБНОВЛЕНО (Задача 2): Добавлена валидация `validateDynamicLists`
 // ОБНОВЛЕНО (Задача 3): Добавлена логика для `skillsModalSource: 'editPostModal'`
+// ✅ НОВОЕ: Добавлена логика для кнопки "Назад" (Back Button)
+// ✅ НОВОЕ (Задача 6): Добавлен 'listener' для события openCreatePostModal и удалены старые ссылки на createPostFab
+// ✅ ИСПРАВЛЕНИЕ (Задача 4): Исправлен ID кнопки 'select-post-skills-button' в 'elements'
+// --- ИЗМЕНЕНИЕ: Полностью удалена логика TomSelect (postTypeSelectInstance, initPostTypeSelect) ---
+// --- ИЗМЕНЕНИЕ: Добавлена синхронизация ручного ввода тегов в модалке поста ---
+// --- ИЗМЕНЕНИЕ: Добавлен обработчик для кнопки #save-post-button ---
 
 // --- ИМПОРТ МОДУЛЕЙ ---
 import { loadTranslations, t, supportedLangs } from './i18n.js';
@@ -30,6 +36,8 @@ window.REACT_FEED = true;
 
 // --- ИНИЦИАЛИЗАЦИЯ ---
 const tg = window.Telegram.WebApp;
+
+// Расширяем viewport
 tg.expand();
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -56,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
             quickFilters: document.getElementById('posts-quick-filters'),
             backToProfileButton: document.getElementById('back-to-profile-from-posts-button'),
             openSkillsModalButton: document.getElementById('open-skills-modal-button-posts'),
-            // ИСПРАВЛЕНО: ID кнопки создания поста
-            createPostFab: document.getElementById('create-post-button') 
+            // ✅ ИСПРАВЛЕНИЕ (Задача 6): Ссылка на createPostFab УДАЛЕНА
+            // createPostFab: document.getElementById('create-post-button') 
         },
         
         // (НОВЫЙ БЛОК) Модальное окно создания поста
@@ -69,7 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
             contentField: document.getElementById('post-content-field'),
             fullDescriptionField: document.getElementById('post-full-description-field'), // НОВОЕ ПОЛЕ
             skillsField: document.getElementById('post-skills-field'),
-            openSkillsModalButton: document.getElementById('open-skills-modal-from-post')
+             // ✅ ИСПРАВЛЕНИЕ (Задача 4): Исправлен ID
+            openSkillsModalButton: document.getElementById('select-post-skills-button')
         },
 
         // --- Элементы формы ---
@@ -229,38 +238,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let linksManager, experienceManager, educationManager;
     console.log('UI exports:', Object.keys(UI));
 
-    // --- ИНИЦИАЛИЗАЦИЯ TomSelect ДЛЯ ТИПА ЗАПРОСА ---
-    let postTypeSelectInstance = null;
-
-    function initPostTypeSelect() {
-    if (postTypeSelectInstance) {
-        postTypeSelectInstance.destroy();
-    }
-    
-    postTypeSelectInstance = new TomSelect('#post-type-select', {
-        create: false, // Запрещаем создавать новые опции
-        allowEmptyOption: false,
-        placeholder: t('select_post_type'),
-        render: {
-        option: function(data, escape) {
-            // Рендерим опцию с эмодзи
-            return '<div class="tomselect-option-with-emoji">' + 
-                escape(data.text) + 
-                '</div>';
-        },
-        item: function(data, escape) {
-            // Рендерим выбранный элемент с эмодзи
-            return '<div class="tomselect-item-with-emoji">' + 
-                escape(data.text) + 
-                '</div>';
-        }
-        },
-        onInitialize: function() {
-        // Устанавливаем z-index для dropdown
-        this.dropdown.style.zIndex = '1002';
-        }
-    });
-    }
+    // --- ИЗМЕНЕНИЕ: Вся логика TomSelect удалена ---
+    // let postTypeSelectInstance = null;
+    // function initPostTypeSelect() { ... }
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
     /**
      * Загружает основной профиль пользователя (с UI.showSpinner)
@@ -535,8 +516,9 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.postModal.fullDescriptionField.value = ''; // Очищаем новое поле
         elements.postModal.skillsField.value = '';
 
-        // Инициализируем TomSelect
-        initPostTypeSelect();
+        // --- ИЗМЕНЕНИЕ: TomSelect удален ---
+        // initPostTypeSelect();
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
         UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t);
         // Кнопка управляется из showView
@@ -701,6 +683,11 @@ function loadScript(src, retries = 3) {
                     detail: { showMyPostsOnly: false }
                 }));
             });
+            
+            // ✅ НОВОЕ (Задача 6): Слушаем событие от React-кнопки
+            document.addEventListener('openCreatePostModal', () => {
+                showCreatePostModal();
+            });
 
         tg.MainButton.onClick(() => {
             if (elements.formContainer.style.display === 'block') {
@@ -830,11 +817,22 @@ function loadScript(src, retries = 3) {
         if (elements.posts.backToProfileButton) {
             elements.posts.backToProfileButton.addEventListener('click', loadProfileData);
         }
+        
+        // ✅ ИСПРАВЛЕНИЕ (Задача 6): Этот обработчик УДАЛЕН
+        /*
         if (elements.posts.createPostFab) {
             elements.posts.createPostFab.addEventListener('click', showCreatePostModal);
         }
+        */
+
         if (elements.postModal.closeButton) {
             elements.postModal.closeButton.addEventListener('click', () => {
+                // --- ИЗМЕНЕНИЕ: TomSelect удален ---
+                // if (postTypeSelectInstance) {
+                //    postTypeSelectInstance.destroy();
+                //    postTypeSelectInstance = null;
+                // }
+                // --- КОНЕЦ ИЗМЕНЕНИЯ ---
                 loadPostsFeedData(); 
             });
         }
@@ -874,6 +872,21 @@ function loadScript(src, retries = 3) {
                 UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t);
             });
         }
+
+        // --- НОВОЕ ИЗМЕНЕНИЕ (Шаг 2: Ручной ввод тегов) ---
+        // Добавляем слушатель на ручной ввод в поле тегов
+        if (elements.postModal.skillsField) {
+            elements.postModal.skillsField.addEventListener('input', (event) => {
+                const currentSkills = event.target.value.split(',')
+                    .map(s => s.trim())
+                    .filter(s => s);
+                
+                // Обновляем глобальное состояние, чтобы модалка
+                // знала об изменениях, сделанных вручную.
+                state.selectedSkills = [...currentSkills];
+            });
+        }
+        // --- КОНЕЦ НОВОГО ИЗМЕНЕНИЯ ---
         
         if (elements.feed.backToProfileButton) elements.feed.backToProfileButton.addEventListener('click', loadProfileData);
         if (elements.form.backToProfileFromEditButton) elements.form.backToProfileFromEditButton.addEventListener('click', loadProfileData);
@@ -1160,12 +1173,24 @@ function loadScript(src, retries = 3) {
                 // Этот код слушает React (react-posts-feed.js)
              });
         }
+        
+        // --- НОВЫЙ ОБРАБОТЧИК ДЛЯ КНОПКИ "ОПУБЛИКОВАТЬ" ---
+        if (elements.postModal.saveButton) {
+            elements.postModal.saveButton.addEventListener('click', () => {
+                // Вызываем ту же функцию, что и главная кнопка
+                savePostData();
+            });
+        }
+        // --- КОНЕЦ НОВОГО ОБРАБОТЧИКА ---
+        
         if (elements.postModal.closeButton) {
         elements.postModal.closeButton.addEventListener('click', () => {
-            if (postTypeSelectInstance) {
-            postTypeSelectInstance.destroy();
-            postTypeSelectInstance = null;
-            }
+            // --- ИЗМЕНЕНИЕ: TomSelect удален ---
+            // if (postTypeSelectInstance) {
+            //   postTypeSelectInstance.destroy();
+            //   postTypeSelectInstance = null;
+            // }
+            // --- КОНЕЦ ИЗМЕНЕНИЯ ---
             loadPostsFeedData();
         });
         }        
@@ -1240,6 +1265,16 @@ function loadScript(src, retries = 3) {
                 UI.showView(targetView, elements.allViews, elements.spinner, tg, t);
             });
         }
+        
+        // --- ✅ НОВЫЙ КОД: Добавляем логику кнопки "Назад" ---
+        // Показываем системную кнопку "Назад"
+        tg.BackButton.show();
+        // Вешаем на нее обработчик, который закроет приложение
+        tg.BackButton.onClick(() => {
+            tg.close();
+        });
+        // --- КОНЕЦ НОВОГО КОДА ---
+        
     } // Конец функции setupEventListeners
     
     // (УДАЛЕНО) Пинг Статуса
@@ -1309,7 +1344,39 @@ function loadScript(src, retries = 3) {
             if (educationManager?.renderItems) educationManager.renderItems([]); 
             state.targetUserIdFromLink = null; 
         }
-
+        // Функция проверки мобильного устройства
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        
+        // Fullscreen только на мобильных
+        if (isMobileDevice() && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0')) {
+            try {
+                if (typeof tg.requestFullscreen === 'function') {
+                    await tg.requestFullscreen();
+                    console.log('✅ Fullscreen включен');
+                    
+                        setTimeout(() => {
+                        // Применяем padding ко всем экранам
+                        const screens = document.querySelectorAll('.screen');
+                        screens.forEach(screen => {
+                            screen.style.paddingTop = '95px';
+                        });
+                        console.log('✅ Padding применён к экранам');
+                    }, 300);
+                }
+            } catch (e) {
+                console.warn('⚠️ Fullscreen недоступен:', e);
+            }
+        }
+        
+        // Отключаем свайп
+        if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
+            if (typeof tg.disableVerticalSwipes === 'function') {
+                tg.disableVerticalSwipes();
+                console.log('✅ Свайп отключен');
+            }
+        }
     } catch (error) {
         console.error('💥 КРИТИЧЕСКАЯ ОШИБКА в main:', error); 
         const fallbackError = "Не удалось загрузить приложение."; 

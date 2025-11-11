@@ -7,6 +7,7 @@
 /* ✅ ИСПРАВЛЕНИЕ #2: Добавлен .overflow-visible-sheet */
 /* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Полностью переработан #skills-modal для исправления прокрутки */
 /* ✅ ИСПРАВЛЕНИЕ (Проблема 4): Удален фон у .react-sheet-footer */
+/* --- ИЗМЕНЕНИЕ: Полностью удалены стили TomSelect --- */
 
 /* --- СТИЛИ: МОДАЛЬНОЕ ОКНО QR-КОДА --- */
 .modal-overlay {
@@ -268,13 +269,16 @@ body.theme-glass-overlay #create-post-modal {
     background-color: transparent; /* Сам экран прозрачный */
 }
 /* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Добавляем фон контейнеру */
-body.theme-glass-overlay #skills-modal {
+body.theme-glass-overlay #skills-modal,
+body.theme-glass-overlay #create-post-modal {
     background-color: var(--main-bg-color); /* Используем фоновый цвет темы */
 }
-body.theme-glass-overlay.theme-light.theme-glass-overlay #skills-modal {
+body.theme-glass-overlay.theme-light.theme-glass-overlay #skills-modal,
+body.theme-light.theme-glass-overlay #create-post-modal {
     background-color: var(--main-bg-color); /* #ffffff */
 }
-body.theme-glass-overlay.theme-dark.theme-glass-overlay #skills-modal {
+body.theme-glass-overlay.theme-dark.theme-glass-overlay #skills-modal,
+body.theme-dark.theme-glass-overlay #create-post-modal {
     background-color: var(--main-bg-color); /* #1c1c1d */
 }
 /* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
@@ -528,54 +532,4 @@ body.theme-glass-overlay .react-sheet-chevron-close.is-ios {
     -webkit-backdrop-filter: none;
 }
 
-/* --- Стили для TomSelect в модалке создания запроса --- */
-#post-type-select + .ts-wrapper {
-  width: 100%;
-}
-
-#post-type-select + .ts-wrapper .ts-control {
-  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-  border: 1.5px solid transparent;
-  border-radius: 10px;
-  padding: 12px 14px;
-  font-size: 16px;
-  color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-  transition: background-color 0.3s, border-color 0.3s;
-}
-
-#post-type-select + .ts-wrapper .ts-dropdown {
-  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-  border: 1.5px solid var(--secondary-bg-color, #efefef);
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  z-index: 1002 !important;
-}
-
-.tomselect-option-with-emoji,
-.tomselect-item-with-emoji {
-  padding: 8px 12px;
-  font-size: 15px;
-}
-
-body.theme-dark #post-type-select + .ts-wrapper .ts-control {
-  background-color: var(--secondary-bg-color, #2c2c2e);
-  color: var(--main-text-color, #ffffff);
-}
-
-body.theme-dark #post-type-select + .ts-wrapper .ts-dropdown {
-  background-color: var(--secondary-bg-color, #2c2c2e);
-  border-color: var(--main-bg-color, #1c1c1d);
-}
-
-body.theme-glass-overlay #post-type-select + .ts-wrapper .ts-control {
-  background-color: var(--glass-bg-input);
-  border: var(--glass-border);
-}
-
-body.theme-glass-overlay #post-type-select + .ts-wrapper .ts-dropdown {
-  background-color: var(--glass-bg);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: var(--glass-border);
-  box-shadow: var(--glass-shadow);
-}
+/* --- ИЗМЕНЕНИЕ: Все стили TomSelect удалены отсюда --- */

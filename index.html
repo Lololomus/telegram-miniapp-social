@@ -2,18 +2,17 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title data-i18n-key="my_profile">Мой профиль</title>
 
-    <!-- ✅ ИЗМЕНЕНИЕ: TomSelect CSS РАСКОММЕНТИРОВАН -->
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-    <!-- ИСПРАВЛЕНО: v=1.3 -->
+    <!-- ИЗМЕНЕНИЕ: TomSelect УДАЛЕН -->
     <link rel="stylesheet" href="/css/style.css?v=1.3">
     <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+    
+    <!-- ИЗМЕНЕНИЕ: TomSelect УДАЛЕН -->
 </head>
 <body>
 
-    <!-- (НОВЫЙ БЛОК) Фон для режима "Стекло" -->
     <div class="glass-background"></div>
 
     <div id="welcome-container" class="screen" style="display: none;">
@@ -47,8 +46,6 @@
             <textarea id="bio-field" data-i18n-placeholder="bio_placeholder"></textarea>
         </div>
         
-        <!-- (УДАЛЕНО) Блок <div class="form-group"> для nationality-field -->
-        
         <div class="form-group">
             <label for="skills-field" data-i18n-key="skills_label">Ключевые навыки:</label>
             <div class="skills-input-group">
@@ -67,22 +64,19 @@
         <div class="form-section">
             <h2 data-i18n-key="links_section_title">Ссылки</h2>
             <div id="links-container">
-                <!-- Шаблон #link-template будет клонирован сюда -->
-            </div>
+                </div>
             <button type="button" id="add-link-button" class="add-item-button" data-i18n-key="add_link_button">+ Добавить ссылку</button>
         </div>
         <div class="form-section">
             <h2 data-i18n-key="experience_section_title">Опыт работы</h2>
             <div id="experience-container">
-                <!-- Шаблон #experience-template будет клонирован сюда -->
-            </div>
+                </div>
             <button type="button" id="add-experience-button" class="add-item-button" data-i18n-key="add_experience_button">+ Добавить место работы</button>
         </div>
         <div class="form-section">
             <h2 data-i18n-key="education_section_title">Образование</h2>
             <div id="education-container">
-                <!-- Шаблон #education-template будет клонирован сюда -->
-            </div>
+                </div>
             <button type="button" id="add-education-button" class="add-item-button" data-i18n-key="add_education_button">+ Добавить место учебы</button>
         </div>
     </div>
@@ -111,8 +105,7 @@
             <div id="profile-stats" class="profile-stats-container">
                 <div class="stat-item" id="profile-followers"><span class="stat-value">0</span><span class="stat-label" data-i18n-key="followers">Подписчики</span></div>
                 <div class="stat-item" id="profile-following"><span class="stat-value">0</span><span class="stat-label" data-i18n-key="following">Подписки</span></div>
-                <!-- УДАЛЕНО: Счетчик Групп -->
-            </div>
+                </div>
 
             <p id="profile-bio"></p>
             <div id="profile-skills" class="skills-container"></div>
@@ -151,17 +144,13 @@
         </div>
         <div id="feed-quick-filters" class="quick-filters"></div>
         <div id="feed-list" class="feed-list">
-            <!-- React-компонент #react-feed-list будет монтирован сюда -->
-        </div>
+            </div>
     </div>
 
-    <!-- Лента Запросов (Networking Hub) -->
     <div id="posts-feed-container" class="screen" style="display: none;">
         <div class="feed-header">
-            <!-- Заголовок h1 управляется из React -->
             <h1 data-i18n-key="feed_posts_title">Лента запросов</h1>
             
-            <!-- Кнопка "Все запросы", управляется из React -->
             <button id="back-to-all-posts-button" class="header-button" style="display: none;" data-i18n-key="all_requests">
                 Все запросы
             </button>
@@ -174,7 +163,6 @@
         <div class="feed-filter skills-input-group">
             <input type="text" id="posts-search-input" data-i18n-placeholder="search_placeholder_posts">
             
-            <!-- Скрытое поле для фильтра по статусу, управляется из React -->
             <input type="hidden" id="posts-status-filter-input">
 
             <button type="button" id="open-skills-modal-button-posts" class="skills-input-button" aria-label="Фильтр по навыкам">
@@ -182,27 +170,12 @@
             </button>
         </div>
         
-        <!-- Хост для React-портала быстрых фильтров -->
         <div id="posts-quick-filters" class="quick-filters"></div>
         
-        <!-- Хост для React-компонента ленты -->
         <div id="posts-list" class="feed-list">
-            <!-- React-компонент #react-posts-feed-list будет монтирован сюда -->
-        </div>
+            </div>
 
-        <!-- Кнопка "Создать пост", управляется из app.js, но может быть показана/скрыта React (через display: none) -->
-        <div id="create-post-button-container" class="fab-create-post-container" style="display: none;">
-            <button id="create-post-button" class="fab-button fab-primary" title="Создать запрос" style="display: none;">
-                <!-- Иконка + -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-            </button>
         </div>
-    </div>
-    <!-- Конец Ленты Запросов -->
-
     <div id="user-detail-container" class="screen" style="display: none;">
         <div class="feed-header detail-header">
             <button id="detail-header-back-button" class="header-icon-button" aria-label="Назад"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="sr-only">Назад</span></button>
@@ -212,15 +185,13 @@
         <div class="profile-card detail-card-content">
             <div class="detail-avatar-container"><img id="detail-avatar" src="https://t.me/i/userpic/320/null.jpg" alt="Avatar"></div>
             
-            <!-- (ИСПРАВЛЕНО) Удалена обертка .name-status-container -->
             <h2 id="detail-username"></h2>
             
             <p id="detail-bio"></p>
             <div id="detail-stats" class="profile-stats-container">
                 <div class="stat-item" id="detail-followers"><span class="stat-value">0</span><span class="stat-label" data-i18n-key="followers">Подписчики</span></div>
                 <div class="stat-item" id="detail-following"><span class="stat-value">0</span><span class="stat-label" data-i18n-key="following">Подписки</span></div>
-                <!-- УДАЛЕНО: Счетчик Групп -->
-            </div>
+                </div>
             <div id="detail-skills" class="skills-container"></div>
             <div class="show-more-skills-container"><button id="detail-skills-toggle" class="show-more-skills-button" style="display: none;"><span>Показать еще</span> <span class="arrow"></span></button></div>
             <div id="detail-experience" class="profile-section"></div>
@@ -248,7 +219,6 @@
             </div>
         </div>
         
-        <!-- (НОВЫЙ БЛОК) Переключатель "Стекла" -->
         <div id="glass-toggle-wrapper" class="settings-group glass-toggle-group">
             <label data-i18n-key="glass_mode_label">Режим 'Стекло' (Beta)</label>
             <div class="toggle-switch">
@@ -302,29 +272,27 @@
         </div>
         
         <div id="status-filter-container" class="status-filter-group" style="display: none;">
-            <!-- Содержимое рендерится из ui-helpers.js -->
-        </div>
+            </div>
 
         <div id="skills-modal-list-container">
-            <!-- Содержимое рендерится из ui-helpers.js -->
-        </div>
+            </div>
         
         <div class="fab-modal-save-container">
             <button id="save-skills-modal-button" class="action-button fab-modal-save" data-i18n-key="select">Выбрать</button>
         </div>
     </div>
     
-    <!-- Модалка создания запроса -->
     <div id="create-post-modal" class="screen" style="display: none;">
     <div class="form-header">
-        <h1 data-i18n-key="newpost">Новый запрос</h1>
+        <!-- ИЗМЕНЕНИЕ: Починен ключ "newpost" -> "create_post_title" -->
+        <h1 data-i18n-key="create_post_title">Новый запрос</h1>
         <button id="close-post-modal-button" class="header-button" data-i18n-key="cancel">Отмена</button>
     </div>
 
-    <!-- ✅ НОВАЯ ОБЁРТКА ДЛЯ ПРОКРУТКИ -->
     <div class="form-content">
         <div class="form-group">
-        <label for="post-type-select" data-i18n-key="posttype">Тип запроса:</label>
+        <!-- ИЗМЕНЕНИЕ: Починен ключ "posttype" -> "post_type_label" -->
+        <label for="post-type-select" data-i18n-key="post_type_label">Тип запроса:</label>
         <select id="post-type-select">
             <option value="looking">🤝 Ищу специалиста</option>
             <option value="offering">💼 Предлагаю услуги</option>
@@ -333,32 +301,42 @@
         </div>
 
         <div class="form-group">
-        <label for="post-content-field" data-i18n-key="postbriefdescription">Краткое описание:</label>
-        <textarea id="post-content-field" rows="3" data-i18n-key-placeholder="postcontentplaceholder"></textarea>
+        <!-- ИЗМЕНЕНИЕ: Починен ключ "postbriefdescription" -> "post_content_label" -->
+        <label for="post-content-field" data-i18n-key="post_content_label">Краткое описание:</label>
+        <!-- ИЗМЕНЕНИЕ: Починен ключ "postcontentplaceholder" -> "post_content_placeholder" -->
+        <textarea id="post-content-field" rows="3" data-i18n-placeholder="post_content_placeholder"></textarea>
         </div>
 
         <div class="form-group">
-        <label for="post-full-description-field" data-i18n-key="postfulldescription">Полное описание (необязательно):</label>
-        <textarea id="post-full-description-field" rows="5" data-i18n-key-placeholder="postfulldescriptionplaceholder"></textarea>
+        <!-- ИЗМЕНЕНИЕ: Починен ключ "postfulldescription" -> "post_full_description_label" -->
+        <label for="post-full-description-field" data-i18n-key="post_full_description_label">Полное описание (необязательно):</label>
+        <!-- ИЗМЕНЕНИЕ: Починен ключ "postfulldescriptionplaceholder" -> "post_full_description_placeholder" -->
+        <textarea id="post-full-description-field" rows="5" data-i18n-placeholder="post_full_description_placeholder"></textarea>
         </div>
 
         <div class="form-group">
-        <label for="post-skills-field" data-i18n-key="posttags">Теги (навыки):</label>
-        <input type="text" id="post-skills-field" readonly data-i18n-key-placeholder="postskillsplaceholder" />
-        <button type="button" id="select-post-skills-button" class="action-button secondary" data-i18n-key="selectskillsbutton">
-            Выбрать навыки
-        </button>
+        <!-- ИЗМЕНЕНИЕ: Починен ключ "posttags" -> "post_skills_label" -->
+        <label for="post-skills-field" data-i18n-key="post_skills_label">Теги (навыки):</label>
+        
+        <div class="skills-input-group">
+            <!-- ИЗМЕНЕНИЕ: Убран 'readonly' -->
+            <!-- ИЗМЕНЕНИЕ: Починен ключ "postskillsplaceholder" -> "skills_placeholder_posts" -->
+            <input type="text" id="post-skills-field" data-i18n-placeholder="skills_placeholder_posts" />
+            <button type="button" id="select-post-skills-button" class="skills-input-button" aria-label="Выбрать навыки">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M10 7h8M10 12h8M10 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    <circle cx="6" cy="7" r="1.5" fill="currentColor"></circle>
+                    <circle cx="6" cy="12" r="1.5" fill="currentColor"></circle>
+                    <circle cx="6" cy="17" r="1.5" fill="currentColor"></circle>
+                </svg>
+            </button>
         </div>
-    </div><!-- .form-content -->
-
-    <div class="fab-modal-save-container">
+        
+        </div>
+    </div><div class="fab-modal-save-container">
         <button id="save-post-button" class="action-button" data-i18n-key="publish">Опубликовать</button>
     </div>
     </div>
-    <!-- /Модалка создания запроса -->
-
-
-    <!-- --- Шаблоны --- -->
     <template id="skeleton-card-template">
         <div class="skeleton-card">
             <div class="skeleton-avatar"></div>
@@ -396,16 +374,9 @@
              <div class="form-group"><label data-i18n-key="description_label">Описание:</label><textarea class="education-description" data-i18n-placeholder="description_placeholder_edu"></textarea></div>
         </div>
     </template>
-    <!-- --- Конец Шаблонов --- -->
-
-    <!-- НОВЫЙ БЛОК: Контейнер для "Тост"-уведомлений -->
     <div id="toast-container"></div>
-    <!-- --- Конец Нового Блока --- -->
-
-    <!-- --- Скрипты --- -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- ИСПРАВЛЕНО: v=1.3 -->
     <script type="module" src="/js/app.js?v=1.3"></script>
 </body>
 </html>
