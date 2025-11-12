@@ -533,3 +533,11 @@ body.theme-glass-overlay .react-sheet-chevron-close.is-ios {
 }
 
 /* --- ИЗМЕНЕНИЕ: Все стили TomSelect удалены отсюда --- */
+
+/* Сброс paddingTop для модальных окон, 
+  чтобы они игнорировали 60px из app.js 
+*/
+#skills-modal.screen,
+#create-post-modal.screen {
+    padding-top: 40px !important; 
+}

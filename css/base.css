@@ -67,10 +67,16 @@ h2 { font-size: 20px; font-weight: 600; margin: 0 0 15px 0; text-align: center; 
 
 /* --- ЭКРАНЫ С ЗАГОЛОВКОМ --- */
 .feed-header, .form-header {
-    display: flex; justify-content: space-between; align-items: center;
-    width: 100%; margin-bottom: 20px;
+    display: flex; 
+    justify-content: center; /* ИЗМЕНЕНИЕ: space-between -> center */
+    align-items: center;
+    width: 100%; 
+    margin-bottom: 20px;
 }
-.feed-header h1, .form-header h1 { margin: 0; text-align: left; }
+.feed-header h1, .form-header h1 { 
+    margin: 0; 
+    text-align: center; /* ИЗМЕНЕНИЕ: left -> center */
+}
 
 /* --- ЭКРАНЫ С ЗАГОЛОВКОМ (Кнопки Назад/Мой Профиль) --- */
 .header-button {
@@ -95,6 +101,12 @@ h2 { font-size: 20px; font-weight: 600; margin: 0 0 15px 0; text-align: center; 
 /* --- Стили для хедера чужого профиля (новый дизайн) --- */
 .detail-header {
     padding-bottom: 0;
+    /* --- ИЗМЕНЕНИЕ: Добавляем display: flex, т.к. кнопка "Назад" удалена --- */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
 }
 .detail-header h1 {
     flex-grow: 1;
@@ -107,6 +119,9 @@ h2 { font-size: 20px; font-weight: 600; margin: 0 0 15px 0; text-align: center; 
     color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
     opacity: var(--main-hint-opacity, 1);
     font-weight: 500;
+    
+    /* --- ИЗМЕНЕНИЕ: Убираем flex: 1 и margin: 0, т.к. родитель теперь flex --- */
+    margin: 0; 
 }
 
 /* --- Кнопки-иконки в хедере (стиль под Telegram) --- */
@@ -127,7 +142,18 @@ h2 { font-size: 20px; font-weight: 600; margin: 0 0 15px 0; text-align: center; 
     justify-content: center;
     cursor: pointer;
     transition: transform 0.2s ease;
+    
+    /* --- ИЗМЕНЕНИЕ: Добавляем absolute, т.к. заголовок теперь по центру --- */
+    position: absolute;
+    right: 10px; /* Отступ от края экрана .screen (у которого padding 20px, но мы ставим 10px) */
+    top: 18px; /* Примерный отступ сверху */
 }
+/* --- ИЗМЕНЕНИЕ: Позиционируем кнопку "Назад" (если она будет) слева --- */
+.header-icon-button.back {
+    left: 10px;
+    right: auto;
+}
+
 .header-icon-button:active { transform: scale(0.95); }
 .header-icon-button svg { width: 20px; height: 20px; }
 body.theme-dark .header-icon-button {
@@ -162,7 +188,7 @@ body.theme-custom .header-icon-button {
     /* Стили для текста удалены (кроме qr-icon) */
     display: inline-flex; align-items: center; justify-content: center;
     text-align: center; padding: 0; cursor: pointer; position: absolute;
-    top: 15px; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    top: 50px; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 .icon-button svg { width: 18px; height: 18px; }
 

@@ -6,6 +6,7 @@
 // ✅ НОВОЕ: React.memo для FeedCard
 // ✅ НОВОЕ: loading="lazy" для аватаров
 // ✅ ИСПРАВЛЕНИЕ #7: Добавлена заглушка EmptyState
+// ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Для этого файла изменения не потребовались
 
 // ✅ ИЗМЕНЕНИЕ: Добавляем Suspense и memo
 import React, { useState, useEffect, useRef, useLayoutEffect, Suspense, memo } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';

@@ -21,6 +21,7 @@
 // ✅ ИСПРАВЛЕНИЕ (Задача 5): Крестик в EditPostModal заменен на Шеврон
 // ✅ ИСПРАВЛЕНИЕ (Задача 6): Убран click() по невидимой кнопке, заменен на CustomEvent
 // --- ИЗМЕНЕНИЕ: Полностью удалена логика TomSelect ---
+// ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Удалены useEffect, связанные с HTML-кнопками "Назад"
 
 // ✅ ИЗМЕНЕНИЕ: Добавляем Suspense, memo, useCallback
 import React, { useState, useEffect, useRef, useCallback, useLayoutEffect, Suspense, memo } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
@@ -1552,6 +1553,9 @@ function App({ mountInto, overlayHost }) {
     inputRef.current = document.getElementById('posts-search-input'); 
     statusFilterInputRef.current = document.getElementById('posts-status-filter-input');
     
+    // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+    // Вся логика, связанная с 'backBtn', УДАЛЕНА
+    /*
     const backBtn = document.getElementById('back-to-all-posts-button');
     if (backBtn) {
         backBtn.addEventListener('click', handleBackToAllPosts);
@@ -1562,6 +1566,7 @@ function App({ mountInto, overlayHost }) {
             backBtn.removeEventListener('click', handleBackToAllPosts);
         }
     };
+    */
   }, [handleBackToAllPosts]);
 
   const fetchPosts = useCallback(async () => {
@@ -1647,23 +1652,24 @@ function App({ mountInto, overlayHost }) {
   }, []); // Пустой массив зависимостей, чтобы слушатель добавился один раз
   // --- (КОНЕЦ ИСПРАВЛЕНИЯ) ---
 
-  // Управление UI (заголовок и кнопки) (без изменений)
+  // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+  // Логика, связанная с 'backToProfileBtn' и 'backToAllBtn', УДАЛЕНА
   useEffect(() => {
 // ... (остальной код без изменений) ...
     const titleEl = document.querySelector('#posts-feed-container h1[data-i18n-key="feed_posts_title"]');
-    const backToProfileBtn = document.getElementById('back-to-profile-from-posts-button');
-    const backToAllBtn = document.getElementById('back-to-all-posts-button');
+    // const backToProfileBtn = document.getElementById('back-to-profile-from-posts-button'); // УДАЛЕНО
+    // const backToAllBtn = document.getElementById('back-to-all-posts-button'); // УДАЛЕНО
     
-    if (!titleEl || !backToProfileBtn || !backToAllBtn) return;
+    if (!titleEl) return; // Убрали кнопки из проверки
 
     if (showMyPostsOnly) {
         titleEl.textContent = t('my_posts_title'); // 'Мои запросы'
-        backToProfileBtn.style.display = 'none';
-        backToAllBtn.style.display = 'block';
+        // backToProfileBtn.style.display = 'none'; // УДАЛЕНО
+        // backToAllBtn.style.display = 'block'; // УДАЛЕНО
     } else {
         titleEl.textContent = t('feed_posts_title'); // 'Лента запросов'
-        backToProfileBtn.style.display = 'block';
-        backToAllBtn.style.display = 'none';
+        // backToProfileBtn.style.display = 'block'; // УДАЛЕНО
+        // backToAllBtn.style.display = 'none'; // УДАЛЕНО
     }
   }, [showMyPostsOnly]); 
 

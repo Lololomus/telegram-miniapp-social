@@ -11,6 +11,7 @@
 // --- ИЗМЕНЕНИЕ: Полностью удалена логика TomSelect (postTypeSelectInstance, initPostTypeSelect) ---
 // --- ИЗМЕНЕНИЕ: Добавлена синхронизация ручного ввода тегов в модалке поста ---
 // --- ИЗМЕНЕНИЕ: Добавлен обработчик для кнопки #save-post-button ---
+// ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Перестроена вся логика навигации на tg.BackButton
 
 // --- ИМПОРТ МОДУЛЕЙ ---
 import { loadTranslations, t, supportedLangs } from './i18n.js';
@@ -43,6 +44,7 @@ tg.expand();
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- ЭЛЕМЕНТЫ СТРАНИЦЫ (Константы) ---
+    // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Удалены все кнопки "Назад"
     const elements = {
         // Контейнеры
         welcomeContainer: document.getElementById('welcome-container'),
@@ -62,22 +64,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // (ВОТ ЭТО ДОБАВЛЕНО)
             postsStatusFilterInput: document.getElementById('posts-status-filter-input'), 
             quickFilters: document.getElementById('posts-quick-filters'),
-            backToProfileButton: document.getElementById('back-to-profile-from-posts-button'),
+            // backToProfileButton: (УДАЛЕНО)
             openSkillsModalButton: document.getElementById('open-skills-modal-button-posts'),
-            // ✅ ИСПРАВЛЕНИЕ (Задача 6): Ссылка на createPostFab УДАЛЕНА
-            // createPostFab: document.getElementById('create-post-button') 
+            // createPostFab: (УДАЛЕНО)
         },
         
         // (НОВЫЙ БЛОК) Модальное окно создания поста
         postModal: {
             modal: document.getElementById('create-post-modal'),
-            closeButton: document.getElementById('close-post-modal-button'),
+            // closeButton: (УДАЛЕНО)
             saveButton: document.getElementById('save-post-button'), // Этот ID не используется, но пусть будет
             typeSelect: document.getElementById('post-type-select'),
             contentField: document.getElementById('post-content-field'),
             fullDescriptionField: document.getElementById('post-full-description-field'), // НОВОЕ ПОЛЕ
             skillsField: document.getElementById('post-skills-field'),
-             // ✅ ИСПРАВЛЕНИЕ (Задача 4): Исправлен ID
             openSkillsModalButton: document.getElementById('select-post-skills-button')
         },
 
@@ -85,12 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
         form: {
             nameField: document.getElementById('name-field'),
             bioField: document.getElementById('bio-field'),
-            // nationalityField: document.getElementById('nationality-field'), // УДАЛЕНО
+            // nationalityField: (УДАЛЕНО)
             skillsField: document.getElementById('skills-field'),
             photoInput: document.getElementById('photo-input'),
             avatarPreview: document.getElementById('avatar-preview'),
             openSkillsModalButton: document.getElementById('open-skills-modal-button'),
-            backToProfileFromEditButton: document.getElementById('back-to-profile-from-edit-button'),
+            // backToProfileFromEditButton: (УДАЛЕНО)
             linksContainer: document.getElementById('links-container'),
             addLinkButton: document.getElementById('add-link-button'),
             experienceContainer: document.getElementById('experience-container'),
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             linksContainer: document.getElementById('profile-links'),
             followersCount: document.getElementById('profile-followers').querySelector('.stat-value'),
             followingCount: document.getElementById('profile-following').querySelector('.stat-value'),
-            // УДАЛЕНО: groupsCount
+            // groupsCount: (УДАЛЕНО)
             logoutButton: document.getElementById('logout-button'), // Edit button
             shareButton: document.getElementById('share-button'),
             viewFeedButton: document.getElementById('view-feed-button'), // Feed FAB (Люди)
@@ -129,18 +129,18 @@ document.addEventListener('DOMContentLoaded', () => {
             list: document.getElementById('feed-list'),
             searchInput: document.getElementById('feed-search-input'),
             quickFilters: document.getElementById('feed-quick-filters'),
-            backToProfileButton: document.getElementById('back-to-profile-button'),
+            // backToProfileButton: (УДАЛЕНО)
             openSkillsModalButtonFeed: document.getElementById('open-skills-modal-button-feed')
         },
 
         // --- Элементы просмотра пользователя ---
         detail: {
-            headerBackButton: document.getElementById('detail-header-back-button'),
+            // headerBackButton: (УДАЛЕНО)
             headerActionsButton: document.getElementById('detail-header-actions-button'),
             avatar: document.getElementById('detail-avatar'),
             avatarContainer: document.querySelector('.detail-avatar-container'),
             username: document.getElementById('detail-username'),
-            // lastSeen: document.getElementById('detail-last-seen'), // УДАЛЕНО
+            // lastSeen: (УДАЛЕНО)
             bio: document.getElementById('detail-bio'),
             experienceContainer: document.getElementById('detail-experience'),
             educationContainer: document.getElementById('detail-education'),
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             skillsToggleBtn: document.getElementById('detail-skills-toggle'),
             followersCount: document.getElementById('detail-followers').querySelector('.stat-value'),
             followingCount: document.getElementById('detail-following').querySelector('.stat-value'),
-            // УДАЛЕНО: groupsCount
+            // groupsCount: (УДАЛЕНО)
             fabContainer: document.getElementById('detail-fab-container'),
             fabContactButton: document.getElementById('fab-contact-button'),
             fabFollowButton: document.getElementById('fab-follow-button')
@@ -157,13 +157,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Элементы настроек
         settings: {
-            backToProfileFromSettingsButton: document.getElementById('back-to-profile-from-settings-button'),
+            // backToProfileFromSettingsButton: (УДАЛЕНО)
             langBtnRu: document.getElementById('lang-btn-ru'),
             langBtnEn: document.getElementById('lang-btn-en'),
-            // (НОВЫЕ ЭЛЕМЕНТЫ) "Стекло"
             glassToggleWrapper: document.getElementById('glass-toggle-wrapper'),
             glassToggle: document.getElementById('glass-toggle-switch'),
-            // ---
             themeButtons: [
                 document.getElementById('theme-btn-auto'),
                 document.getElementById('theme-btn-light'),
@@ -188,10 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Модальное окно навыков
         skills: {
             modal: document.getElementById('skills-modal'),
-            closeButton: document.getElementById('close-skills-modal-button'),
+            // closeButton: (УДАЛЕНО)
             saveButton: document.getElementById('save-skills-modal-button'),
             listContainer: document.getElementById('skills-modal-list-container'),
-            // (ИЗМЕНЕНИЕ) Добавлен контейнер для фильтра статусов
             statusFilterContainer: document.getElementById('status-filter-container')
         },
 
@@ -343,12 +340,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     (container, skills, btn) => UI.renderSkillTags(container, skills, btn, t)
                 );
                 
+                // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+                // ✅ (Fullscreen Nav) onBackAction = () => tg.close() (кнопка "Close")
                 UI.showView(
-                    elements.profileViewContainer, 
-                    elements.allViews, 
-                    elements.spinner, 
-                    tg, 
-                    t
+                elements.profileViewContainer,
+                elements.allViews,
+                elements.spinner,
+                tg,
+                t,
+                undefined // Теперь !onBackAction: скрываем Back, показываем Settings с tg.close()
                 );
                 
             } else {
@@ -356,12 +356,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyTheme(tg, t, elements.settings, state.currentUserProfile, 'auto');
                 // (НОВОЕ) Убедимся, что стекло выключено для нового пользователя
                 applyGlass(false);
+                
+                // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+                // ✅ (Fullscreen Nav) onBackAction = () => tg.close() (кнопка "Close")
                 UI.showView(
-                    elements.welcomeContainer, 
-                    elements.allViews, 
-                    elements.spinner, 
-                    tg, 
-                    t
+                elements.profileViewContainer,
+                elements.allViews,
+                elements.spinner,
+                tg,
+                t,
+                undefined // Теперь !onBackAction: скрываем Back, показываем Settings с tg.close()
                 );
             }
             
@@ -374,13 +378,17 @@ document.addEventListener('DOMContentLoaded', () => {
             applyTheme(tg, t, elements.settings, state.currentUserProfile, 'auto');
             // (НОВОЕ) Убедимся, что стекло выключено при ошибке
             applyGlass(false);
-            UI.showView(
-                elements.welcomeContainer, 
-                elements.allViews, 
-                elements.spinner, 
-                tg, 
-                t
-            );
+            
+            // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+            // ✅ (Fullscreen Nav) onBackAction = () => tg.close() (кнопка "Close")
+                UI.showView(
+                elements.profileViewContainer,
+                elements.allViews,
+                elements.spinner,
+                tg,
+                t,
+                undefined // Теперь !onBackAction: скрываем Back, показываем Settings с tg.close()
+                );
             
         } finally {
             UI.hideSpinner(elements.spinner);
@@ -401,7 +409,19 @@ document.addEventListener('DOMContentLoaded', () => {
             (container, skills, btn) => UI.renderSkillTags(container, skills, btn, t), 
             state.currentUserProfile.user_id
         ); 
-        UI.showView(elements.userDetailContainer, elements.allViews, elements.spinner, tg, t); } else { console.warn(`⚠️ loadTargetUserProfile: User ${targetUserId} not found.`); UI.showToast(t('error_profile_not_found'), true); await loadProfileData(); } } catch (error) { console.error(`❌ Error /get-user-by-id for ${targetUserId}:`, error); UI.showToast(t('error_load_profile_generic'), true); await loadProfileData(); } finally { UI.hideSpinner(elements.spinner); }
+        
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // Кнопка "Назад" должна возвращать в Ленту Людей
+        UI.showView(
+            elements.userDetailContainer, 
+            elements.allViews, 
+            elements.spinner, 
+            tg, 
+            t,
+            loadFeedData // Вернуться в ленту
+        ); 
+        
+        } else { console.warn(`⚠️ loadTargetUserProfile: User ${targetUserId} not found.`); UI.showToast(t('error_profile_not_found'), true); await loadProfileData(); } } catch (error) { console.error(`❌ Error /get-user-by-id for ${targetUserId}:`, error); UI.showToast(t('error_load_profile_generic'), true); await loadProfileData(); } finally { UI.hideSpinner(elements.spinner); }
     }
 
     /**
@@ -444,12 +464,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await api.saveProfileData(formData); 
             
             // Эта часть выполнится, только если 'data.ok === true'
-            await loadProfileData(); 
+            await loadProfileData(); // loadProfileData() сама установит кнопку "Назад" на tg.close()
+            
             if (state.targetUserIdFromLink && state.isRegistered) { 
-                await loadTargetUserProfile(state.targetUserIdFromLink); 
+                await loadTargetUserProfile(state.targetUserIdFromLink); // loadTargetUserProfile() установит "Назад" на loadFeedData
                 state.targetUserIdFromLink = null; 
             } else if (state.isRegistered) { 
-                UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t); 
+                // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+                // Эта ветка теперь дублирует loadProfileData, но мы вызовем 
+                // ✅ (Fullscreen Nav) onBackAction = () => tg.close() (кнопка "Close")
+                UI.showView(
+                elements.profileViewContainer,
+                elements.allViews,
+                elements.spinner,
+                tg,
+                t,
+                undefined // Теперь !onBackAction: скрываем Back, показываем Settings с tg.close()
+                );
             } 
         } catch (error) { 
             console.error('Error saving profile:', error); 
@@ -473,7 +504,16 @@ document.addEventListener('DOMContentLoaded', () => {
      * Загружает ленту профилей
      */
     async function loadFeedData() {
-        UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t);
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // Кнопка "Назад" должна возвращать в Профиль
+        UI.showView(
+            elements.feedContainer, 
+            elements.allViews, 
+            elements.spinner, 
+            tg, 
+            t,
+            loadProfileData // Вернуться в профиль
+        );
         elements.feed.searchInput.value = '';
         // Сбрасываем React-фильтры
         document.dispatchEvent(new CustomEvent('set-feed-mode', {
@@ -485,7 +525,16 @@ document.addEventListener('DOMContentLoaded', () => {
      * Загружает ленту запросов (постов)
      */
     async function loadPostsFeedData() {
-        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t);
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // Кнопка "Назад" должна возвращать в Профиль
+        UI.showView(
+            elements.posts.container, 
+            elements.allViews, 
+            elements.spinner, 
+            tg, 
+            t,
+            loadProfileData // Вернуться в профиль
+        );
         elements.posts.searchInput.value = '';
         // Сбрасываем React-фильтры
         document.dispatchEvent(new CustomEvent('set-posts-feed-mode', {
@@ -497,7 +546,16 @@ document.addEventListener('DOMContentLoaded', () => {
      * Загружает ленту ТОЛЬКО своих запросов
      */
     async function loadMyPostsFeedData() {
-        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t);
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // Кнопка "Назад" должна возвращать в Профиль
+        UI.showView(
+            elements.posts.container, 
+            elements.allViews, 
+            elements.spinner, 
+            tg, 
+            t,
+            loadProfileData // Вернуться в профиль
+        );
         elements.posts.searchInput.value = '';
         
         // (ИСПРАВЛЕНО) Отправляем React-компоненту команду
@@ -520,7 +578,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // initPostTypeSelect();
         // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
-        UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t);
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // Кнопка "Назад" (вместо "Отмена") должна возвращать в Ленту Постов
+        UI.showView(
+            elements.postModal.modal, 
+            elements.allViews, 
+            elements.spinner, 
+            tg, 
+            t,
+            loadPostsFeedData // Вернуться в ленту постов
+        );
         // Кнопка управляется из showView
     }
 
@@ -551,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // ИСПОЛЬЗУЕМ TOAST
                 UI.showToast(t('post_created_success'), false); // false = не ошибка
                 document.dispatchEvent(new CustomEvent('posts-updated'));
-                loadPostsFeedData(); 
+                loadPostsFeedData(); // Эта функция сама установит правильную кнопку "Назад"
             } else {
                  // Эта ветка больше не используется
                 UI.showToast(t('error_save', {error: result.error || 'Unknown error'}), true);
@@ -672,6 +739,8 @@ function loadScript(src, retries = 3) {
 }
 
     // --- НАСТРОЙКА СОБЫТИЙ ---
+    // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+    // Удалены все обработчики для HTML-кнопок "Назад"
     function setupEventListeners() {
             // ... (код без изменений) ...
             document.addEventListener('show-my-posts', () => {
@@ -784,7 +853,26 @@ function loadScript(src, retries = 3) {
             // --- ИСПРАВЛЕНИЕ #1 (Конец) ---
             
             elements.skills.modal.classList.remove('screen-fade-in');
-            UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t);
+            
+            // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+            // Определяем, куда вернет кнопка "Назад"
+            let onBackAction;
+            if (state.skillsModalSource === 'form') {
+                onBackAction = () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
+            } else if (state.skillsModalSource === 'postModal') {
+                onBackAction = () => UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
+            } else if (state.skillsModalSource === 'feed') {
+                onBackAction = loadFeedData;
+            } else if (state.skillsModalSource === 'postsFeed') {
+                onBackAction = loadPostsFeedData;
+            } else if (state.skillsModalSource === 'editPostModal') {
+                // Возвращаемся в ленту постов (где открыта React-модалка)
+                onBackAction = loadPostsFeedData; 
+            } else {
+                onBackAction = loadProfileData; // Фоллбэк
+            }
+            
+            UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t, onBackAction);
         });
 
         // --- (ИЗМЕНЕНИЕ) ---
@@ -807,91 +895,48 @@ function loadScript(src, retries = 3) {
             if (linksManager?.renderItems) linksManager.renderItems([]);
             if (experienceManager?.renderItems) experienceManager.renderItems([]);
             if (educationManager?.renderItems) educationManager.renderItems([]);
-            UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t);
+            
+            // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+            // При переходе на форму, кнопка "Назад" должна вернуть в loadProfileData 
+            // (которая покажет Welcome, т.к. профиль не создан)
+            UI.showView(
+                elements.formContainer, 
+                elements.allViews, 
+                elements.spinner, 
+                tg, 
+                t,
+                loadProfileData // Вернуться на экран "Привет" (через loadProfileData)
+            );
         });
 
         if (elements.profile.viewFeedButton) elements.profile.viewFeedButton.addEventListener('click', loadFeedData);
         if (elements.profile.viewPostsFeedButton) {
             elements.profile.viewPostsFeedButton.addEventListener('click', loadPostsFeedData);
         }
-        if (elements.posts.backToProfileButton) {
-            elements.posts.backToProfileButton.addEventListener('click', loadProfileData);
-        }
         
-        // ✅ ИСПРАВЛЕНИЕ (Задача 6): Этот обработчик УДАЛЕН
-        /*
-        if (elements.posts.createPostFab) {
-            elements.posts.createPostFab.addEventListener('click', showCreatePostModal);
-        }
-        */
-
-        if (elements.postModal.closeButton) {
-            elements.postModal.closeButton.addEventListener('click', () => {
-                // --- ИЗМЕНЕНИЕ: TomSelect удален ---
-                // if (postTypeSelectInstance) {
-                //    postTypeSelectInstance.destroy();
-                //    postTypeSelectInstance = null;
-                // }
-                // --- КОНЕЦ ИЗМЕНЕНИЯ ---
-                loadPostsFeedData(); 
-            });
-        }
-        if (elements.postModal.openSkillsModalButton) {
-            // ... (код без изменений) ...
-            elements.postModal.openSkillsModalButton.addEventListener('click', () => {
-                state.skillsModalSource = 'postModal';
-                const currentSkills = elements.postModal.skillsField.value.split(',').map(s => s.trim()).filter(s => s);
-                state.selectedSkills = [...currentSkills];
-                
-                // --- ИСПРАВЛЕНИЕ #2 (Начало) ---
-                // Та же самая логика, что и в ИСПРАВЛЕНИИ #1
-                function onToggleSkillInPostModal(skill) {
-                    if (state.selectedSkills.includes(skill)) {
-                        state.selectedSkills = state.selectedSkills.filter(s => s !== skill);
-                    } else {
-                        state.selectedSkills.push(skill);
-                    }
-                    UI.renderSkillSelectionForm(
-                        elements.skills.listContainer, 
-                        state.selectedSkills, 
-                        SKILL_CATEGORIES, 
-                        t, 
-                        onToggleSkillInPostModal // <-- Рекурсивная передача
-                    );
-                }
-                
-                UI.renderSkillSelectionForm(
-                    elements.skills.listContainer, 
-                    state.selectedSkills, // Используем state.selectedSkills, а не currentSkills
-                    SKILL_CATEGORIES, 
-                    t, 
-                    onToggleSkillInPostModal
-                );
-                // --- ИСПРАВЛЕНИЕ #2 (Конец) ---
-                
-                UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t);
-            });
-        }
-
-        // --- НОВОЕ ИЗМЕНЕНИЕ (Шаг 2: Ручной ввод тегов) ---
-        // Добавляем слушатель на ручной ввод в поле тегов
-        if (elements.postModal.skillsField) {
-            elements.postModal.skillsField.addEventListener('input', (event) => {
-                const currentSkills = event.target.value.split(',')
-                    .map(s => s.trim())
-                    .filter(s => s);
-                
-                // Обновляем глобальное состояние, чтобы модалка
-                // знала об изменениях, сделанных вручную.
-                state.selectedSkills = [...currentSkills];
-            });
-        }
-        // --- КОНЕЦ НОВОГО ИЗМЕНЕНИЯ ---
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // Все эти обработчики кнопок "Назад" УДАЛЕНЫ,
+        // так как они управляются через UI.showView()
         
-        if (elements.feed.backToProfileButton) elements.feed.backToProfileButton.addEventListener('click', loadProfileData);
-        if (elements.form.backToProfileFromEditButton) elements.form.backToProfileFromEditButton.addEventListener('click', loadProfileData);
-        if (elements.detail.headerBackButton) elements.detail.headerBackButton.addEventListener('click', loadFeedData);
-        if (elements.profile.logoutButton) elements.profile.logoutButton.addEventListener('click', () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t));
+        // if (elements.posts.backToProfileButton) ... (УДАЛЕНО)
+        // if (elements.postModal.closeButton) ... (УДАЛЕНО)
+        // if (elements.feed.backToProfileButton) ... (УДАЛЕНО)
+        // if (elements.form.backToProfileFromEditButton) ... (УДАЛЕНО)
+        // if (elements.detail.headerBackButton) ... (УДАЛЕНО)
+
+        if (elements.profile.logoutButton) elements.profile.logoutButton.addEventListener('click', () => {
+            // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+            // "Редактировать" (logoutButton) - кнопка "Назад" должна вернуть в Профиль
+            UI.showView(
+                elements.formContainer, 
+                elements.allViews, 
+                elements.spinner, 
+                tg, 
+                t,
+                loadProfileData // Вернуться в профиль
+            );
+        });
+        
         if (elements.detail.headerActionsButton) {
             elements.detail.headerActionsButton.addEventListener('click', () => {
                 // ИСПОЛЬЗУЕМ TOAST
@@ -952,8 +997,24 @@ function loadScript(src, retries = 3) {
                 }
             });
         }
-        if (elements.profile.settingsButton) elements.profile.settingsButton.addEventListener('click', () => UI.showView(elements.settingsContainer, elements.allViews, elements.spinner, tg, t));
-        if (elements.settings.backToProfileFromSettingsButton) elements.settings.backToProfileFromSettingsButton.addEventListener('click', loadProfileData);
+        
+        if (elements.profile.settingsButton) elements.profile.settingsButton.addEventListener('click', () => {
+            // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+            // При переходе в Настройки, кнопка "Назад" должна вернуть в Профиль
+            UI.showView(
+                elements.settingsContainer, 
+                elements.allViews, 
+                elements.spinner, 
+                tg, 
+                t,
+                loadProfileData // Вернуться в профиль
+            );
+        });
+        
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // Этот обработчик УДАЛЕН
+        // if (elements.settings.backToProfileFromSettingsButton) ... (УДАЛЕНО)
+        
         if (elements.settings.langBtnRu) elements.settings.langBtnRu.addEventListener('click', () => setLanguage('ru'));
         if (elements.settings.langBtnEn) elements.settings.langBtnEn.addEventListener('click', () => setLanguage('en'));
         
@@ -1156,7 +1217,18 @@ function loadScript(src, retries = 3) {
                 // --- ИСПРАВЛЕНИЕ #3 (Конец) ---
 
                 elements.skills.modal.classList.remove('screen-fade-in');
-                UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t);
+                // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+                // Устанавливаем "Назад" на возврат в Форму
+                UI.showView(
+                    elements.skillsModal, 
+                    elements.allViews, 
+                    elements.spinner, 
+                    tg, 
+                    t,
+                    // Оборачиваем в функцию, чтобы UI.showView() 
+                    // правильно установил кнопку "Назад"
+                    () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData)
+                );
             });
         }
         
@@ -1183,35 +1255,31 @@ function loadScript(src, retries = 3) {
         }
         // --- КОНЕЦ НОВОГО ОБРАБОТЧИКА ---
         
-        if (elements.postModal.closeButton) {
-        elements.postModal.closeButton.addEventListener('click', () => {
-            // --- ИЗМЕНЕНИЕ: TomSelect удален ---
-            // if (postTypeSelectInstance) {
-            //   postTypeSelectInstance.destroy();
-            //   postTypeSelectInstance = null;
-            // }
-            // --- КОНЕЦ ИЗМЕНЕНИЯ ---
-            loadPostsFeedData();
-        });
-        }        
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // Этот обработчик УДАЛЕН
+        // if (elements.postModal.closeButton) ... (УДАЛЕНО)
+        
         // (ИЗМЕНЕНИЕ) Этот слушатель 'saveButton' полностью заменен
         if (elements.skills.saveButton) {
             elements.skills.saveButton.addEventListener('click', () => {
                 if (state.skillsModalSource === 'form') {
                     elements.form.skillsField.value = state.selectedSkills.join(', ');
                     tg.MainButton.show();
-                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t);
+                    // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Устанавливаем "Назад" на Профиль
+                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
 
                 } else if (state.skillsModalSource === 'postModal') {
                      elements.postModal.skillsField.value = state.selectedSkills.join(', ');
-                    UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t);
+                    // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Устанавливаем "Назад" на Ленту Постов
+                    UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
 
                 } else if (state.skillsModalSource === 'feed') {
                    // ИСПОЛЬЗУЕМ React Event
                    document.dispatchEvent(new CustomEvent('set-feed-mode', {
                        detail: { skills: state.selectedSkills }
                    }));
-                   UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t);
+                   // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Устанавливаем "Назад" на Профиль
+                   UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
 
                 } else if (state.skillsModalSource === 'postsFeed') {
                     
@@ -1223,7 +1291,8 @@ function loadScript(src, retries = 3) {
                        }
                    }));
                     
-                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t);
+                    // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Устанавливаем "Назад" на Профиль
+                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
 
                 // --- (НОВЫЙ БЛОК) ---
                 } else if (state.skillsModalSource === 'editPostModal') {
@@ -1235,45 +1304,24 @@ function loadScript(src, retries = 3) {
                     // (Примечание: React сам управляет своим внутренним UI,
                     // но мы должны показать HTML-контейнер, в котором он живет)
                     
-                    // --- ИСПРАВЛЕНИЕ: Мы должны вернуться в #posts-feed-container,
-                    // --- а React modal (EditPostModal) уже должен быть открыт.
-                    // --- UI.showView скроет #skills-modal и покажет #posts-feed-container
-                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t);
+                    // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Устанавливаем "Назад" на Профиль
+                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
                     
                 } else {
-                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t);
+                    // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Устанавливаем "Назад" на Профиль (фоллбэк)
+                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
                 }
             });
         }
 
-        if (elements.skills.closeButton) {
-            elements.skills.closeButton.addEventListener('click', () => {
-                let targetView;
-                if (state.skillsModalSource === 'feed') {
-                    targetView = elements.feedContainer;
-                } else if (state.skillsModalSource === 'postModal') {
-                    targetView = elements.postModal.modal;
-                // --- (НОВЫЙ БЛОК) ---
-                } else if (state.skillsModalSource === 'editPostModal') {
-                    // Возвращаемся в ленту постов, где открыто модальное окно React
-                    targetView = elements.posts.container;
-                } else if (state.skillsModalSource === 'postsFeed') {
-                    targetView = elements.posts.container;
-                } else {
-                    targetView = elements.formContainer;
-                }
-                UI.showView(targetView, elements.allViews, elements.spinner, tg, t);
-            });
-        }
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // Этот обработчик УДАЛЕН
+        // if (elements.skills.closeButton) ... (УДАЛЕНО)
         
-        // --- ✅ НОВЫЙ КОД: Добавляем логику кнопки "Назад" ---
-        // Показываем системную кнопку "Назад"
-        tg.BackButton.show();
-        // Вешаем на нее обработчик, который закроет приложение
-        tg.BackButton.onClick(() => {
-            tg.close();
-        });
-        // --- КОНЕЦ НОВОГО КОДА ---
+        // --- ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Глобальный обработчик кнопки "Назад" УДАЛЕН ---
+        // tg.BackButton.show();
+        // tg.BackButton.onClick(() => { ... });
+        // --- КОНЕЦ УДАЛЕНИЯ ---
         
     } // Конец функции setupEventListeners
     
@@ -1328,12 +1376,15 @@ function loadScript(src, retries = 3) {
         else if (state.targetUserIdFromLink && !state.isRegistered) { 
             // ИСПОЛЬЗУЕМ TOAST
             UI.showToast(t('error_must_create_profile'), true);
+            // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+            // Устанавливаем "Назад" на loadProfileData (которая покажет Welcome)
             UI.showView(
                 elements.formContainer, 
                 elements.allViews, 
                 elements.spinner, 
                 tg, 
-                t
+                t,
+                loadProfileData 
             ); 
             elements.form.nameField.value = tg.initDataUnsafe?.user?.first_name || ''; 
             elements.form.bioField.value = ''; 
@@ -1360,7 +1411,7 @@ function loadScript(src, retries = 3) {
                         // Применяем padding ко всем экранам
                         const screens = document.querySelectorAll('.screen');
                         screens.forEach(screen => {
-                            screen.style.paddingTop = '95px';
+                            screen.style.paddingTop = '60px';
                         });
                         console.log('✅ Padding применён к экранам');
                     }, 300);
@@ -1387,13 +1438,16 @@ function loadScript(src, retries = 3) {
             alert(`Критическая ошибка: ${error.message || fallbackError}`); 
         }
         UI.hideSpinner(elements.spinner); 
-        UI.showView(
-            elements.welcomeContainer, 
-            elements.allViews, 
-            elements.spinner, 
-            tg, 
-            t
-        );
+        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
+        // ✅ (Fullscreen Nav) onBackAction = () => tg.close() (кнопка "Close")
+            UI.showView(
+            elements.profileViewContainer,
+            elements.allViews,
+            elements.spinner,
+            tg,
+            t,
+            undefined // Теперь !onBackAction: скрываем Back, показываем Settings с tg.close()
+            );
     }
 }
 

@@ -4,6 +4,13 @@
 // УДАЛЕНО: Логика "Last Seen" и "Flag Overlay"
 // УДАЛЕНО: Параметры getTomSelectInstance и updateCountryCallback из showView
 // ✅ ИСПРАВЛЕНИЕ (Задача 4): MainButton (FAB) больше не показывается для create-post-modal
+// ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): showView теперь управляет нативной кнопкой "Назад" (tg.BackButton)
+// ✅ ИЗМЕНЕНИЕ (Fullscreen Nav 2): Добавлена смена текста "Back" / "Close"
+
+/**
+ * (НОВОЕ) Хранит текущий назначенный обработчик кнопки "Назад"
+ */
+let currentBackAction = null;
 
 /**
  * Показывает спиннер загрузки
@@ -25,40 +32,67 @@ export function hideSpinner(spinner) {
 
 /**
  * Показывает указанный экран, скрывая остальные
+ * (ИЗМЕНЕНО) Добавлен onBackAction для управления tg.BackButton
  */
-export function showView(targetView, allViews, spinner, tg, t) {
-    hideSpinner(spinner);
-    allViews?.forEach(view => {
-        if (view) view.style.display = 'none';
-    });
-    if (targetView) {
-        targetView.style.display = 'block';
-        targetView.classList.add('screen-fade-in');
+export function showView(targetView, allViews, spinner, tg, t, onBackAction) {
+  // --- Логика кнопок навигации ---
+  
+  // Если onBackAction не передан (главный экран)
+  if (!onBackAction) {
+    // Скрываем BackButton
+    if (currentBackAction) {
+      tg.BackButton.offClick(currentBackAction);
+      currentBackAction = null;
+    }
+    tg.BackButton.hide();
+    
+    // Показываем SettingsButton для закрытия
+    tg.SettingsButton.show();
+    tg.SettingsButton.onClick(() => tg.close());
+  } else {
+    // Для остальных экранов - показываем BackButton
+    
+    // Скрываем SettingsButton
+    tg.SettingsButton.hide();
+    
+    // Снимаем старый обработчик BackButton
+    if (currentBackAction) {
+      tg.BackButton.offClick(currentBackAction);
     }
     
-    // Показываем MainButton только на форме
-    if (targetView?.id === 'form-container') {
-        tg.MainButton.setText(t('save_button'));
-        tg.MainButton.show();
-    // ✅ ИСПРАВЛЕНИЕ: Убираем показ MainButton для модалки постов
-    /* } else if (targetView?.id === 'create-post-modal') {
-        // НОВОЕ: Показываем кнопку и на форме создания поста
-        tg.MainButton.setText(t('publish')); // Нужен перевод 'publish'
-        tg.MainButton.show(); */
-    } else {
-        tg.MainButton.hide();
-    }
+    // Назначаем новый
+    tg.BackButton.onClick(onBackAction);
+    currentBackAction = onBackAction;
     
-    if (targetView) {
-    // ✅ ИСПРАВЛЕНИЕ: Для модалок используем flex
+    // Показываем кнопку
+    tg.BackButton.show();
+  }
+  
+  // --- Конец логики навигации ---
+  
+  hideSpinner(spinner);
+  
+  allViews?.forEach(view => {
+    if (view) view.style.display = 'none';
+  });
+  
+  if (targetView) {
     if (targetView.id === 'skills-modal' || targetView.id === 'create-post-modal') {
-        targetView.style.display = 'flex';
+      targetView.style.display = 'flex';
     } else {
-        targetView.style.display = 'block';
+      targetView.style.display = 'block';
     }
     targetView.classList.add('screen-fade-in');
-    }
+  }
+  
+  if (targetView?.id === 'form-container') {
+    tg.MainButton.setText(t('save_button'));
+    tg.MainButton.show();
+  } else {
+    tg.MainButton.hide();
+  }
 }
+
 
 /**
  * Рендерит теги навыков
