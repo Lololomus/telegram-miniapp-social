@@ -1328,7 +1328,7 @@ function loadScript(src, retries = 3) {
     // (УДАЛЕНО) Пинг Статуса
     // async function updateOnlineStatus() { ... }
 
-    // ✅ ИСПРАВЛЕНИЕ #3: Главная функция main с правильным порядком
+// ✅ ИСПРАВЛЕНИЕ #3: Главная функция main с правильным порядком
     async function main() {
     UI.showSpinner(elements.spinner, elements.allViews);
     try {
@@ -1421,13 +1421,17 @@ function loadScript(src, retries = 3) {
             }
         }
         
-        // Отключаем свайп
-        if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
-            if (typeof tg.disableVerticalSwipes === 'function') {
-                tg.disableVerticalSwipes();
-                console.log('✅ Свайп отключен');
-            }
-        }
+        // --- 🔴 ИЗМЕНЕНИЕ ЗДЕСЬ ---
+        // Блок tg.disableVerticalSwipes() УДАЛЕН отсюда.
+        // Управление свайпами теперь будет на уровне карточек в React.
+        // (Старый код УДАЛЕН)
+        // if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) {
+        //     if (typeof tg.disableVerticalSwipes === 'function') {
+        //         tg.disableVerticalSwipes();
+        //         console.log('✅ Свайп отключен');
+        //     }
+        // }
+        
     } catch (error) {
         console.error('💥 КРИТИЧЕСКАЯ ОШИБКА в main:', error); 
         const fallbackError = "Не удалось загрузить приложение."; 

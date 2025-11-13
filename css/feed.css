@@ -1,10 +1,13 @@
 /* css/feed.css */
 /* ОБНОВЛЕНО: Удалены дублирующиеся стили тегов */
 /* ОБНОВЛЕНО (Glass): Добавлены "стеклянные" стили для карточек и поиска */
-/* ✅ НОВОЕ (Context Menu): Добавлены стили для кнопки "..." и поп-ап меню */
+/* ✅ ИЗМЕНЕНИЕ: Удалены стили .post-actions-button и .post-actions-menu */
 /* ✅ ИСПРАВЛЕНИЕ #8: Добавлен отступ для карточки MyPostCard */
 /* ✅ ИСПРАВЛЕНИЕ (Item 1): Уменьшен gap в .feed-list с 15px до 12px */
 /* ✅ ИСПРАВЛЕНИЕ (Item 2): Изменены стили .feed-card-skills-more для выравнивания */
+/* ✅ НОВОЕ (Long-Press Menu): Добавлены стили для .post-context-menu-* */
+/* ✅ ИСПРАВЛЕНИЕ (Long-Press Bug): Добавлен user-select: none */
+/* ✅ ИСПРАВЛЕНИЕ (Long-Press Menu v2): Стили меню-листа заменены на стили плавающего меню */
 
 /* --- ЛЕНТА --- */
 .feed-list {
@@ -132,6 +135,12 @@
     /* ✅ ИСПРАВЛЕНИЕ #8: Отступ УБРАН отсюда и перенесен в .feed-list (gap)
        и в MyPostCard (margin-bottom) */
     /* margin-bottom: 15px; */
+    
+    /* ✅ ИСПРАВЛЕНИЕ (Long-Press Bug): Запрещаем выделение текста */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+ */
+    user-select: none; /* Standard */
 }
 /* .react-feed-card:last-child { margin-bottom: 0; } */ /* <-- УДАЛЕНО */
 
@@ -265,150 +274,141 @@ body.theme-glass-overlay .feed-card-skills-more {
     );
 }
 
-/* --- ✅ НОВОЕ: Стили для Контекстного Меню Поста --- */
+/* --- ✅ ИЗМЕНЕНИЕ: Старые стили .post-actions-button и .post-actions-menu УДАЛЕНЫ --- */
 
-.post-actions-button {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 5;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
+/* --- ========================================================== --- */
+/* --- ✅ НОВОЕ (Long-Press Menu v2): Новые стили для плавающего меню --- */
+/* --- ========================================================== --- */
+
+/* 1. ФОН (Backdrop)
+  z-index: 2000
+*/
+.post-context-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000; /* Под карточкой (2001) и меню (2002) */
     
-    /* Стили по умолчанию (светлая/авто тема) */
-    background-color: var(--main-bg-color, #ffffff); /* ✅ ИЗМЕНЕНО: Фон стал светлее */
-    color: var(--main-hint-color, #999999);
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    font-size: 20px;
-    font-weight: bold;
-    line-height: 1;
-    transition: background-color 0.3s, color 0.3s, opacity 0.2s, transform 0.2s, border-color 0.3s, box-shadow 0.3s;
-}
-.post-actions-button:active {
-    transform: scale(0.9);
+    /* Эффект размытия и затемнения, как в iOS */
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
-.post-actions-menu {
-    position: absolute;
-    top: 48px; /* 12px (отступ кнопки) + 30px (высота кнопки) + 6px (отступ) */
-    right: 12px;
-    z-index: 10;
-    background-color: var(--main-bg-color, #fff);
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    border: 1px solid var(--secondary-bg-color, #efefef);
-    width: 180px;
+/* 2. КОНТЕЙНЕР МЕНЮ (Плавающий блок)
+  z-index: 2002 
+*/
+.post-context-menu-container {
+    /* Позиционируется через inline-стили (top/left/width) */
+    z-index: 2002; /* Над карточкой (2001) */
+
+    /* Стили фона, как у карточек, но непрозрачные */
+    background-color: var(--main-bg-color, #ffffff);
+    border-radius: 12px;
+    /* Тень, чтобы меню "парило" */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-    /* Для framer-motion */
-    transform-origin: top right;
 }
 
-.post-actions-menu-button {
-    display: block;
-    width: 100%;
-    padding: 12px 16px;
-    background: none;
-    border: none;
-    border-bottom: 1px solid var(--secondary-bg-color, #efefef);
-    text-align: left;
+/* 3. ГРУППА КНОПОК */
+.post-context-menu-group {
+    display: flex;
+    flex-direction: column;
+    padding: 6px; /* Небольшой отступ от краев */
+}
+
+/* 4. КНОПКИ МЕНЮ */
+.post-context-menu-button {
+    display: flex; /* Для иконок */
+    align-items: center;
+    gap: 10px;
+    
+    font-family: inherit;
     font-size: 15px;
     font-weight: 500;
+    padding: 10px 12px;
+    text-align: left;
+    
+    color: var(--main-text-color, #000000);
+    background: none;
+    border: none;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background-color 0.2s;
-}
-.post-actions-menu-button:last-child {
-    border-bottom: none;
-}
-.post-actions-menu-button:hover {
-    background-color: var(--secondary-bg-color, #efefef);
+    border-radius: 8px; /* Скругление при наведении */
+    
+    transition: background-color 0.1s ease-out;
 }
 
-.post-actions-menu-button.edit {
-    color: #34C759; /* Зеленый */
-}
-.post-actions-menu-button.delete {
-    color: #FF3B30; /* Красный */
+/* 5. ПОДВЕДЕНИЕ КУРСОРА (Hover) / Нажатие (Active) */
+.post-context-menu-button:active,
+.post-context-menu-button:hover {
+    /* Используем hint-color, он темнее/светлее фона */
+    background-color: var(--main-hint-color, #999999);
+    opacity: 0.6;
 }
 
+/* 6. КРАСНАЯ КНОПКА (Удалить) */
+.post-context-menu-button.destructive {
+    color: var(--main-destructive-color, #ff3b30);
+}
 
-/* --- Темная тема для Меню --- */
-body.theme-dark .post-actions-button {
-    background-color: var(--main-bg-color, #1c1c1d);
-    color: var(--main-hint-color, #98989e);
+.post-context-menu-button.destructive:active,
+.post-context-menu-button.destructive:hover {
+    background-color: var(--main-destructive-color, #ff3b30);
+    color: #ffffff;
+    opacity: 1;
 }
-body.theme-dark .post-actions-menu {
-    background-color: #3a3a3c; /* Чуть светлее фона карточки */
-    border-color: rgba(255,255,255, 0.1);
+
+/* --- Кнопка "Отмена" УДАЛЕНА --- */
+/* .post-context-menu-button.cancel { ... } */
+
+
+/* --- Темная тема для Меню v2 --- */
+body.theme-dark .post-context-menu-container {
+    background-color: #2c2c2e; /* Фон панели */
 }
-body.theme-dark .post-actions-menu-button {
-    border-bottom-color: rgba(255,255,255, 0.1);
+body.theme-dark .post-context-menu-button {
+    color: var(--main-text-color, #ffffff);
 }
-body.theme-dark .post-actions-menu-button:hover {
-    background-color: #4a4a4c;
+body.theme-dark .post-context-menu-button:active,
+body.theme-dark .post-context-menu-button:hover {
+    background-color: var(--main-hint-color, #555555);
+    opacity: 1;
 }
-body.theme-dark .post-actions-menu-button.edit {
-    color: #34C759;
-}
-body.theme-dark .post-actions-menu-button.delete {
+body.theme-dark .post-context-menu-button.destructive {
     color: #FF453A;
 }
+body.theme-dark .post-context-menu-button.destructive:active,
+body.theme-dark .post-context-menu-button.destructive:hover {
+    background-color: #FF453A;
+    color: #ffffff;
+}
 
-
-/* --- "Стекло" для Меню --- */
-body.theme-glass-overlay .post-actions-button {
+/* --- "Стекло" для Меню v2 --- */
+body.theme-glass-overlay .post-context-menu-backdrop {
+    /* Фон уже имеет backdrop-filter, просто меняем цвет */
+    background-color: rgba(0, 0, 0, 0.4);
+}
+body.theme-glass-overlay .post-context-menu-container {
     background-color: var(--glass-bg-secondary);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: var(--glass-border);
-    color: var(--main-text-color);
-    opacity: 0.8;
-}
-body.theme-glass-overlay .post-actions-button.is-ios {
-    background-color: var(--glass-bg-ios-fallback-secondary);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
-
-body.theme-glass-overlay .post-actions-menu {
-    background-color: var(--glass-bg);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     border: var(--glass-border);
     box-shadow: var(--glass-shadow);
 }
-body.theme-glass-overlay .post-actions-menu.is-ios {
-    background-color: var(--glass-bg-ios-fallback);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
-body.theme-glass-overlay .post-actions-menu-button {
-    border-bottom: var(--glass-border);
+body.theme-glass-overlay .post-context-menu-button {
     color: var(--main-text-color);
 }
-body.theme-glass-overlay .post-actions-menu-button:hover {
-    background-color: var(--glass-bg-secondary);
-}
-body.theme-glass-overlay .post-actions-menu-button.edit {
-    color: #34C759; /* Оставляем цветным */
-}
-body.theme-glass-overlay .post-actions-menu-button.delete {
-    color: #FF3B30; /* Оставляем цветным */
+body.theme-glass-overlay .post-context-menu-button:active,
+body.theme-glass-overlay .post-context-menu-button:hover {
+    background-color: var(--glass-bg-input); /* Полупрозрачный фон */
+    opacity: 1;
 }
 
-/* Темная тема + "Стекло" */
-body.theme-dark.theme-glass-overlay .post-actions-menu-button.edit {
-    color: #34C759;
-}
-body.theme-dark.theme-glass-overlay .post-actions-menu-button.delete {
+/* Стекло + Темная тема */
+body.theme-dark.theme-glass-overlay .post-context-menu-button.destructive {
     color: #FF453A;
+}
+body.theme-dark.theme-glass-overlay .post-context-menu-button.destructive:active,
+body.theme-dark.theme-glass-overlay .post-context-menu-button.destructive:hover {
+    background-color: #FF453A;
+    color: #ffffff;
 }

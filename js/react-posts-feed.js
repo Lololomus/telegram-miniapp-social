@@ -22,6 +22,11 @@
 // ✅ ИСПРАВЛЕНИЕ (Задача 6): Убран click() по невидимой кнопке, заменен на CustomEvent
 // --- ИЗМЕНЕНИЕ: Полностью удалена логика TomSelect ---
 // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Удалены useEffect, связанные с HTML-кнопками "Назад"
+// ✅ НОВОЕ (Long-Press Menu): Удалена кнопка "..." с MyPostCard.
+// ✅ НОВОЕ (Long-Press Menu): Добавлен новый компонент PostContextMenu.
+// ✅ НОВОЕ (Task 1): Добавлены кнопки "Откликнуться" и "Репост" в PostDetailSheet.
+// ✅ ИСПРАВЛЕНИЕ (Long-Press Fix): Заменены onClick/onContextMenu на onTap/onLongPress (framer-motion).
+// ✅ ИСПРАВЛЕНИЕ (Long-Press Fix 2): Добавлен onContextMenu=(e)=>e.preventDefault() для срабатывания onLongPress.
 
 // ✅ ИЗМЕНЕНИЕ: Добавляем Suspense, memo, useCallback
 import React, { useState, useEffect, useRef, useCallback, useLayoutEffect, Suspense, memo } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
@@ -55,7 +60,17 @@ const t = (k, d = {}) => {
         'post_full_description_label': 'Полное описание (необязательно):',
         'post_skills_label': 'Теги (навыки):',
         'select_skills_button': 'Выбрать навыки',
-        'post_type_placeholder': 'Выберите тип запроса...' // <-- Для TomSelect
+        'post_type_placeholder': 'Выберите тип запроса...', // <-- Для TomSelect
+        
+        // ✅ НОВОЕ (Task 1 & 2): Ключи для новых действий
+        'action_respond': 'Откликнуться',
+        'action_repost': 'Репост',
+        'action_view_profile': 'Посмотреть профиль',
+        'action_edit': 'Редактировать',
+        'action_delete': 'Удалить',
+        'action_cancel': 'Отмена',
+        'action_respond_toast': 'Функция "Откликнуться" в разработке',
+        'action_repost_toast': 'Функция "Репост" в разработке'
     };
     let s = dict[k] || k;
     Object.entries(d).forEach(([k, v]) => { s = s.replace(new RegExp(`{${k}}`, 'g'), v); });
@@ -167,27 +182,32 @@ function TopSpacer() {
 
 // Вариант карточки (анимация ПОЯВЛЕНИЯ/ИСЧЕЗНОВЕНИЯ)
 const cardVariants = isIOS 
-// ... (остальной код без изменений) ...
   ? {
       hidden: { opacity: 0 },
-      visible: { 
+      // 'visible' теперь функция, принимающая 'custom' проп
+      visible: ({ isContextMenuOpen }) => ({ // <-- ИЗМЕНЕНИЕ
         opacity: 1,
+        scale: isContextMenuOpen ? 1.03 : 1, // <-- ДОБАВЛЕНО
         transition: {
           duration: 0.2,
           ease: "easeOut"
         }
-      },
+      }),
       exit: { opacity: 0, transition: { duration: 0.1 } }
     }
   : {
       hidden: { opacity: 0, x: -20 },
-      visible: (i) => ({ 
+      // 'visible' теперь функция, принимающая 'custom' проп
+      visible: ({ i, isContextMenuOpen }) => ({ // <-- ИЗМЕНЕНИЕ
         opacity: 1, 
         x: 0,
+        scale: isContextMenuOpen ? 1.03 : 1, // <-- ДОБАВЛЕНО
         transition: {
           delay: i * 0.1, // Задержка зависит от индекса
-          duration: 0.4,
-          ease: "easeOut"
+          // Добавляем spring для scale
+          type: "spring", 
+          stiffness: 300, 
+          damping: 30 
         }
       }),
       exit: { opacity: 0, x: -10, transition: { duration: 0.2 } }
@@ -241,10 +261,180 @@ const TomSelectWrapper = ({ value, onChange, options, placeholder }) => {
 // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
 
+// ✅ НОВОЕ (Long-Press Menu): Контекстное меню
+function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespond, onRepost, onEdit, onDelete }) {
+  const isMyPost = post.author?.user_id === window.__CURRENT_USER_ID;
+  const menuRef = useRef(null);
+  
+  // Состояние для вычисленной позиции
+  const [position, setPosition] = useState({
+    top: -9999, // Изначально рендерим вне экрана
+    left: 0,
+    width: 0,
+    opacity: 0 // Изначально невидимо
+  });
+
+  // Этот хук сработает ПОСЛЕ рендера, но ДО отрисовки
+  useLayoutEffect(() => {
+    if (!targetElement || !menuRef.current) return;
+
+    // 1. Измеряем карточку и меню
+    const cardRect = targetElement.getBoundingClientRect();
+    const menuHeight = menuRef.current.offsetHeight;
+    
+    // 2. Определяем ширину (как у карточки, но не шире 300px)
+    // ✅ ИЗМЕНЕНИЕ: Сделаем ширину чуть меньше карточки, но фиксированной
+    const menuWidth = Math.min(cardRect.width - 40, 280); // 280px макс, или (ширина карточки - 40px)
+    
+    // 3. Вычисляем позицию по горизонтали (центрируем)
+    const left = cardRect.left + (cardRect.width - menuWidth) / 2;
+    
+    // 4. Вычисляем позицию по вертикали
+    const spaceBelow = window.innerHeight - cardRect.bottom;
+    const spaceAbove = cardRect.top;
+    const margin = 8; // Отступ 8px
+    
+    let top;
+
+    // 5. Помещается ли меню снизу?
+    if (spaceBelow > menuHeight + margin) {
+        top = cardRect.bottom + margin; // Да, ставим снизу
+    } 
+    // Помещается ли оно сверху?
+    else if (spaceAbove > menuHeight + margin) {
+        top = cardRect.top - menuHeight - margin; // Нет, ставим сверху
+    } 
+    // Не помещается нигде (редкий случай)
+    else {
+        top = window.innerHeight - menuHeight - 20; // Прижимаем к низу
+    }
+
+    // 6. Устанавливаем позицию, чтобы React мог ее отрисовать
+    setPosition({
+        top: top,
+        left: left,
+        width: menuWidth,
+        opacity: 1 // Делаем видимым
+    });
+    
+  }, [targetElement]); // Зависим только от targetElement
+
+
+  // Закрытие по клику вне меню (на фон)
+  const handleBackdropClick = (e) => {
+    e.stopPropagation();
+    onClose();
+  };
+  
+  // Оборачиваем действия, чтобы они закрывали меню
+  const doAction = (actionFn) => (e) => {
+    e.stopPropagation();
+    if (actionFn) {
+        actionFn(post);
+    }
+    onClose(); 
+  };
+
+  return h(motion.div, {
+    key: `backdrop-${post.post_id}`,
+    className: 'post-context-menu-backdrop', // <-- Cтили из CSS выше
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.2, ease: 'easeOut' },
+    onClick: handleBackdropClick,
+    
+    style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 2000 // Фон (под карточкой и меню)
+    }
+  },
+    
+    // --- Это само "плавающее" меню ---
+    h(motion.div, {
+        key: `menu-${post.post_id}`,
+        ref: menuRef,
+        className: `post-context-menu-container ${isIOS ? 'is-ios' : ''}`, // <-- Cтили из CSS выше
+        
+        // Позиционируемся абсолютно относительно backdrop
+        style: {
+            position: 'absolute',
+            top: position.top,
+            left: position.left,
+            width: position.width,
+            zIndex: 2002, // Выше, чем фон (2000) и карточка (2001)
+        },
+        
+        // Анимация "вырастания"
+        initial: { opacity: 0, scale: 0.9, y: -10 },
+        animate: { 
+            opacity: position.opacity, // Используем 1 из state
+            scale: 1, 
+            y: 0 
+        },
+        exit: { opacity: 0, scale: 0.9, y: -10 },
+        transition: { type: 'spring', damping: 20, stiffness: 300 },
+        
+        onClick: (e) => e.stopPropagation() // Предотвращаем закрытие
+    },
+      
+      // --- Группа кнопок действий ---
+      h('div', { 
+        className: 'post-context-menu-group' // <-- Cтили из CSS выше
+      },
+        isMyPost
+          ? [ // Свои посты
+              h('button', { 
+                  key: 'edit', 
+                  className: 'post-context-menu-button', // <-- Cтили из CSS
+                  onClick: doAction(onEdit) 
+              }, `✏️ ${t('action_edit')}`),
+              
+              h('button', { 
+                  key: 'repost', 
+                  className: 'post-context-menu-button', // <-- Cтили из CSS
+                  onClick: doAction(onRepost) 
+              }, `🔗 ${t('action_repost')}`),
+              
+              h('button', { 
+                  key: 'delete', 
+                  className: 'post-context-menu-button destructive', // <-- Cтили из CSS
+                  onClick: doAction(onDelete) 
+              }, `🗑️ ${t('action_delete')}`)
+            ]
+          : [ // Чужие посты
+              h('button', { 
+                  key: 'respond', 
+                  className: 'post-context-menu-button', // <-- Cтили из CSS
+                  onClick: doAction(onRespond) 
+              }, `🚀 ${t('action_respond')}`),
+              
+              h('button', { 
+                  key: 'repost', 
+                  className: 'post-context-menu-button', // <-- Cтили из CSS
+                  onClick: doAction(onRepost) 
+              }, `🔗 ${t('action_repost')}`),
+              
+              h('button', { 
+                  key: 'profile', 
+                  className: 'post-context-menu-button', // <-- Cтили из CSS
+                  onClick: doAction(onOpenProfile) 
+              }, `👤 ${t('action_view_profile')}`)
+            ]
+      ),
+      
+      // --- Кнопка "Отмена" УДАЛЕНА ---
+    )
+  ); // Конец motion.div (меню)
+}
+
+
 // Модальное окно редактирования поста
 // ✅ ИСПРАВЛЕНИЕ (Задача 3): Полностью переработана верстка
 // ✅ ИСПРАВЛЕНИЕ (Задача 5): Заменен крестик на шеврон
 function EditPostModal({ post, onClose, onSave }) {
+// ... (остальной код без изменений) ...
   const [postType, setPostType] = useState(post.post_type);
   const [content, setContent] = useState(post.content);
   const [fullDescription, setFullDescription] = useState(post.full_description || '');
@@ -300,6 +490,7 @@ function EditPostModal({ post, onClose, onSave }) {
   }, [currentSkillsArray]); // Зависим от актуального списка навыков
 
   const handleSave = () => {
+// ... (остальной код без изменений) ...
     if (!content.trim()) {
       tg.showAlert('Заполните краткое описание');
       return;
@@ -315,6 +506,7 @@ function EditPostModal({ post, onClose, onSave }) {
   };
 
   return h(motion.div, {
+// ... (остальной код без изменений) ...
     style: {
       position: 'fixed',
       inset: 0,
@@ -329,6 +521,7 @@ function EditPostModal({ post, onClose, onSave }) {
     exit: { opacity: 0 }
   },
     h(motion.div, {
+// ... (остальной код без изменений) ...
       onClick: onClose,
       style: {
         position: 'absolute',
@@ -340,6 +533,7 @@ function EditPostModal({ post, onClose, onSave }) {
     
     // --- ✅ ИЗМЕНЕНИЕ: Новая обертка для анимации и шеврона (как в PostDetailSheet) ---
     h(motion.div, {
+// ... (остальной код без изменений) ...
         style: {
             position: 'relative', 
             width: '100%',
@@ -360,6 +554,7 @@ function EditPostModal({ post, onClose, onSave }) {
     },
         // --- ✅ ИЗМЕНЕНИЕ: Добавлен Шеврон ---
         h('button', {
+// ... (остальной код без изменений) ...
             className: `react-sheet-chevron-close ${isIOS ? 'is-ios' : ''}`,
             onClick: onClose,
             'aria-label': 'Закрыть',
@@ -380,6 +575,7 @@ function EditPostModal({ post, onClose, onSave }) {
     
         // --- ✅ ИЗМЕНЕНИЕ: Этот div теперь отвечает только за контент и прокрутку ---
         h('div', {
+// ... (остальной код без изменений) ...
           className: `react-sheet-content ${isIOS ? 'is-ios' : ''}`,
           style: {
             position: 'relative',
@@ -400,6 +596,7 @@ function EditPostModal({ post, onClose, onSave }) {
 
           // --- ✅ ИЗМЕНЕНИЕ: Полная переверстка ---
           h('h2', { 
+// ... (остальной код без изменений) ...
               // Используем стили из profile.css
               className: 'profile-section-title', 
               style: { 
@@ -411,6 +608,7 @@ function EditPostModal({ post, onClose, onSave }) {
           
           // --- 1. TomSelect для Типа запроса ---
           h('div', { className: 'form-group' },
+// ... (остальной код без изменений) ...
             h('label', { htmlFor: 'edit-post-type-select' }, t('post_type_label')),
             // --- ✅ ИЗМЕНЕНИЕ: Заменяем TomSelectWrapper на обычный <select> ---
             h('select', {
@@ -428,6 +626,7 @@ function EditPostModal({ post, onClose, onSave }) {
           
           // --- 2. Textarea для Краткого описания ---
           h('div', { className: 'form-group' },
+// ... (остальной код без изменений) ...
             h('label', { htmlFor: 'edit-post-content' }, t('post_content_label')),
             h('textarea', {
               id: 'edit-post-content',
@@ -439,6 +638,7 @@ function EditPostModal({ post, onClose, onSave }) {
           
           // --- 3. Textarea для Полного описания ---
           h('div', { className: 'form-group' },
+// ... (остальной код без изменений) ...
             h('label', { htmlFor: 'edit-post-full' }, t('post_full_description_label')),
             h('textarea', {
               id: 'edit-post-full',
@@ -450,6 +650,7 @@ function EditPostModal({ post, onClose, onSave }) {
           
           // --- 4. Кнопка для выбора Тегов ---
           h('div', { className: 'form-group' },
+// ... (остальной код без изменений) ...
             h('label', null, t('post_skills_label')),
             h('div', { 
                 className: 'skills-input-group',
@@ -462,6 +663,7 @@ function EditPostModal({ post, onClose, onSave }) {
                   placeholder: t('select_skills_button'),
                 }),
                 h('button', {
+// ... (остальной код без изменений) ...
                     type: 'button',
                     className: 'skills-input-button', // из form.css
                     'aria-label': t('select_skills_button')
@@ -480,6 +682,7 @@ function EditPostModal({ post, onClose, onSave }) {
 
           // --- ✅ ИЗМЕНЕНИЕ: Кнопки теперь являются частью контента ---
           h('div', {
+// ... (остальной код без изменений) ...
             className: `react-sheet-footer ${isIOS ? 'is-ios' : ''}`,
             style: {
               // ✅ ИСПРАВЛЕНИЕ (Задача 4): УБРАНЫ: position, bottom, left, right, zIndex, borderTop, paddingTop, marginTop
@@ -489,6 +692,7 @@ function EditPostModal({ post, onClose, onSave }) {
             }
           },
             h('button', {
+// ... (остальной код без изменений) ...
               onClick: onClose,
               style: {
                 padding: '14px',
@@ -500,8 +704,9 @@ function EditPostModal({ post, onClose, onSave }) {
                 fontWeight: 600,
                 cursor: 'pointer'
               }
-            }, 'Отмена'),
+            }, t('action_cancel')),
             h('button', {
+// ... (остальной код без изменений) ...
               onClick: handleSave,
               style: {
                 padding: '14px',
@@ -521,64 +726,100 @@ function EditPostModal({ post, onClose, onSave }) {
 }
 
 // ✅ НОВОЕ: Компонент переименован (был SwipeablePostCard)
-// ✅ НОВОЕ: Добавлено поп-ап меню, убран свайп
-// ✅ ИСПРАВЛЕНИЕ #8: Исправлена верстка (убран paddingRight)
-// ✅ ИСПРАВЛЕНИЕ #3: Возвращен styleOverride с paddingRight
-// ✅ ИСПРАВЛЕНИЕ #3 (НОВЫЙ ФИКС): Убран styleOverride, передаем prop
-const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpenPostSheet, onEdit, onDelete }) {
-// ... (остальной код без изменений) ...
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef(null);
+// ✅ ИЗМЕНЕНИЕ: Убраны isMenuOpen, menuRef, handleEdit, handleDelete
+// ✅ ИЗМЕНЕНИЕ: Убран onClick (заменен на onTap/onLongPress)
+const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onEdit, onDelete, isContextMenuOpen }) {
   const postKey = post.post_id || `temp-post-${Math.random()}`;
+  
+  // --- 🔴 НОВАЯ ЛОГИКА ЖЕСТОВ (Полная замена) ---
+  const gestureTimerRef = useRef(null); // Для таймера 300мс
+  const pointerStartRef = useRef(null); // { y: number } - стартовая позиция пальца
+  const cardRef = useRef(null); // 🔴 (ИЗМЕНЕНИЕ) Ref для DOM-элемента
 
-  // Обработчик клика снаружи
-  useEffect(() => {
-    if (!isMenuOpen) return;
-    const handleClickOutside = (event) => {
-        // Закрываем, если клик был не по меню И не по кнопке, которая его открывает
-        // (Проверку кнопки убрали, т.к. кнопка теперь сама_переключает state)
-        if (menuRef.current && !menuRef.current.contains(event.target)) {
-            setIsMenuOpen(false);
-        }
-    };
-    // Используем 'mousedown', чтобы сработать до 'click' на карточке
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMenuOpen]);
+  // Порог (в пикселях), после которого мы считаем, что это скролл, а не тап
+  const POINTER_SLOP = 5;
 
-  const handleEdit = (e) => {
-    e.stopPropagation();
-    setIsMenuOpen(false);
-    onEdit(post);
+  const handlePointerDown = (e) => {
+    // 1. Запоминаем, где палец коснулся экрана
+    pointerStartRef.current = { y: e.pageY };
+    
+    // 2. Отключаем свайпы TWA, чтобы мы могли обработать жест
+    tg.disableVerticalSwipes();
+
+    // 3. Запускаем таймер, который через 300мс вызовет Long Press
+    gestureTimerRef.current = setTimeout(() => {
+        // Таймер сработал! Это Long Press.
+        if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
+        
+        // 🔴 (ИЗМЕНЕНИЕ) Передаем DOM-элемент карточки
+        onOpenContextMenu(post, cardRef.current); 
+        
+        // Сбрасываем, чтобы onPointerUp ничего не сделал
+        pointerStartRef.current = null; 
+        
+        // Возвращаем TWA управление, так как жест завершен
+        tg.enableVerticalSwipes();
+    }, 300);
   };
 
-  const handleDelete = (e) => {
-    e.stopPropagation();
-    setIsMenuOpen(false);
-    
-    // Используем тот же handleDeleteConfirm, что и раньше
-    if (tg?.showConfirm) {
-      tg.showConfirm("Удалить этот запрос?", (ok) => {
-        if (ok) {
-          onDelete(post);
-        }
-      });
-    } else {
-      if (confirm("Удалить этот запрос?")) {
-        onDelete(post);
-      }
+  const handlePointerMove = (e) => {
+    // Если таймер уже сработал или жест отменен, ничего не делаем
+    if (!pointerStartRef.current) return;
+
+    // Считаем, как далеко ушел палец
+    const deltaY = Math.abs(e.pageY - pointerStartRef.current.y);
+
+    // Если палец ушел > 5px, это Скролл
+    if (deltaY > POINTER_SLOP) {
+        // 1. Немедленно отменяем таймер Long Press
+        clearTimeout(gestureTimerRef.current);
+        
+        // 2. Сбрасываем жест
+        pointerStartRef.current = null;
+        
+        // 3. Возвращаем TWA управление, чтобы юзер мог скроллить
+        tg.enableVerticalSwipes();
     }
   };
 
+  const handlePointerUp = (e) => {
+    // 1. Всегда возвращаем TWA управление
+    tg.enableVerticalSwipes();
+    
+    // 2. Всегда отменяем таймер (на случай, если это был тап)
+    clearTimeout(gestureTimerRef.current);
+
+    // 3. Если pointerStartRef не был сброшен (т.е. это НЕ был long-press и НЕ был скролл),
+    //    значит, это был Tap!
+    if (pointerStartRef.current) {
+        onOpenPostSheet(post);
+    }
+    
+    // 4. Сбрасываем состояние
+    pointerStartRef.current = null;
+  };
+  // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
+
   return h(motion.div, {
+    // 🔴 (ИЗМЕНЕНИЕ) Добавляем ref
+    ref: cardRef,
+    
     // ✅ ИСПРАВЛЕНИЕ (iOS): Отключаем layout-анимацию на iOS
     layout: isIOS ? false : "position",
     
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 30,
-    },
+    // --- 🔴 ИЗМЕНЕНИЕ ЗДЕСЬ ---
+    // УБИРАЕМ layoutId
+    
+    // ВОЗВРАЩАЕМ 'variants' для анимации появления
+    variants: cardVariants, 
+    
+    // ПЕРЕДАЕМ ОБЪЕКТ в 'custom', чтобы 'visible' мог его прочитать
+    custom: { i: index, isContextMenuOpen: isContextMenuOpen },
+    
+    initial: "hidden",
+    animate: "visible", // <-- ВОЗВРАЩАЕМ "visible"
+    exit: "exit",
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     
     // ✅ НОВОЕ: Контейнер теперь относительный
     style: {
@@ -587,48 +828,31 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
       // ✅ ИСПРАВЛЕНИЕ #1: Отступ теперь здесь (MyPostCard - это motion.div)
       marginBottom: '15px', 
       borderRadius: 12,
-      cursor: 'pointer' // Вся карточка кликабельна
+      cursor: 'pointer', // Вся карточка кликабельна
+      
+      // --- 🔴 ВОТ ИСПРАВЛЕНИЕ ---
+      // Поднимаем карточку НАД фоном (backdrop)
+      zIndex: isContextMenuOpen ? 2001 : 'auto'
+      // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
     },
-    // ✅ НОВОЕ: Клик по карточке открывает детали (если меню не открыто)
-    onClick: () => {
-        if (!isMenuOpen) {
-            onOpenPostSheet(post);
-        }
-    }
+    
+    // --- 🔴 ИЗМЕНЕНИЕ ЗДЕСЬ: Новые обработчики ---
+    // Убираем ВСЕ старые жесты (onTap, onLongPress, drag, onDragStart)
+    // Ставим наши кастомные обработчики
+    onPointerDown: handlePointerDown,
+    onPointerMove: handlePointerMove,
+    onPointerUp: handlePointerUp,
+    onPointerCancel: handlePointerUp, // Отмена = отпускание пальца
+    
+    // Отключаем системное меню (ОСТАЕТСЯ)
+    onContextMenu: (e) => e.preventDefault(),
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
   },
     
-    // ✅ НОВОЕ: Кнопка "..." (Троеточие)
-    h('button', {
-        className: `post-actions-button ${isIOS ? 'is-ios' : ''}`,
-        onClick: (e) => {
-            e.stopPropagation(); // Не даем клику "провалиться" на карточку
-            setIsMenuOpen(prev => !prev); // Переключаем меню
-        },
-        'aria-label': 'Действия'
-    }, '⋯'),
-
-    // ✅ НОВОЕ: Поп-ап меню
-    h(AnimatePresence, null,
-        isMenuOpen && h(motion.div, {
-            ref: menuRef,
-            className: `post-actions-menu ${isIOS ? 'is-ios' : ''}`,
-            initial: { opacity: 0, scale: 0.8, y: -10 },
-            animate: { opacity: 1, scale: 1, y: 0 },
-            exit: { opacity: 0, scale: 0.8, y: -10 },
-            transition: { type: 'spring', stiffness: 500, damping: 30 },
-            onClick: (e) => e.stopPropagation() // Не даем клику закрыть меню
-        },
-            h('button', {
-                className: 'post-actions-menu-button edit',
-                onClick: handleEdit
-            }, '✏️ Редактировать'),
-            
-            h('button', {
-                className: 'post-actions-menu-button delete',
-                onClick: handleDelete
-            }, '🗑️ Удалить')
-        )
-    ),
+    // ✅ ИЗМЕНЕНИЕ: Кнопка "..." (Троеточие) УДАЛЕНА
+    
+    // ✅ ИЗМЕНЕНИЕ: Поп-ап меню УДАЛЕНО (теперь управляется из App)
 
     // Сама карточка
     // ✅ НОВОЕ: disableClick={true}, т.к. родитель управляет кликом
@@ -637,11 +861,17 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
       post: post,
       index: index,
       onOpenProfile: onOpenProfile,
-      onOpenPostSheet: onOpenPostSheet,
+      onOpenPostSheet: onOpenPostSheet, // Передаем, но PostCard не будет его использовать
+      onOpenContextMenu: onOpenContextMenu, // Передаем, но PostCard не будет его использовать
       onTagClick: () => {},
       disableClick: true, // <-- ВАЖНО
       // ✅ ИСПРАВЛЕНИЕ #3: Передаем новый prop
-      showActionsSpacer: true 
+      showActionsSpacer: false, // <-- ИЗМЕНЕНИЕ: УБИРАЕМ SPACER, т.к. нет кнопки "..."
+      
+      // --- 🔴 ИЗМЕНЕНИЕ ЗДЕСЬ ---
+      isWrapped: true, // Сообщаем PostCard, что он "обернут"
+      isContextMenuOpen: isContextMenuOpen // Передаем флаг "приподнимания"
+      // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     })
   );
 });
@@ -652,8 +882,8 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
 // ✅ ИСПРАВЛЕНИЕ #5: Добавлен marginRight к блоку имени
 // ✅ ИСПРАВЛЕНИЕ #1: Возвращаем marginBottom
 // ✅ ИСПРАВЛЕНИЕ #3, #5: Принимаем showActionsSpacer
-const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPostSheet, onTagClick, disableClick = false, styleOverride = {}, showActionsSpacer = false }) {
-// ... (остальной код без изменений) ...
+// ✅ ИЗМЕНЕНИЕ: Убран onClick (заменен на onTap/onLongPress)
+const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onTagClick, disableClick = false, styleOverride = {}, showActionsSpacer = false, isContextMenuOpen }) {
     const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
     const { content = 'Нет описания', post_type = 'default', skill_tags = [], created_at } = post;
     const avatar = author.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
@@ -668,13 +898,65 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
     const timeAgo = formatPostTime(created_at);
     const postKey = post.post_id || `temp-post-${Math.random()}`;
 
+    // --- 🔴 НОВАЯ ЛОГИКА ЖЕСТОВ (Полная замена) ---
+    const gestureTimerRef = useRef(null); // Для таймера 300мс
+    const pointerStartRef = useRef(null); // { y: number } - стартовая позиция пальца
+    const cardRef = useRef(null); // 🔴 (ИЗМЕНЕНИЕ) Ref для DOM-элемента
+
+    // Порог (в пикселях), после которого мы считаем, что это скролл, а не тап
+    const POINTER_SLOP = 5;
+
+    const handlePointerDown = (e) => {
+        if (disableClick) return;
+        pointerStartRef.current = { y: e.pageY };
+        tg.disableVerticalSwipes();
+        gestureTimerRef.current = setTimeout(() => {
+            if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
+            
+            // 🔴 (ИЗМЕНЕНИЕ) Передаем DOM-элемент карточки
+            onOpenContextMenu(post, cardRef.current);
+            
+            pointerStartRef.current = null; 
+            tg.enableVerticalSwipes();
+        }, 300);
+    };
+
+    const handlePointerMove = (e) => {
+        if (disableClick || !pointerStartRef.current) return;
+        const deltaY = Math.abs(e.pageY - pointerStartRef.current.y);
+        if (deltaY > POINTER_SLOP) {
+            clearTimeout(gestureTimerRef.current);
+            pointerStartRef.current = null;
+            tg.enableVerticalSwipes();
+        }
+    };
+
+    const handlePointerUp = (e) => {
+        if (disableClick) return;
+        tg.enableVerticalSwipes();
+        clearTimeout(gestureTimerRef.current);
+        if (pointerStartRef.current) {
+            onOpenPostSheet(post);
+        }
+        pointerStartRef.current = null;
+    };
+    // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
+
     return h(motion.div, {
+        // 🔴 (ИЗМЕНЕНИЕ) Добавляем ref
+        ref: cardRef,
+        
         // (ИЗМЕНЕНИЕ) Возвращаем layout="position", если это НЕ свайпабельная карточка
         // ✅ ИСПРАВЛЕНИЕ (iOS): Отключаем layout-анимацию на iOS
         layout: disableClick ? undefined : (isIOS ? false : "position"),
         
+        // --- 🔴 ИЗМЕНЕНИЕ ЗДЕСЬ ---
+        // Добавляем layoutId для "магического" перехода
+        layoutId: `postcard-${post.post_id}`,
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+        
         variants: cardVariants,
-        custom: index,
+        custom: { i: index, isContextMenuOpen: isContextMenuOpen },
         initial: "hidden",
         animate: "visible",
         exit: "exit",
@@ -686,6 +968,8 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
           damping: 30,
         },
         
+        // 🔴 (ИЗМЕНЕНИЕ) Убрана анимация scale, она теперь в variants
+        
         key: postKey,
         className: 'react-feed-card',
         style: { 
@@ -695,9 +979,27 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
             // ✅ ИСПРАВЛЕНИЕ #1: Возвращаем marginBottom
             marginBottom: '15px',
             cursor: disableClick ? 'inherit' : 'pointer',
-            ...styleOverride // Оставляем для будущих нужд
+            ...styleOverride, // Оставляем для будущих нужд
+            
+            // --- 🔴 ВОТ ИСПРАВЛЕНИЕ ---
+            // Поднимаем карточку НАД фоном (backdrop)
+            position: 'relative', // zIndex не работает без position
+            zIndex: isContextMenuOpen ? 2001 : 'auto'
+            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
         },
-        onClick: disableClick ? undefined : () => onOpenPostSheet(post)
+        
+        // --- 🔴 ИЗМЕНЕНИЕ ЗДЕСЬ: Новые обработчики ---
+        // Убираем ВСЕ старые жесты
+        onPointerDown: handlePointerDown,
+        onPointerMove: handlePointerMove,
+        onPointerUp: handlePointerUp,
+        onPointerCancel: handlePointerUp, // Отмена = отпускание пальца
+        
+        // Отключаем системное меню (ОСТАЕТСЯ)
+        onContextMenu: (e) => {
+            if (!disableClick) e.preventDefault();
+        },
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     },
         h('div', {
             style: {
@@ -812,7 +1114,6 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
         ),
         
         h('p', { 
-// ... (остальной код без изменений) ...
             style: { 
                 margin: 0, 
                 fontSize: 15, 
@@ -829,7 +1130,6 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
         }, content),
         
         skill_tags.length > 0 && h('div', { 
-// ... (остальной код без изменений) ...
             style: { 
                 display: 'flex', 
                 flexWrap: 'wrap', 
@@ -849,8 +1149,8 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
     );
 }); // ✅ НОВОЕ: Закрываем React.memo
 
-function PostsList({ posts, onOpenProfile, onOpenPostSheet, onTagClick, isMyPosts, onEditPost, onDeletePost, containerRef }) {
-// ... (остальной код без изменений) ...
+// ✅ ИЗМЕНЕНИЕ: Добавлен prop onOpenContextMenu
+function PostsList({ posts, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onTagClick, isMyPosts, onEditPost, onDeletePost, containerRef, contextMenuPost }) {
   
   return h(motion.div, {
     ref: containerRef,
@@ -868,6 +1168,9 @@ function PostsList({ posts, onOpenProfile, onOpenPostSheet, onTagClick, isMyPost
     },
       posts.map((p, index) => {
         const key = p.post_id;
+        // 🔴 (ИЗМЕНЕНИЕ) Определяем, активна ли эта карточка
+        const isContextMenuOpen = contextMenuPost?.post_id === p.post_id;
+        
         if (isMyPosts) {
           // ✅ НОВОЕ: Используем MyPostCard вместо SwipeablePostCard
           return h(MyPostCard, {
@@ -876,8 +1179,10 @@ function PostsList({ posts, onOpenProfile, onOpenPostSheet, onTagClick, isMyPost
             index: index,
             onOpenProfile: onOpenProfile,
             onOpenPostSheet: onOpenPostSheet,
+            onOpenContextMenu: onOpenContextMenu, // <-- ✅ Передаем prop
             onEdit: onEditPost,
-            onDelete: onDeletePost
+            onDelete: onDeletePost,
+            isContextMenuOpen: isContextMenuOpen // 🔴 (ИЗМЕНЕНИЕ) Передаем флаг
             // ✅ ИСПРАВЛЕНИЕ #1: У MyPostCard УЖЕ ЕСТЬ свой margin, gap не нужен
             // Поэтому PostCard рендерится без обертки
           });
@@ -889,7 +1194,9 @@ function PostsList({ posts, onOpenProfile, onOpenPostSheet, onTagClick, isMyPost
             index: index,
             onOpenProfile: onOpenProfile,
             onOpenPostSheet: onOpenPostSheet,
-            onTagClick: onTagClick
+            onOpenContextMenu: onOpenContextMenu, // <-- ✅ Передаем prop
+            onTagClick: onTagClick,
+            isContextMenuOpen: isContextMenuOpen // 🔴 (ИЗМЕНЕНИЕ) Передаем флаг
           });
         }
       })
@@ -901,8 +1208,8 @@ function PostsList({ posts, onOpenProfile, onOpenPostSheet, onTagClick, isMyPost
 // ✅ ИСПРАВЛЕНИЕ #8: Замена "X" на "Шеврон", рефакторинг верстки
 // ✅ ИСПРАВЛЕНИЕ #2: Рефакторинг верстки для "плавающего" шеврона
 // ✅ ИСПРАВЛЕНИЕ #4: Убран лишний padding-bottom
-function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDelete }) {
-// ... (остальной код без изменений) ...
+// ✅ НОВОЕ (Task 1): Добавлены кнопки "Откликнуться", "Репост"
+function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDelete, onRespond, onRepost }) {
     const sheetRef = useRef(null);
     const [isDragging, setIsDragging] = useState(false);
     
@@ -992,6 +1299,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
             }, 
                 // SVG "Шеврон вниз"
                 h('svg', { 
+// ... (остальной код без изменений) ...
                     xmlns: 'http://www.w3.org/2000/svg', 
                     viewBox: '0 0 24 24', 
                     fill: 'none', 
@@ -1045,6 +1353,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                                 onOpenProfile(author);
                             },
                             style: {
+// ... (остальной код без изменений) ...
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 12,
@@ -1078,8 +1387,8 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                                 })
                             ),
                             h('div', { style: { flex: 1, minWidth: 0 } },
-                                h('div', { 
 // ... (остальной код без изменений) ...
+                                h('div', { 
                                     style: { 
                                         fontWeight: 600, 
                                         fontSize: 16, 
@@ -1208,6 +1517,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                             } 
                         },
                             ...skill_tags.map(tag => h('span', {
+// ... (остальной код без изменений) ...
                                 key: tag,
                                 // (ИЗМЕНЕНИЕ) Используем единый класс
                                 className: 'skill-tag skill-tag--display',
@@ -1246,6 +1556,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                                 },
                                 // ✅ ИСПРАВЛЕНИЕ (Bug): Добавлен зеленый фон
                                 style: { 
+// ... (остальной код без изменений) ...
                                     display: 'flex', 
                                     alignItems: 'center', 
                                     justifyContent: 'center', 
@@ -1253,7 +1564,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                                     background: '#34C759', // <-- ЗЕЛЕНЫЙ
                                     color: '#ffffff'       // <-- БЕЛЫЙ ТЕКСТ
                                 }
-                            }, '✏️ Редактировать'),
+                            }, `✏️ ${t('action_edit')}`),
                             h('button', {
 // ... (остальной код без изменений) ...
                                 className: 'action-button',
@@ -1262,24 +1573,46 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                                     onClose();
                                 },
                                 style: { 
+// ... (остальной код без изменений) ...
                                     display: 'flex', 
                                     alignItems: 'center', 
                                     justifyContent: 'center', 
                                     gap: 8,
                                     background: '#FF3B30'
                                 }
-                            }, '🗑️ Удалить')
+                            }, `🗑️ ${t('action_delete')}`)
                         ),
                         
-                        h('button', {
-// ... (остальной код без изменений) ...
-                            className: 'action-button',
-                            onClick: () => onOpenProfile(author),
-                            style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }
+                        // ✅ НОВОЕ (Task 1): Ряд кнопок для действий
+                        !isMyPost && h('div', {
+                            className: 'post-detail-actions-row',
+                            style: { gridTemplateColumns: '1fr 1fr 1fr' } // 3 кнопки
                         },
-                            h('span', null, '👤'),
-                            'Посмотреть профиль автора'
+                            h('button', {
+                                className: 'action-button secondary',
+                                onClick: () => onRespond(post)
+                            }, t('action_respond')),
+                            h('button', {
+                                className: 'action-button secondary',
+                                onClick: () => onRepost(post)
+                            }, t('action_repost')),
+                            h('button', {
+                                className: 'action-button secondary',
+                                onClick: () => onOpenProfile(author)
+                            }, t('action_view_profile'))
                         ),
+                        
+                        // Для СВОИХ постов показываем только "Репост" (т.к. "Профиль" не нужен)
+                        isMyPost && h('div', {
+                            className: 'post-detail-actions-row',
+                            style: { gridTemplateColumns: '1fr' } // 1 кнопка
+                        },
+                            h('button', {
+                                className: 'action-button secondary',
+                                onClick: () => onRepost(post)
+                            }, t('action_repost'))
+                        )
+                        
                         // ✅ ИСПРАВЛЕНИЕ #8: Кнопка "Закрыть" здесь больше не нужна
                         /*
                         h('button', {
@@ -1301,6 +1634,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
     const [isOpen, setIsOpen] = useState(false);
     
     const toggleMenu = useCallback(() => {
+// ... (остальной код без изменений) ...
         if (tg?.HapticFeedback?.impactOccurred) {
             tg.HapticFeedback.impactOccurred('medium');
         }
@@ -1308,6 +1642,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
     }, []);
     
     const handleAction = useCallback((action) => {
+// ... (остальной код без изменений) ...
         setIsOpen(false);
         if (tg?.HapticFeedback?.impactOccurred) {
             tg.HapticFeedback.impactOccurred('light');
@@ -1316,6 +1651,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
     }, []);
     
     const menuItems = [
+// ... (остальной код без изменений) ...
         { icon: '➕', label: 'Создать запрос', action: onCreatePost, color: '#007AFF' },
         { icon: '📝', label: 'Мои запросы', action: onMyPosts, color: '#34C759' },
         { icon: '🔖', label: 'Сохраненное', action: onSaved, color: '#FF9500' },
@@ -1373,6 +1709,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
                         key: item.label,
                         initial: { opacity: 0, y: 20, scale: 0.8 },
                         animate: { 
+// ... (остальной код без изменений) ...
                             opacity: 1, 
                             y: 0, 
                             scale: 1,
@@ -1384,12 +1721,14 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
                             }
                         },
                         exit: { 
+// ... (остальной код без изменений) ...
                             opacity: 0, 
                             y: 10, 
                             scale: 0.8,
                             transition: { duration: 0.15, delay: (menuItems.length - index - 1) * 0.03 }
                         },
                         style: {
+// ... (остальной код без изменений) ...
                             display: 'flex',
                             alignItems: 'center',
                             gap: 12,
@@ -1407,6 +1746,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
                             },
                             exit: { opacity: 0, x: 10 },
                             style: {
+// ... (остальной код без изменений) ...
                                 flex: 1,
                                 textAlign: 'right',
                                 paddingRight: 8
@@ -1434,6 +1774,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
                             whileHover: { scale: 1.05 },
                             whileTap: { scale: 0.95 },
                             style: {
+// ... (остальной код без изменений) ...
                                 width: 56,
                                 height: 56,
                                 borderRadius: '50%',
@@ -1464,6 +1805,7 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
                 transition: { type: 'spring', stiffness: 300, damping: 20 },
                 whileTap: { scale: 0.9 },
                 style: {
+// ... (остальной код без изменений) ...
                     width: 56,
                     height: 56,
                     borderRadius: '50%',
@@ -1497,6 +1839,7 @@ function ProfileFallback() {
         }
     },
         h('div', {
+// ... (остальной код без изменений) ...
             style: {
                 width: 40,
                 height: 40,
@@ -1514,12 +1857,16 @@ const quickFiltersHost = document.getElementById('posts-quick-filters');
 if (!quickFiltersHost) { console.warn("REACT Posts: Host element #posts-quick-filters not found!"); }
 
 function App({ mountInto, overlayHost }) {
-// ... (остальной код без изменений) ...
   const [cfg, setCfg] = useState(null);
   const [posts, setPosts] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [profileToShow, setProfileToShow] = useState(null);
   const [postToShow, setPostToShow] = useState(null);
+  
+  // ✅ НОВОЕ (Long-Press Menu): Состояние для контекстного меню
+  // 🔴 (ИЗМЕНЕНИЕ) Меняем `useState(null)` на объект
+  const [contextMenuState, setContextMenuState] = useState({ post: null, targetElement: null });
+  
   const [allSkills] = useState(POPULAR_SKILLS);
   
   // --- (ИЗМЕНЕНИЕ) Состояния для поиска ---
@@ -1543,13 +1890,11 @@ function App({ mountInto, overlayHost }) {
   
   
   const handleBackToAllPosts = useCallback(() => {
-// ... (остальной код без изменений) ...
     console.log("Back to all posts");
     document.dispatchEvent(new CustomEvent('show-all-posts'));
   }, []);
   
   useEffect(() => { 
-// ... (остальной код без изменений) ...
     inputRef.current = document.getElementById('posts-search-input'); 
     statusFilterInputRef.current = document.getElementById('posts-status-filter-input');
     
@@ -1570,7 +1915,6 @@ function App({ mountInto, overlayHost }) {
   }, [handleBackToAllPosts]);
 
   const fetchPosts = useCallback(async () => {
-// ... (остальной код без изменений) ...
     if (!cfg?.backendUrl) return; 
     console.log("REACT Posts: Fetching posts...");
     try {
@@ -1589,7 +1933,6 @@ function App({ mountInto, overlayHost }) {
 
 // (ИСПРАВЛЕНО) Читаем конфиг из window (без изменений)
   useEffect(() => {
-// ... (остальной код без изменений) ...
     (async () => {
         try {
             if (!window.__CONFIG) {
@@ -1613,7 +1956,6 @@ function App({ mountInto, overlayHost }) {
   // --- (ИСПРАВЛЕНИЕ) ---
   // Слушатель смены режима (теперь также слушает 'skills' и 'status')
   useEffect(() => {
-// ... (остальной код без изменений) ...
     const handleSetMode = (event) => {
         if (!event.detail) return;
 
@@ -1655,7 +1997,6 @@ function App({ mountInto, overlayHost }) {
   // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
   // Логика, связанная с 'backToProfileBtn' и 'backToAllBtn', УДАЛЕНА
   useEffect(() => {
-// ... (остальной код без изменений) ...
     const titleEl = document.querySelector('#posts-feed-container h1[data-i18n-key="feed_posts_title"]');
     // const backToProfileBtn = document.getElementById('back-to-profile-from-posts-button'); // УДАЛЕНО
     // const backToAllBtn = document.getElementById('back-to-all-posts-button'); // УДАЛЕНО
@@ -1675,7 +2016,6 @@ function App({ mountInto, overlayHost }) {
 
   // --- (ИЗМЕНЕНИЕ) Главный useEffect фильтрации по DEBOUNCED-значениям ---
   useEffect(() => {
-// ... (остальной код без изменений) ...
     const qLower = debouncedSearchQuery.toLowerCase(); 
     const terms = qLower.replace(/,/g, ' ').split(' ').map(s => s.trim()).filter(Boolean);
     const selectedSkillsLower = debouncedSelectedSkills.map(s => s.toLowerCase());
@@ -1712,7 +2052,6 @@ function App({ mountInto, overlayHost }) {
 
   // --- (ИЗМЕНЕНИЕ) useEffect слушателя инпута ---
   useEffect(() => {
-// ... (остальной код без изменений) ...
     const input = inputRef.current; 
     if (!input) return;
     
@@ -1748,7 +2087,6 @@ function App({ mountInto, overlayHost }) {
 
   // (ВОССТАНОВЛЕНА ФУНКЦИЯ) (без изменений)
   useEffect(() => {
-// ... (остальной код без изменений) ...
     const skillButton = document.getElementById('open-skills-modal-button-posts'); if (!skillButton) return;
     const handleClick = () => { const event = new CustomEvent('openSkillsModal', { detail: { source: 'postsFeed', skills: selectedSkills } }); document.dispatchEvent(event); };
     skillButton.addEventListener('click', handleClick); return () => skillButton.removeEventListener('click', handleClick);
@@ -1756,7 +2094,6 @@ function App({ mountInto, overlayHost }) {
 
   // (ИЗМЕНЕНИЕ) onToggleSkill теперь обновляет state
   const onToggleSkill = useCallback((skill) => {
-// ... (остальной код без изменений) ...
     const lowerSkill = skill.toLowerCase(); let newSelectedSkills;
     const isSelected = selectedSkills.some(s => s.toLowerCase() === lowerSkill);
     if (isSelected) { newSelectedSkills = selectedSkills.filter(s => s.toLowerCase() !== lowerSkill); } 
@@ -1780,10 +2117,10 @@ function App({ mountInto, overlayHost }) {
 
   // (Без изменений)
   const handleOpenProfile = useCallback(async (author) => {
-// ... (остальной код без изменений) ...
     if (!author || !author.user_id) { console.error("REACT Posts: Invalid author data:", author); return; }
     if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light');
     setPostToShow(null);
+    setContextMenuState({ post: null, targetElement: null }); // <-- 🔴 (ИЗМЕНЕНИЕ) Закрываем меню
     try {
       const resp = await postJSON(`${cfg.backendUrl}/get-user-by-id`, { initData: tg?.initData, target_user_id: author.user_id });
       if (resp?.ok && resp.profile) { setProfileToShow(resp.profile); } else { setProfileToShow(author); }
@@ -1791,12 +2128,35 @@ function App({ mountInto, overlayHost }) {
   }, [cfg]);
 
   const handleCloseProfile = useCallback(() => { setProfileToShow(null); }, []);
+  
   const handleOpenPostSheet = useCallback((post) => {
-// ... (остальной код без изменений) ...
     if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('medium');
     setPostToShow(post);
   }, []);
   const handleClosePostSheet = useCallback(() => { setPostToShow(null); }, []);
+
+  // ✅ НОВОЕ (Long-Press Menu): Обработчики
+  // 🔴 (ИЗМЕНЕНИЕ) Принимаем (post, element)
+  const handleOpenContextMenu = useCallback((post, element) => {
+      if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
+      setContextMenuState({ post: post, targetElement: element });
+  }, []);
+  
+  const handleCloseContextMenu = useCallback(() => {
+      setContextMenuState({ post: null, targetElement: null });
+  }, []);
+
+  // ✅ НОВОЕ (Task 1 & 2): Заглушки для действий
+  const handleRespond = useCallback((post) => {
+      setContextMenuState({ post: null, targetElement: null }); // Закрываем меню, если оно было открыто
+      tg.showAlert(t('action_respond_toast'));
+  }, []);
+  
+  const handleRepost = useCallback((post) => {
+      setContextMenuState({ post: null, targetElement: null }); // Закрываем меню, если оно было открыто
+      tg.showAlert(t('action_repost_toast'));
+  }, []);
+
 
   // ✅ ИСПРАВЛЕНИЕ (Задача 6): Отправляем CustomEvent вместо .click()
   const handleCreatePost = useCallback(() => {
@@ -1807,34 +2167,32 @@ function App({ mountInto, overlayHost }) {
   }, []);
 
   const handleMyPosts = useCallback(() => {
-// ... (остальной код без изменений) ...
     console.log("FAB: My posts clicked");
     document.dispatchEvent(new CustomEvent('show-my-posts'));
   }, []);
 
   const handleSaved = useCallback(() => {
-// ... (остальной код без изменений) ...
     console.log("FAB: Saved clicked");
     tg.showAlert('Сохраненное - в разработке');
   }, []);
 
   const handleSubscriptions = useCallback(() => {
-// ... (остальной код без изменений) ...
     console.log("FAB: Subscriptions clicked");
     tg.showAlert('Лента подписок - в разработке');
   }, []);
 
   // Новые обработчики для редактирования/удаления
   const handleEditPost = useCallback((post) => {
-// ... (остальной код без изменений) ...
     console.log("Edit post:", post.post_id);
     setEditingPost(post);
     setPostToShow(null);
+    setContextMenuState({ post: null, targetElement: null }); // <-- 🔴 (ИЗМЕНЕНИЕ) Закрываем меню
   }, []);
 
   // (ВОССТАНОВЛЕНА ФУНКЦИЯ) (без изменений)
   const handleDeletePost = useCallback(async (post) => {
-// ... (остальной код без изменений) ...
+    setContextMenuState({ post: null, targetElement: null }); // <-- 🔴 (ИЗМЕНЕНИЕ) Закрываем меню
+    
     if (tg?.showConfirm) {
         tg.showConfirm("Удалить этот запрос?", async (ok) => {
             if (!ok) return;
@@ -1878,7 +2236,6 @@ function App({ mountInto, overlayHost }) {
 
   // (ВОССТАНОВЛЕНА ФУНКЦИЯ) (без изменений)
   const handleSaveEdit = useCallback(async (postData) => {
-// ... (остальной код без изменений) ...
     try {
       const resp = await postJSON(`${cfg.backendUrl}/api/update-post`, {
         initData: tg?.initData,
@@ -1905,24 +2262,25 @@ function App({ mountInto, overlayHost }) {
   }, [cfg, editingPost, fetchPosts]);
 
   return h('div', { style: { padding: '0 12px 12px' } },
-// ... (остальной код без изменений) ...
     
     h(PostsList, { 
       posts: filtered, 
       onOpenProfile: handleOpenProfile,
       onOpenPostSheet: handleOpenPostSheet,
+      onOpenContextMenu: handleOpenContextMenu, // <-- ✅ Передаем новый prop
       onTagClick: onToggleSkill,
       isMyPosts: showMyPostsOnly,
       onEditPost: handleEditPost,
       onDeletePost: handleDeletePost,
-      containerRef: listContainerRef
+      containerRef: listContainerRef,
+      contextMenuPost: contextMenuState.post // 🔴 (ИЗМЕНЕНИЕ) Передаем пост
     }),
     
     // ✅ НОВОЕ: Оборачиваем модалки в Suspense
     h(Suspense, { fallback: h(ProfileFallback) },
-// ... (остальной код без изменений) ...
         h(AnimatePresence, null, 
           profileToShow && h(ProfileSheet, { key: `profile-${profileToShow.user_id}`, user: profileToShow, onClose: handleCloseProfile }),
+          
           postToShow && h(PostDetailSheet, { 
             key: `post-${postToShow.post_id}`, 
             post: postToShow, 
@@ -1930,19 +2288,35 @@ function App({ mountInto, overlayHost }) {
             onOpenProfile: handleOpenProfile,
             isMyPost: showMyPostsOnly,
             onEdit: handleEditPost,
-            onDelete: handleDeletePost
+            onDelete: handleDeletePost,
+            onRespond: handleRespond, // <-- ✅ Передаем prop
+            onRepost: handleRepost     // <-- ✅ Передаем prop
           }),
+          
           editingPost && h(EditPostModal, {
             key: `edit-${editingPost.post_id}`,
             post: editingPost,
             onClose: () => setEditingPost(null),
             onSave: handleSaveEdit
+          }),
+          
+          // ✅ НОВОЕ (Long-Press Menu): Рендерим контекстное меню
+          // 🔴 (ИЗМЕНЕНИЕ) Проверяем state.post
+          contextMenuState.post && h(PostContextMenu, {
+            key: `context-menu-${contextMenuState.post.post_id}`,
+            post: contextMenuState.post,
+            targetElement: contextMenuState.targetElement, // 🔴 (ИЗМЕНЕНИЕ) Передаем элемент
+            onClose: handleCloseContextMenu,
+            onOpenProfile: handleOpenProfile,
+            onRespond: handleRespond,
+            onRepost: handleRepost,
+            onEdit: handleEditPost,
+            onDelete: handleDeletePost
           })
         )
     ),
     
     h(FABMenu, {
-// ... (остальной код без изменений) ...
       onCreatePost: handleCreatePost,
       onMyPosts: handleMyPosts,
       onSaved: handleSaved,

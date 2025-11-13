@@ -7,6 +7,7 @@
 /* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container теперь position: absolute */
 /* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container снова position: fixed + z-index */
 /* УДАЛЕНО: Стили .flag-overlay, .profile-last-seen, .name-status-container */
+/* ✅ НОВОЕ (Task 1): Добавлены стили для .post-detail-actions-row */
 
 /* --- КАРТОЧКА ПРОФИЛЯ (СВОЕГО И ЧУЖОГО) --- */
 .profile-card {
@@ -537,4 +538,40 @@ body.theme-glass-overlay .fab-main-button:last-child {
     background-color: var(--main-button-color);
     color: var(--main-button-text-color);
     border: none;
+}
+
+
+/* --- ✅ НОВОЕ (Task 1): Стили для ряда кнопок в PostDetailSheet --- */
+.post-detail-actions-row {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* Стилизация кнопок в этом ряду */
+.post-detail-actions-row .action-button {
+    /* Немного уменьшаем, чтобы выглядели легче */
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 10px;
+    
+    /* Добавляем иконки для наглядности */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+/* Добавляем эмодзи через ::before */
+.post-detail-actions-row .action-button[onClick*="onRespond"]::before {
+    content: '🚀';
+    display: inline-block;
+}
+.post-detail-actions-row .action-button[onClick*="onRepost"]::before {
+    content: '🔗';
+    display: inline-block;
+}
+.post-detail-actions-row .action-button[onClick*="onOpenProfile"]::before {
+    content: '👤';
+    display: inline-block;
 }
