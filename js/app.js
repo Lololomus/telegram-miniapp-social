@@ -576,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
             detail: { showMyPostsOnly: true }
         }));
     }
-    
+
     /**
      * Показывает модальное окно создания поста
      */
@@ -698,9 +698,8 @@ async function loadReactIslands() {
     window.REACT_ISLANDS_LOADED = true;
     console.log("🔄 Начинаем СИНХРОННУЮ загрузку React-островков...");
     try {
-        await loadScript('/js/react-shared.js?v=1.4'); 
-        await loadScript('/js/react-feed.js?v=1.4');
-        await loadScript('/js/react-posts-feed.js?v=1.4');
+        await loadScript('/js/react/feed/index.js?v=1.4');
+        await loadScript('/js/react/posts/index.js?v=1.4');
         console.log("✅ Все React-островки успешно загружены.");
     } catch (e) {
         console.error("❌ КРИТИЧЕСКАЯ ОШИБКА при загрузке React-скриптов:", e);
@@ -711,7 +710,6 @@ async function loadReactIslands() {
 
 // ✅ ИСПРАВЛЕНИЕ #2: Улучшенный loadScript с retry
 function loadScript(src, retries = 3) {
-    // ... (код без изменений) ...
     console.log(`⏳ Загружается скрипт: ${src}`);
     return new Promise((resolve, reject) => {
         if (document.querySelector(`script[src="${src}"]`)) {

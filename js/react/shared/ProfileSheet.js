@@ -1,71 +1,19 @@
-// js/react-shared.js
-// ОБЩИЙ КОМПОНЕНТ для react-feed.js и react-posts-feed.js
-// --- (ИЗМЕНЕНИЕ) Удален хук useFlipAnimation ---
-// ✅ ИСПРАВЛЕНИЕ (Glass): Добавлена проверка isIOS и убран inline-background
-// ✅ ИСПРАВЛЕНИЕ (Swipe): Убран layout и добавлена кнопка CloseButton
-// ✅ ИСПРАВЛЕНИЕ (Item 4, 6): "Крестик" (CloseButton) заменен на "Шеврон".
-// ✅ ИСПРАВЛЕНИЕ (Item 6): Анимация изменена на выезд снизу (y: '100%').
-// ✅ ИСПРАВЛЕНИЕ (Item 5): Ссылки теперь используют .profile-link-button.
-// ✅ ИСПРАВЛЕНИЕ (Item 3): FAB-контейнер теперь внутри .react-sheet-content.
-// ✅ ИСПРАВЛЕНИЕ (Item 3, 2): FAB-контейнер вынесен из .react-sheet-content
-// ✅ ИСПРАВЛЕНИЕ (Item 3, 3): Анимация фона (backdrop) ускорена до 0.1s
-// ✅ ИСПРАВЛЕНИЕ (Item 3, 3): Анимация фона синхронизирована (spring)
-// ✅ ИСПРАВЛЕНИЕ (Item 2): FAB-контейнер перемещен в правильное место
-// ✅ ИСПРАВЛЕНИЕ (Item 3): Анимация фона (backdrop) сделана быстрой (0.15s)
+// react/shared/ProfileSheet.js
+//
+// ОБЩИЙ КОМПОНЕНТ "шторки" профиля.
+// (Перенесен из /js/react-shared.js)
+// Теперь импортирует утилиты из ./utils.js
 
 import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
+
+// --- ИМПОРТ ОБЩИХ УТИЛИТ ---
+import { tg, isIOS, t, postJSON } from './utils.js';
+
 const h = React.createElement;
 
-// --- Утилиты и окружение, необходимые для ProfileSheet ---
-const tg = window.Telegram?.WebApp;
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-/**
- * Функция перевода (взята из react-posts-feed.js, т.к. она полнее)
- */
-const t = (k, d = {}) => {
-    // Расширенный словарь для постов и профиля
-    const dict = {
-        'feed_empty': 'Нет запросов',
-        'links': 'Ссылки',
-        'skills': 'Навыки',
-        'experience': 'Опыт работы',
-        'education': 'Образование',
-        'present_time': 'по наст. время',
-        'post_type_looking': '🤝 Ищет',
-        'post_type_offering': '💼 Предлагает',
-        'post_type_showcase': '🚀 Демо',
-        'post_type_default': 'Запрос',
-        'job_not_specified': 'Опыт не указан',
-    };
-    let s = dict[k] || k;
-    Object.entries(d).forEach(([k, v]) => { s = s.replace(new RegExp(`{${k}}`, 'g'), v); });
-    return s;
-};
-
-/**
- * Отправка JSON-запроса (нужна для FABContainer)
- */
-async function postJSON(url, body) {
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    return await res.json();
-}
-
-// ✅ ИСПРАВЛЕНИЕ (Item 4): Убран компонент CloseButton
-/*
-function CloseButton({ onClick, isIOS }) { ... }
-*/
-
-// --- (КОД ИЗ REACT-POSTS-FEED.JS) КОМПОНЕНТ ProfileSheet и его хелперы ---
+// --- КОМПОНЕНТ ProfileSheet и его хелперы ---
 
 export function ProfileSheet({user, onClose}) {
   const avatar = user.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${user.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
@@ -82,8 +30,8 @@ export function ProfileSheet({user, onClose}) {
         position:'fixed', 
         inset:0, 
         zIndex:1000,
-        display: 'flex', // <-- Добавлено для Item 4
-        alignItems: 'flex-end' // <-- Добавлено для Item 4
+        display: 'flex',
+        alignItems: 'flex-end'
     }, 
     initial:{opacity:0}, 
     animate:{opacity:1}, 
@@ -96,11 +44,10 @@ export function ProfileSheet({user, onClose}) {
         initial:{opacity:0}, 
         animate:{opacity:1}, 
         exit:{opacity:0},
-        // ✅ ИСПРАВЛЕНИЕ (Item 3): Анимация фона сделана быстрой
         transition: { duration: 0.15, ease: 'easeOut' }
     }),
     
-    // ✅ ИСПРАВЛЕНИЕ (Item 4, 6): Новая внешняя обертка для анимации и шеврона
+    // Внешняя обертка для анимации и шеврона
     h(motion.div, {
         style: {
             position: 'relative', 
@@ -110,7 +57,6 @@ export function ProfileSheet({user, onClose}) {
             flexDirection: 'column',
             alignItems: 'center', 
         },
-        // ✅ ИСПРАВЛЕНИЕ (Item 6): Анимация выезда снизу
         initial: { y: '100%' },
         animate: { y: 0 },
         exit: { y: '100%' },
@@ -120,7 +66,7 @@ export function ProfileSheet({user, onClose}) {
             stiffness: 300 
         },
     },
-        // ✅ ИСПРАВЛЕНИЕ (Item 4): Добавлен "Шеврон" (скопирован из react-posts-feed.js)
+        // "Шеврон" (ручка)
         h('button', {
             className: `react-sheet-chevron-close ${isIOS ? 'is-ios' : ''}`,
             onClick: onClose,
@@ -141,29 +87,21 @@ export function ProfileSheet({user, onClose}) {
             
         // sheet (контент)
         h(motion.div,{
-          // ✅ ИСПРАВЛЕНИЕ (Glass): Убран inline 'background', добавлен className
           className: `react-sheet-content ${isIOS ? 'is-ios' : ''}`,
-          
-          // ✅ ИСПРАВЛЕНИЕ (Item 4, 6): Убраны 'top:64', 'bottom:0', 'left:0', 'right:0'
-          // Убраны 'initial: {y:40}', 'animate:{y:0}', 'exit:{y:40}'
           style:{ 
             position:'relative', 
             width:'100%', 
-            maxHeight: '85vh', // Ограничиваем высоту
+            maxHeight: '85vh',
             borderTopLeftRadius: 20, 
             borderTopRightRadius: 20, 
             borderTop:'none', 
             overflow:'auto', 
             padding:'0 16px 80px 16px' 
-            // padding-bottom: 80px ОСТАВЛЕН для FAB
           },
         },
-          // ✅ ИСПРАВЛЕНИЕ (Item 4): Кнопка "Крестик" (CloseButton) УДАЛЕНА
-          
-          // ✅ ИСПРАВЛЕНИЕ (Item 4): Кнопка "..." перенесена сюда (влево)
+          // Кнопка "..." (действия)
           h('button',{ 
               onClick:(e)=>{e.stopPropagation(); if(tg) tg.showAlert('Меню в разработке');}, 
-              // Используем CSS-класс для позиционирования
               className: `react-sheet-actions-button ${isIOS ? 'is-ios' : ''}`,
               'aria-label': 'Действия',
           }, '⋯'),
@@ -204,13 +142,9 @@ export function ProfileSheet({user, onClose}) {
           // Ссылки
           links.length > 0 && h(LinksCard, {links}),
           
-          // ✅ ИСПРАВЛЕНИЕ (Item 2): FAB-контейнер УДАЛЕН отсюда
-          // window.__CURRENT_USER_ID && window.__CURRENT_USER_ID !== user.user_id && h(FABContainer, {user})
         ), // <-- Конец .react-sheet-content
         
-        // ✅ ИСПРАВЛЕНИЕ (Item 2): FAB-контейнер ПЕРЕМЕЩЕН сюда
-        // Он теперь "брат" (sibling) .react-sheet-content,
-        // и будет позиционироваться (position: fixed) относительно ВНЕШНЕЙ обертки.
+        // FAB-контейнер
         window.__CURRENT_USER_ID && window.__CURRENT_USER_ID !== user.user_id && h(FABContainer, {user})
         
     ) // <-- Конец внешней motion.div (анимации)
@@ -229,13 +163,12 @@ function SectionBlock({title, items, renderItem}) {
 function LinksCard({links}) {
   return h('div',{ className: 'profile-section', style:{ display: 'block', marginTop: '15px' } },
     h('div', {style:{display:'grid', gap:10, width: '100%'}},
-      // ✅ ИСПРАВЛЕНИЕ (Item 5): Добавлен className: 'profile-link-button'
       ...links.map((link,i)=>h('a',{ 
         key:i, 
         href:link, 
         target:'_blank', 
         rel:'noopener noreferrer', 
-        className: 'profile-link-button' // <-- ИЗМЕНЕНИЕ
+        className: 'profile-link-button'
       }, 
         h('span',{className: 'link-icon'}, '🔗'), h('span', {className: 'link-text'}, link)
       ))
@@ -262,7 +195,7 @@ function FABContainer({user}) {
       console.error("FAB: Contact error:", e);
       if(tg) tg.showAlert('Ошибка связи с сервером при получении @username');
     }
-  }, [user.user_id]); // Зависит только от ID пользователя
+  }, [user.user_id]);
 
   // Обработчик "Подписаться/Отписаться"
   const handleFollow = useCallback(async () => {
@@ -285,9 +218,8 @@ function FABContainer({user}) {
       setIsFollowed(!newState); // Откатываем UI при ошибке сети
       if(tg) tg.showAlert('Ошибка связи с сервером при подписке/отписке');
     }
-  }, [isFollowed, user.user_id]); // Зависит от состояния подписки и ID
+  }, [isFollowed, user.user_id]);
 
-  // Стили кнопок перенесены в CSS (классы fab-button, fab-primary, fab-secondary)
   return h('div',{className: 'fab-container' },
     h('button',{ onClick:handleContact, title:'Написать', className: 'fab-button fab-secondary' }, '💬'),
     h('button',{
@@ -298,6 +230,5 @@ function FABContainer({user}) {
   );
 }
 
-// ====================================================================
-// === (ИЗМЕНЕНИЕ) ХУК useFlipAnimation УДАЛЕН ОТСЮДА
-// ====================================================================
+// Экспортируем ProfileSheet по умолчанию (для React.lazy)
+export default ProfileSheet;
