@@ -184,32 +184,12 @@ function TopSpacer() {
 const cardVariants = isIOS 
   ? {
       hidden: { opacity: 0 },
-      // 'visible' теперь функция, принимающая 'custom' проп
-      visible: ({ isContextMenuOpen }) => ({ // <-- ИЗМЕНЕНИЕ
-        opacity: 1,
-        scale: isContextMenuOpen ? 1.03 : 1, // <-- ДОБАВЛЕНО
-        transition: {
-          duration: 0.2,
-          ease: "easeOut"
-        }
-      }),
+      // 'visible' УДАЛЕН
       exit: { opacity: 0, transition: { duration: 0.1 } }
     }
   : {
       hidden: { opacity: 0, x: -20 },
-      // 'visible' теперь функция, принимающая 'custom' проп
-      visible: ({ i, isContextMenuOpen }) => ({ // <-- ИЗМЕНЕНИЕ
-        opacity: 1, 
-        x: 0,
-        scale: isContextMenuOpen ? 1.03 : 1, // <-- ДОБАВЛЕНО
-        transition: {
-          delay: i * 0.1, // Задержка зависит от индекса
-          // Добавляем spring для scale
-          type: "spring", 
-          stiffness: 300, 
-          damping: 30 
-        }
-      }),
+      // 'visible' УДАЛЕН
       exit: { opacity: 0, x: -10, transition: { duration: 0.2 } }
     };
 
@@ -262,7 +242,7 @@ const TomSelectWrapper = ({ value, onChange, options, placeholder }) => {
 
 
 // ✅ НОВОЕ (Long-Press Menu): Контекстное меню
-function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespond, onRepost, onEdit, onDelete }) {
+function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespond, onRepost, onEdit, onDelete, onLayout }) {
   const isMyPost = post.author?.user_id === window.__CURRENT_USER_ID;
   const menuRef = useRef(null);
   
@@ -274,7 +254,7 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
     opacity: 0 // Изначально невидимо
   });
 
-  // Этот хук сработает ПОСЛЕ рендера, но ДО отрисовки
+  // --- ✅ ИЗМЕНЕНИЕ: useLayoutEffect ПОЛНОСТЬЮ ПЕРЕРАБОТАН ---
   useLayoutEffect(() => {
     if (!targetElement || !menuRef.current) return;
 
@@ -283,33 +263,34 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
     const menuHeight = menuRef.current.offsetHeight;
     
     // 2. Определяем ширину (как у карточки, но не шире 300px)
-    // ✅ ИЗМЕНЕНИЕ: Сделаем ширину чуть меньше карточки, но фиксированной
-    const menuWidth = Math.min(cardRect.width - 40, 280); // 280px макс, или (ширина карточки - 40px)
+    const menuWidth = Math.min(cardRect.width - 40, 280);
     
     // 3. Вычисляем позицию по горизонтали (центрируем)
     const left = cardRect.left + (cardRect.width - menuWidth) / 2;
     
-    // 4. Вычисляем позицию по вертикали
-    const spaceBelow = window.innerHeight - cardRect.bottom;
-    const spaceAbove = cardRect.top;
+    // --- 4. НОВАЯ ЛОГИКА РАСЧЕТА СДВИГА (вместо "прыжка" наверх) ---
     const margin = 8; // Отступ 8px
+    const spaceBelow = window.innerHeight - cardRect.bottom;
+    const neededSpace = menuHeight + margin;
     
-    let top;
-
-    // 5. Помещается ли меню снизу?
-    if (spaceBelow > menuHeight + margin) {
-        top = cardRect.bottom + margin; // Да, ставим снизу
-    } 
-    // Помещается ли оно сверху?
-    else if (spaceAbove > menuHeight + margin) {
-        top = cardRect.top - menuHeight - margin; // Нет, ставим сверху
-    } 
-    // Не помещается нигде (редкий случай)
-    else {
-        top = window.innerHeight - menuHeight - 20; // Прижимаем к низу
+    // Вычисляем, на сколько пикселей нужно сдвинуть карточку вверх
+    let verticalAdjust = 0;
+    if (spaceBelow < neededSpace) {
+        // Если места не хватает, вычисляем дельту
+        verticalAdjust = (neededSpace - spaceBelow);
+    }
+    
+    // 5. Сообщаем 'App' о результатах расчета
+    // App сохранит это в state и передаст карточке
+    if (onLayout) {
+        onLayout({ menuHeight, verticalAdjust });
     }
 
-    // 6. Устанавливаем позицию, чтобы React мог ее отрисовать
+    // 6. Позиционируем меню. Оно ВСЕГДА снизу карточки,
+    //    но сдвигается вверх (отрицательный verticalAdjust) вместе с ней.
+    const top = cardRect.bottom - verticalAdjust + margin;
+
+    // 7. Устанавливаем позицию, чтобы React мог ее отрисовать
     setPosition({
         top: top,
         left: left,
@@ -317,7 +298,8 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
         opacity: 1 // Делаем видимым
     });
     
-  }, [targetElement]); // Зависим только от targetElement
+  }, [targetElement, onLayout]); // <-- Добавляем onLayout в зависимости
+  // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
 
   // Закрытие по клику вне меню (на фон)
@@ -338,9 +320,21 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
   return h(motion.div, {
     key: `backdrop-${post.post_id}`,
     className: 'post-context-menu-backdrop', // <-- Cтили из CSS выше
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
+    
+    // --- ✅ ИСПРАВЛЕНИЕ БАГА (Задержка) ---
+    // 'pointerEvents' теперь является частью состояния анимации,
+    // а не статичным стилем.
+    initial: { opacity: 0, pointerEvents: 'none' },
+    animate: { 
+        opacity: 1, 
+        pointerEvents: 'auto' 
+    },
+    exit: { 
+        opacity: 0, 
+        pointerEvents: 'none' 
+    },
+    // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+
     transition: { duration: 0.2, ease: 'easeOut' },
     onClick: handleBackdropClick,
     
@@ -348,6 +342,7 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
         position: 'fixed',
         inset: 0,
         zIndex: 2000 // Фон (под карточкой и меню)
+        // 'pointerEvents' УДАЛЕН отсюда
     }
   },
     
@@ -728,7 +723,7 @@ function EditPostModal({ post, onClose, onSave }) {
 // ✅ НОВОЕ: Компонент переименован (был SwipeablePostCard)
 // ✅ ИЗМЕНЕНИЕ: Убраны isMenuOpen, menuRef, handleEdit, handleDelete
 // ✅ ИЗМЕНЕНИЕ: Убран onClick (заменен на onTap/onLongPress)
-const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onEdit, onDelete, isContextMenuOpen }) {
+const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onEdit, onDelete, isContextMenuOpen, menuLayout }) {
   const postKey = post.post_id || `temp-post-${Math.random()}`;
   
   // --- 🔴 НОВАЯ ЛОГИКА ЖЕСТОВ (Полная замена) ---
@@ -739,14 +734,23 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
   // Порог (в пикселях), после которого мы считаем, что это скролл, а не тап
   const POINTER_SLOP = 5;
 
+  // --- ✅ ИСПРАВЛЕНИЕ БАГА "ЗАДЕРЖКА НА ВХОД" + ⚠️ ANDROID CRASH FIX ---
   const handlePointerDown = (e) => {
     // 1. Запоминаем, где палец коснулся экрана
     pointerStartRef.current = { y: e.pageY };
     
-    // 2. Отключаем свайпы TWA, чтобы мы могли обработать жест
-    tg.disableVerticalSwipes();
+    // 2. ⚠️ ANDROID FIX: Проверяем, существует ли функция
+    if (tg?.disableVerticalSwipes) {
+        tg.disableVerticalSwipes();
+    }
 
-    // 3. Запускаем таймер, который через 300мс вызовет Long Press
+    // 3. ✅ ИСПРАВЛЕНИЕ: Очищаем ЛЮБОЙ предыдущий таймер
+    if (gestureTimerRef.current) {
+        clearTimeout(gestureTimerRef.current);
+    }
+    // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+
+    // 4. Запускаем таймер, который через 300мс вызовет Long Press
     gestureTimerRef.current = setTimeout(() => {
         // Таймер сработал! Это Long Press.
         if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
@@ -757,10 +761,13 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
         // Сбрасываем, чтобы onPointerUp ничего не сделал
         pointerStartRef.current = null; 
         
-        // Возвращаем TWA управление, так как жест завершен
-        tg.enableVerticalSwipes();
+        // ⚠️ ANDROID FIX: Проверяем, существует ли функция
+        if (tg?.enableVerticalSwipes) {
+            tg.enableVerticalSwipes();
+        }
     }, 300);
   };
+  // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
 
   const handlePointerMove = (e) => {
     // Если таймер уже сработал или жест отменен, ничего не делаем
@@ -777,14 +784,18 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
         // 2. Сбрасываем жест
         pointerStartRef.current = null;
         
-        // 3. Возвращаем TWA управление, чтобы юзер мог скроллить
-        tg.enableVerticalSwipes();
+        // 3. ⚠️ ANDROID FIX: Проверяем, существует ли функция
+        if (tg?.enableVerticalSwipes) {
+            tg.enableVerticalSwipes();
+        }
     }
   };
 
   const handlePointerUp = (e) => {
-    // 1. Всегда возвращаем TWA управление
-    tg.enableVerticalSwipes();
+    // 1. ⚠️ ANDROID FIX: Проверяем, существует ли функция
+    if (tg?.enableVerticalSwipes) {
+        tg.enableVerticalSwipes();
+    }
     
     // 2. Всегда отменяем таймер (на случай, если это был тап)
     clearTimeout(gestureTimerRef.current);
@@ -799,6 +810,12 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
     pointerStartRef.current = null;
   };
   // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
+  
+  // --- ✅ НОВОЕ: Логика для анимации ---
+  const isActive = isContextMenuOpen;
+  // Сдвигаем карточку ВВЕРХ (отрицательный 'y') на рассчитанное значение
+  const verticalShift = isActive ? -(menuLayout?.verticalAdjust || 0) : 0;
+  // --- КОНЕЦ ---
 
   return h(motion.div, {
     // 🔴 (ИЗМЕНЕНИЕ) Добавляем ref
@@ -810,16 +827,31 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
     // --- 🔴 ИЗМЕНЕНИЕ ЗДЕСЬ ---
     // УБИРАЕМ layoutId
     
-    // ВОЗВРАЩАЕМ 'variants' для анимации появления
+    // 'variants' предоставляет 'hidden' и 'exit'
     variants: cardVariants, 
     
-    // ПЕРЕДАЕМ ОБЪЕКТ в 'custom', чтобы 'visible' мог его прочитать
-    custom: { i: index, isContextMenuOpen: isContextMenuOpen },
+    // 'custom' больше не используется, но оставим для 'i'
+    custom: { i: index },
     
     initial: "hidden",
-    animate: "visible", // <-- ВОЗВРАЩАЕМ "visible"
+    // 'animate="visible"' УДАЛЕН
     exit: "exit",
-    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+    
+    // --- ✅ ИСПРАВЛЕНИЕ БАГА: 'animate' теперь объект ---
+    animate: {
+        opacity: 1, // <-- ВОТ ИСПРАВЛЕНИЕ
+        x: 0,       // <-- ВОТ ИСПРАВЛЕНИЕ
+        scale: isActive ? 1.03 : 1,
+        y: verticalShift
+    },
+    transition: {
+        type: "spring", 
+        stiffness: 300, 
+        damping: 30,
+        // ✅ ИСПРАВЛЕНИЕ БАГА: Возвращаем stagger delay
+        delay: isIOS ? 0 : index * 0.1
+    },
+    // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
     
     // ✅ НОВОЕ: Контейнер теперь относительный
     style: {
@@ -870,7 +902,8 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
       
       // --- 🔴 ИЗМЕНЕНИЕ ЗДЕСЬ ---
       isWrapped: true, // Сообщаем PostCard, что он "обернут"
-      isContextMenuOpen: isContextMenuOpen // Передаем флаг "приподнимания"
+      isContextMenuOpen: isContextMenuOpen, // Передаем флаг "приподнимания"
+      menuLayout: menuLayout // <-- ✅ НОВОЕ: Пробрасываем layout
       // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     })
   );
@@ -883,7 +916,7 @@ const MyPostCard = memo(function MyPostCard({ post, index, onOpenProfile, onOpen
 // ✅ ИСПРАВЛЕНИЕ #1: Возвращаем marginBottom
 // ✅ ИСПРАВЛЕНИЕ #3, #5: Принимаем showActionsSpacer
 // ✅ ИЗМЕНЕНИЕ: Убран onClick (заменен на onTap/onLongPress)
-const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onTagClick, disableClick = false, styleOverride = {}, showActionsSpacer = false, isContextMenuOpen }) {
+const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onTagClick, disableClick = false, styleOverride = {}, showActionsSpacer = false, isContextMenuOpen, menuLayout, isWrapped = false }) {
     const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
     const { content = 'Нет описания', post_type = 'default', skill_tags = [], created_at } = post;
     const avatar = author.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
@@ -906,10 +939,22 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
     // Порог (в пикселях), после которого мы считаем, что это скролл, а не тап
     const POINTER_SLOP = 5;
 
+    // --- ✅ ИСПРАВЛЕНИЕ БАГА "ЗАДЕРЖКА НА ВХОД" + ⚠️ ANDROID CRASH FIX ---
     const handlePointerDown = (e) => {
         if (disableClick) return;
         pointerStartRef.current = { y: e.pageY };
-        tg.disableVerticalSwipes();
+        
+        // ⚠️ ANDROID FIX: Проверяем, существует ли функция
+        if (tg?.disableVerticalSwipes) {
+            tg.disableVerticalSwipes();
+        }
+        
+        // 3. ✅ ИСПРАВЛЕНИЕ: Очищаем ЛЮБОЙ предыдущий таймер
+        if (gestureTimerRef.current) {
+            clearTimeout(gestureTimerRef.current);
+        }
+        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+
         gestureTimerRef.current = setTimeout(() => {
             if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
             
@@ -917,9 +962,14 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
             onOpenContextMenu(post, cardRef.current);
             
             pointerStartRef.current = null; 
-            tg.enableVerticalSwipes();
+
+            // ⚠️ ANDROID FIX: Проверяем, существует ли функция
+            if (tg?.enableVerticalSwipes) {
+                tg.enableVerticalSwipes();
+            }
         }, 300);
     };
+    // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
 
     const handlePointerMove = (e) => {
         if (disableClick || !pointerStartRef.current) return;
@@ -927,20 +977,52 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
         if (deltaY > POINTER_SLOP) {
             clearTimeout(gestureTimerRef.current);
             pointerStartRef.current = null;
-            tg.enableVerticalSwipes();
+            
+            // ⚠️ ANDROID FIX: Проверяем, существует ли функция
+            if (tg?.enableVerticalSwipes) {
+                tg.enableVerticalSwipes();
+            }
         }
     };
 
+    // --- ✅ ИЗМЕНЕНИЕ (БАГ 3): Логика handlePointerUp ---
     const handlePointerUp = (e) => {
         if (disableClick) return;
-        tg.enableVerticalSwipes();
-        clearTimeout(gestureTimerRef.current);
-        if (pointerStartRef.current) {
-            onOpenPostSheet(post);
+        
+        // ⚠️ ANDROID FIX: Проверяем, существует ли функция
+        if (tg?.enableVerticalSwipes) {
+            tg.enableVerticalSwipes();
         }
+
+        clearTimeout(gestureTimerRef.current);
+        
+        // Проверяем, был ли это ТАП (т.е. long-press НЕ сработал)
+        if (pointerStartRef.current) {
+            // Это был ТАП. Теперь проверяем, куда нажали.
+            const target = e.target;
+            // Ищем, был ли клик по элементу с data-action="open-profile"
+            if (target.closest('[data-action="open-profile"]')) {
+                // Это был тап по аватару или имени
+                e.stopPropagation(); // Останавливаем всплытие, на всякий случай
+                onOpenProfile(author);
+            } else {
+                // Это был тап по любой другой части карточки
+                onOpenPostSheet(post);
+            }
+        }
+        // Если pointerStartRef.current был null, значит, 
+        // long-press уже сработал, и нам не нужно ничего делать (тап отменен).
+        
         pointerStartRef.current = null;
     };
-    // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
+    // --- ✅ НОВОЕ: Логика для анимации ---
+    const isActive = isContextMenuOpen;
+    // Сдвигаем карточку ВВЕРХ (отрицательный 'y') на рассчитанное значение
+    // (Только если карточка НЕ обернута в MyPostCard)
+    const verticalShift = (isActive && !isWrapped) ? -(menuLayout?.verticalAdjust || 0) : 0;
+    // --- КОНЕЦ ---
 
     return h(motion.div, {
         // 🔴 (ИЗМЕНЕНИЕ) Добавляем ref
@@ -956,17 +1038,25 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
         // --- КОНЕЦ ИЗМЕНЕНИЯ ---
         
         variants: cardVariants,
-        custom: { i: index, isContextMenuOpen: isContextMenuOpen },
+        custom: { i: index },
         initial: "hidden",
-        animate: "visible",
         exit: "exit",
         
-        // (ИЗМЕНЕНИЕ) Добавляем transition
-        transition: {
-          type: "spring",
-          stiffness: 300,
-          damping: 30,
+        // --- ✅ ИСПРАВЛЕНИЕ БАГА: 'animate' теперь объект ---
+        animate: {
+            opacity: 1, // <-- ВОТ ИСПРАВЛЕНИЕ
+            x: 0,       // <-- ВОТ ИСПРАВЛЕНИЕ
+            scale: isActive ? 1.03 : 1,
+            y: verticalShift
         },
+        transition: {
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            // ✅ ИСПРАВЛЕНИЕ БАГА: Возвращаем stagger delay
+            delay: isIOS ? 0 : index * 0.1
+        },
+        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
         
         // 🔴 (ИЗМЕНЕНИЕ) Убрана анимация scale, она теперь в variants
         
@@ -1011,10 +1101,12 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
         },
             // ✅ ИСПРАВЛЕНИЕ #8: Обертка для Аватара (без изменений)
             h('button', {
-                onClick: (e) => {
-                    e.stopPropagation();
-                    onOpenProfile(author);
-                },
+                // --- ✅ ИЗМЕНЕНИЕ (БАГ 3): onClick УДАЛЕН ---
+                // onClick: (e) => {
+                //     e.stopPropagation();
+                //     onOpenProfile(author);
+                // },
+                ['data-action']: 'open-profile', // <-- ✅ ДОБАВЛЕНО
                 style: {
                     padding: 0,
                     border: 'none',
@@ -1055,10 +1147,12 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
                 }
             },
                 h('button', {
-                    onClick: (e) => {
-                        e.stopPropagation();
-                        onOpenProfile(author);
-                    },
+                    // --- ✅ ИЗМЕНЕНИЕ (БАГ 3): onClick УДАЛЕН ---
+                    // onClick: (e) => {
+                    //     e.stopPropagation();
+                    //     onOpenProfile(author);
+                    // },
+                    ['data-action']: 'open-profile', // <-- ✅ ДОБАВЛЕНО
                     style: {
                         padding: 0,
                         border: 'none',
@@ -1150,7 +1244,7 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
 }); // ✅ НОВОЕ: Закрываем React.memo
 
 // ✅ ИЗМЕНЕНИЕ: Добавлен prop onOpenContextMenu
-function PostsList({ posts, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onTagClick, isMyPosts, onEditPost, onDeletePost, containerRef, contextMenuPost }) {
+function PostsList({ posts, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onTagClick, isMyPosts, onEditPost, onDeletePost, containerRef, contextMenuPost, menuLayout }) {
   
   return h(motion.div, {
     ref: containerRef,
@@ -1182,7 +1276,8 @@ function PostsList({ posts, onOpenProfile, onOpenPostSheet, onOpenContextMenu, o
             onOpenContextMenu: onOpenContextMenu, // <-- ✅ Передаем prop
             onEdit: onEditPost,
             onDelete: onDeletePost,
-            isContextMenuOpen: isContextMenuOpen // 🔴 (ИЗМЕНЕНИЕ) Передаем флаг
+            isContextMenuOpen: isContextMenuOpen, // 🔴 (ИЗМЕНЕНИЕ) Передаем флаг
+            menuLayout: menuLayout // <-- ✅ НОВОЕ
             // ✅ ИСПРАВЛЕНИЕ #1: У MyPostCard УЖЕ ЕСТЬ свой margin, gap не нужен
             // Поэтому PostCard рендерится без обертки
           });
@@ -1196,7 +1291,8 @@ function PostsList({ posts, onOpenProfile, onOpenPostSheet, onOpenContextMenu, o
             onOpenPostSheet: onOpenPostSheet,
             onOpenContextMenu: onOpenContextMenu, // <-- ✅ Передаем prop
             onTagClick: onTagClick,
-            isContextMenuOpen: isContextMenuOpen // 🔴 (ИЗМЕНЕНИЕ) Передаем флаг
+            isContextMenuOpen: isContextMenuOpen, // 🔴 (ИЗМЕНЕНИЕ) Передаем флаг
+            menuLayout: menuLayout // <-- ✅ НОВОЕ
           });
         }
       })
@@ -1867,6 +1963,9 @@ function App({ mountInto, overlayHost }) {
   // 🔴 (ИЗМЕНЕНИЕ) Меняем `useState(null)` на объект
   const [contextMenuState, setContextMenuState] = useState({ post: null, targetElement: null });
   
+  // --- ✅ НОВОЕ: State для расчетов сдвига меню ---
+  const [menuLayout, setMenuLayout] = useState({ verticalAdjust: 0, menuHeight: 0 });
+  
   const [allSkills] = useState(POPULAR_SKILLS);
   
   // --- (ИЗМЕНЕНИЕ) Состояния для поиска ---
@@ -2121,6 +2220,7 @@ function App({ mountInto, overlayHost }) {
     if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light');
     setPostToShow(null);
     setContextMenuState({ post: null, targetElement: null }); // <-- 🔴 (ИЗМЕНЕНИЕ) Закрываем меню
+    setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); // <-- ✅ НОВОЕ: Сбрасываем layout
     try {
       const resp = await postJSON(`${cfg.backendUrl}/get-user-by-id`, { initData: tg?.initData, target_user_id: author.user_id });
       if (resp?.ok && resp.profile) { setProfileToShow(resp.profile); } else { setProfileToShow(author); }
@@ -2139,21 +2239,54 @@ function App({ mountInto, overlayHost }) {
   // 🔴 (ИЗМЕНЕНИЕ) Принимаем (post, element)
   const handleOpenContextMenu = useCallback((post, element) => {
       if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
+      setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); // <-- ✅ НОВОЕ: Сбрасываем layout
       setContextMenuState({ post: post, targetElement: element });
   }, []);
   
+  // --- ✅ ИЗМЕНЕНИЕ (БАГ 1, 4): handleCloseContextMenu вынесен в useCallback ---
   const handleCloseContextMenu = useCallback(() => {
       setContextMenuState({ post: null, targetElement: null });
+      setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); // <-- ✅ НОВОЕ: Сбрасываем layout
+  }, []); // Пустая зависимость, т.к. он только сбрасывает state
+  // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
+  // --- ✅ НОВОЕ: Callback для сохранения расчетов меню ---
+  const handleMenuLayout = useCallback((layout) => {
+      setMenuLayout(layout);
   }, []);
+  // --- КОНЕЦ ---
+  
+  // --- ✅ ИСПРАВЛЕНИЕ БАГА 1/4 (Скролл) ---
+  useEffect(() => {
+      // ✅ ИЗМЕНЕНИЕ: Мы слушаем 'window' (глобальный скролл),
+      // а не 'listContainerRef.current'
+      
+      const handleScroll = () => {
+        // Мы используем contextMenuState.post, чтобы проверять, открыто ли меню.
+        // Это гарантирует, что state обновляется ТОЛЬКО ОДИН РАЗ, 
+        // а не на каждый пиксель скролла.
+        if (contextMenuState.post) {
+          handleCloseContextMenu();
+        }
+      };
+      
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      return () => window.removeEventListener('scroll', handleScroll);
+      
+  }, [contextMenuState.post, handleCloseContextMenu]); // Зависим от state, чтобы всегда иметь свежий 'if'
+  // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+
 
   // ✅ НОВОЕ (Task 1 & 2): Заглушки для действий
   const handleRespond = useCallback((post) => {
       setContextMenuState({ post: null, targetElement: null }); // Закрываем меню, если оно было открыто
+      setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); // <-- ✅ НОВОЕ: Сбрасываем layout
       tg.showAlert(t('action_respond_toast'));
   }, []);
   
   const handleRepost = useCallback((post) => {
       setContextMenuState({ post: null, targetElement: null }); // Закрываем меню, если оно было открыто
+      setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); // <-- ✅ НОВОЕ: Сбрасываем layout
       tg.showAlert(t('action_repost_toast'));
   }, []);
 
@@ -2187,11 +2320,13 @@ function App({ mountInto, overlayHost }) {
     setEditingPost(post);
     setPostToShow(null);
     setContextMenuState({ post: null, targetElement: null }); // <-- 🔴 (ИЗМЕНЕНИЕ) Закрываем меню
+    setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); // <-- ✅ НОВОЕ: Сбрасываем layout
   }, []);
 
   // (ВОССТАНОВЛЕНА ФУНКЦИЯ) (без изменений)
   const handleDeletePost = useCallback(async (post) => {
     setContextMenuState({ post: null, targetElement: null }); // <-- 🔴 (ИЗМЕНЕНИЕ) Закрываем меню
+    setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); // <-- ✅ НОВОЕ: Сбрасываем layout
     
     if (tg?.showConfirm) {
         tg.showConfirm("Удалить этот запрос?", async (ok) => {
@@ -2261,7 +2396,26 @@ function App({ mountInto, overlayHost }) {
     }
   }, [cfg, editingPost, fetchPosts]);
 
-  return h('div', { style: { padding: '0 12px 12px' } },
+  // --- ✅ НОВОЕ: Функция-глушилка для onContextMenu ---
+  const preventSystemMenu = useCallback((e) => {
+      // Разрешаем контекстное меню ТОЛЬКО в инпутах (чтобы можно было вставить текст)
+      const targetTag = e.target.tagName;
+      if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') {
+          return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+  }, []);
+  // --- КОНЕЦ ---
+
+  return h('div', { 
+      // ✅ ДОБАВЛЕНО: Глобальная блокировка на контейнере приложения
+      onContextMenu: preventSystemMenu,
+      style: { 
+          padding: '0 12px 12px' 
+          // CSS-свойства (userSelect) будут применены из CSS-файлов
+      } 
+  },
     
     h(PostsList, { 
       posts: filtered, 
@@ -2273,12 +2427,20 @@ function App({ mountInto, overlayHost }) {
       onEditPost: handleEditPost,
       onDeletePost: handleDeletePost,
       containerRef: listContainerRef,
-      contextMenuPost: contextMenuState.post // 🔴 (ИЗМЕНЕНИЕ) Передаем пост
+      contextMenuPost: contextMenuState.post, // 🔴 (ИЗМЕНЕНИЕ) Передаем пост
+      menuLayout: menuLayout // <-- ✅ НОВОЕ
     }),
     
     // ✅ НОВОЕ: Оборачиваем модалки в Suspense
     h(Suspense, { fallback: h(ProfileFallback) },
-        h(AnimatePresence, null, 
+        h(AnimatePresence, {
+            // --- ✅ ИСПРАВЛЕНИЕ БАГА "ЗАДЕРЖКА НА ВЫХОД" ---
+            // 'mode="sync"' позволяет анимациям прерывать друг друга.
+            // Если вы закрываете меню A и тут же открываете меню B,
+            // 'sync' не будет ждать завершения анимации выхода A.
+            mode: "sync"
+            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+        }, 
           profileToShow && h(ProfileSheet, { key: `profile-${profileToShow.user_id}`, user: profileToShow, onClose: handleCloseProfile }),
           
           postToShow && h(PostDetailSheet, { 
@@ -2311,17 +2473,25 @@ function App({ mountInto, overlayHost }) {
             onRespond: handleRespond,
             onRepost: handleRepost,
             onEdit: handleEditPost,
-            onDelete: handleDeletePost
+            onDelete: handleDeletePost,
+            onLayout: handleMenuLayout // <-- ✅ НОВОЕ
           })
         )
     ),
     
-    h(FABMenu, {
-      onCreatePost: handleCreatePost,
-      onMyPosts: handleMyPosts,
-      onSaved: handleSaved,
-      onSubscriptions: handleSubscriptions
-    }),
+    // ✅ ВАЖНО: Оборачиваем FABMenu в div с блокировкой
+    h('div', {
+        onContextMenu: preventSystemMenu,
+        // Стили из прошлого ответа (position/zIndex) не нужны,
+        // т.к. FABMenu сам использует position: fixed
+    }, 
+        h(FABMenu, {
+          onCreatePost: handleCreatePost,
+          onMyPosts: handleMyPosts,
+          onSaved: handleSaved,
+          onSubscriptions: handleSubscriptions
+        })
+    ),
     
     quickFiltersHost && createPortal(h(QuickFilterTags, { skills: allSkills, selected: selectedSkills, onToggle: onToggleSkill }), quickFiltersHost)
   );
