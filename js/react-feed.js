@@ -431,22 +431,15 @@ function App({mountInto, overlayHost}) {
     const input = document.getElementById('feed-search-input');
     if (!input) return;
 
-    // Эта функция теперь ТОЛЬКО обновляет state, 
-    // она не запускает фильтрацию
+    // ✅ ИСПРАВЛЕНИЕ: Эта функция теперь ТОЛЬКО обновляет searchQuery.
+    // Мы убрали 'setSelectedSkills', который вызывал баг.
     const onInput = () => {
-      const q = input.value.trim();
-      setSearchQuery(q); // Обновляем React-state
-
-      // Логика авто-выбора тегов
-      const skillsFromInput = q ? q.split(',').map(s => s.trim()) : [];
-      const lowerCaseSkillsFromInput = skillsFromInput.map(s => s.toLowerCase());
-      const newSelected = allSkills.filter(s => lowerCaseSkillsFromInput.includes(s.toLowerCase()));
-      setSelectedSkills(newSelected);
+      setSearchQuery(input.value); // Обновляем React-state
     };
 
     input.addEventListener('input', onInput);
     return () => input.removeEventListener('input', onInput);
-  }, [allSkills]); // Удаляем 'profiles' из зависимостей
+  }, [allSkills]); // Зависимости можно оставить
 
   // Этот useEffect обновляет input.value, ЕСЛИ мы выбрали тег
   useEffect(() => {

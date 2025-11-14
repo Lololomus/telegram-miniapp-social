@@ -1724,6 +1724,41 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
     
 }
 
+// --- ✅ НОВОЕ: Компоненты-скелетоны ---
+// Мы воссоздаем <template id="skeleton-card-template"> из index.html
+function SkeletonCard({ index }) {
+  // Используем motion для плавного появления с задержкой
+  return h(motion.div, {
+    className: 'skeleton-card',
+    style: { marginBottom: '15px' }, // Добавляем отступ, как у карточек
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: { delay: index * 0.1, duration: 0.3 }
+  },
+    h('div', { className: 'skeleton-avatar' }),
+    h('div', { className: 'skeleton-info' },
+      h('div', { className: 'skeleton-line' }),
+      h('div', { className: 'skeleton-line short' })
+    )
+  );
+}
+
+function SkeletonList() {
+  return h('div', {
+    // Используем тот же класс, что и PostsList, для отступов
+    style: { 
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px' // Используем тот же gap, что и в feed.css
+    }
+  },
+    // Рендерим 5 скелетонов
+    [...Array(5)].map((_, i) => h(SkeletonCard, { key: i, index: i }))
+  );
+}
+// --- КОНЕЦ НОВОГО БЛОКА ---
+
 // --- НОВЫЙ КОМПОНЕНТ: Анимированное FAB меню ---
 function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
 // ... (остальной код без изменений) ...
@@ -1959,6 +1994,9 @@ function App({ mountInto, overlayHost }) {
   const [profileToShow, setProfileToShow] = useState(null);
   const [postToShow, setPostToShow] = useState(null);
   
+  // ✅ НОВОЕ: Состояние загрузки (начинаем с true для первой загрузки)
+  const [isLoading, setIsLoading] = useState(true);
+
   // ✅ НОВОЕ (Long-Press Menu): Состояние для контекстного меню
   // 🔴 (ИЗМЕНЕНИЕ) Меняем `useState(null)` на объект
   const [contextMenuState, setContextMenuState] = useState({ post: null, targetElement: null });
@@ -2015,6 +2053,10 @@ function App({ mountInto, overlayHost }) {
 
   const fetchPosts = useCallback(async () => {
     if (!cfg?.backendUrl) return; 
+    
+    // ✅ ИЗМЕНЕНИЕ: Всегда включаем скелетон перед загрузкой
+    setIsLoading(true);
+    
     console.log("REACT Posts: Fetching posts...");
     try {
       const endpoint = showMyPostsOnly ? '/api/get-my-posts' : '/api/get-posts-feed';
@@ -2028,6 +2070,10 @@ function App({ mountInto, overlayHost }) {
         console.log("REACT Posts: Posts fetched:", postsWithKeys.length);
       } else { console.error("REACT Posts: Failed to fetch posts:", resp); setPosts([]); }
     } catch (e) { console.error("REACT Posts: Error fetching posts:", e); setPosts([]); }
+    finally {
+      // ✅ ИЗМЕНЕНИЕ: Всегда выключаем скелетон после загрузки
+      setIsLoading(false);
+    }
   }, [cfg, showMyPostsOnly]);
 
 // (ИСПРАВЛЕНО) Читаем конфиг из window (без изменений)
@@ -2052,6 +2098,7 @@ function App({ mountInto, overlayHost }) {
   useEffect(() => { if (cfg) { fetchPosts(); } }, [cfg, fetchPosts]);
   useEffect(() => { const handleUpdate = () => { fetchPosts(); }; document.addEventListener('posts-updated', handleUpdate); return () => document.removeEventListener('posts-updated', handleUpdate); }, [fetchPosts]);
 
+  
   // --- (ИСПРАВЛЕНИЕ) ---
   // Слушатель смены режима (теперь также слушает 'skills' и 'status')
   useEffect(() => {
@@ -2060,9 +2107,24 @@ function App({ mountInto, overlayHost }) {
 
         // 1. Обработка переключения "Мои посты"
         if (typeof event.detail.showMyPostsOnly === 'boolean') {
-            const { showMyPostsOnly } = event.detail;
-            console.log("REACT (Posts): Получена команда set-posts-feed-mode (showMyPostsOnly)", showMyPostsOnly);
-            setShowMyPostsOnly(showMyPostsOnly);
+            const newMode = event.detail.showMyPostsOnly;
+            
+            // --- ✅ ИЗМЕНЕНИЕ: Проверяем, что режим ДЕЙСТВИТЕЛЬНО меняется ---
+            if (newMode !== showMyPostsOnly) {
+                console.log("REACT (Posts): Смена режима", newMode);
+                
+                // 1. СНАЧАЛА ОЧИЩАЕМ СПИСКИ
+                // Это заставит AnimatePresence анимировать "исчезновение"
+                setPosts([]);
+                setFiltered([]);
+                
+                // 2. ПОТОМ МЕНЯЕМ РЕЖИМ
+                // Это запустит fetchPosts, который включит isLoading и загрузит данные
+                setShowMyPostsOnly(newMode);
+                
+            } else {
+                 console.log("REACT (Posts): Получена команда set-posts-feed-mode, но режим не изменился.", newMode);
+            }
         }
 
         // 2. Обработка фильтра по НАВЫКАМ (из модального окна)
@@ -2090,8 +2152,7 @@ function App({ mountInto, overlayHost }) {
     return () => {
         document.removeEventListener('set-posts-feed-mode', handleSetMode);
     };
-  }, []); // Пустой массив зависимостей, чтобы слушатель добавился один раз
-  // --- (КОНЕЦ ИСПРАВЛЕНИЯ) ---
+  }, [showMyPostsOnly]); // <-- ✅ ИЗМЕНЕНИЕ: Добавлена зависимость
 
   // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
   // Логика, связанная с 'backToProfileBtn' и 'backToAllBtn', УДАЛЕНА
@@ -2408,7 +2469,7 @@ function App({ mountInto, overlayHost }) {
   }, []);
   // --- КОНЕЦ ---
 
-  return h('div', { 
+return h('div', { 
       // ✅ ДОБАВЛЕНО: Глобальная блокировка на контейнере приложения
       onContextMenu: preventSystemMenu,
       style: { 
@@ -2417,19 +2478,23 @@ function App({ mountInto, overlayHost }) {
       } 
   },
     
-    h(PostsList, { 
-      posts: filtered, 
-      onOpenProfile: handleOpenProfile,
-      onOpenPostSheet: handleOpenPostSheet,
-      onOpenContextMenu: handleOpenContextMenu, // <-- ✅ Передаем новый prop
-      onTagClick: onToggleSkill,
-      isMyPosts: showMyPostsOnly,
-      onEditPost: handleEditPost,
-      onDeletePost: handleDeletePost,
-      containerRef: listContainerRef,
-      contextMenuPost: contextMenuState.post, // 🔴 (ИЗМЕНЕНИЕ) Передаем пост
-      menuLayout: menuLayout // <-- ✅ НОВОЕ
-    }),
+    // --- ✅ ИЗМЕНЕНИЕ: Логика рендеринга Скелетона/Списка ---
+    (isLoading && filtered.length === 0)
+      ? h(SkeletonList, null) // Показываем скелетоны, если грузим и список пуст
+      : h(PostsList, { 
+          posts: filtered, 
+          onOpenProfile: handleOpenProfile,
+          onOpenPostSheet: handleOpenPostSheet,
+          onOpenContextMenu: handleOpenContextMenu, // <-- ✅ Передаем новый prop
+          onTagClick: onToggleSkill,
+          isMyPosts: showMyPostsOnly,
+          onEditPost: handleEditPost,
+          onDeletePost: handleDeletePost,
+          containerRef: listContainerRef,
+          contextMenuPost: contextMenuState.post, // 🔴 (ИЗМЕНЕНИЕ) Передаем пост
+          menuLayout: menuLayout // <-- ✅ НОВОЕ
+        }),
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     
     // ✅ НОВОЕ: Оборачиваем модалки в Suspense
     h(Suspense, { fallback: h(ProfileFallback) },
@@ -2495,7 +2560,7 @@ function App({ mountInto, overlayHost }) {
     
     quickFiltersHost && createPortal(h(QuickFilterTags, { skills: allSkills, selected: selectedSkills, onToggle: onToggleSkill }), quickFiltersHost)
   );
-}
+} // Конец функции App
 
 // --- Монтирование ---
 window.REACT_FEED_POSTS = true;

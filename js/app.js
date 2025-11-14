@@ -525,8 +525,21 @@ document.addEventListener('DOMContentLoaded', () => {
      * Загружает ленту запросов (постов)
      */
     async function loadPostsFeedData() {
-        // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): 
-        // Кнопка "Назад" должна возвращать в Профиль
+        // --- ✅ ИЗМЕНЕНИЕ: Поменяли порядок ---
+        
+        // 1. СНАЧАЛА отправляем React-компоненту команду
+        //    переключиться на "все посты" и сбросить фильтры.
+        //    React обработает это *пока* он еще скрыт.
+        document.dispatchEvent(new CustomEvent('set-posts-feed-mode', {
+            detail: { showMyPostsOnly: false, skills: [], status: null }
+        }));
+        
+        // 2. СБРАСЫВАЕМ инпут (React не управляет им напрямую)
+        elements.posts.searchInput.value = '';
+
+        // 3. ПОТОМ показываем экран.
+        //    К этому моменту React уже очистил список (благодаря нашему фиксу в react-posts-feed.js)
+        //    и готов загружать "все посты".
         UI.showView(
             elements.posts.container, 
             elements.allViews, 
@@ -535,11 +548,10 @@ document.addEventListener('DOMContentLoaded', () => {
             t,
             loadProfileData // Вернуться в профиль
         );
-        elements.posts.searchInput.value = '';
-        // Сбрасываем React-фильтры
-        document.dispatchEvent(new CustomEvent('set-posts-feed-mode', {
-            detail: { showMyPostsOnly: false, skills: [], status: null }
-        }));
+        
+        // --- 🔴 СТАРАЯ ЛОГИКА (была здесь) ---
+        // elements.posts.searchInput.value = '';
+        // document.dispatchEvent(...);
     }
 
     /**
@@ -564,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
             detail: { showMyPostsOnly: true }
         }));
     }
-
+    
     /**
      * Показывает модальное окно создания поста
      */

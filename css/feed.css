@@ -156,7 +156,7 @@
     display: flex;
     flex-wrap: wrap; /* Allow wrapping *within* the line before overflow */
     gap: 6px;
-    max-height: 2.3em; /* <-- ВОССТАНОВЛЕНО (подбери точное значение, ~1 строка) */
+    max-height: 2.5em; /* <-- ВОССТАНОВЛЕНО (подбери точное значение, ~1 строка) */
     overflow: hidden; /* <-- ВОССТАНОВЛЕНО */
     position: relative; /* Для позиционирования "+X" */
     min-height: 1.5em; /* Можно оставить */
