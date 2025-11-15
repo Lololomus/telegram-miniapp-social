@@ -5,7 +5,8 @@ import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion, AnimatePresence } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 
 // Локальные импорты
-import { listVariants, isIOS } from './feed_utils.js';
+// ИЗМЕНЕНИЕ: Убираем listVariants, он больше не нужен
+import { isIOS } from './feed_utils.js'; 
 import FeedCard from './FeedCard.js';
 
 const h = React.createElement;
@@ -15,13 +16,16 @@ const h = React.createElement;
  * (Вынесен из react-feed.js)
  */
 function FeedList({profiles, onOpen, containerRef}) {
+  
+  // ИЗМЕНЕНИЕ: Мы убираем 'variants', 'initial', 'animate'
+  // И, ГЛАВНОЕ, 'layout: true' из родителя.
+  // Это устраняет Конфликт №3.
   return h(motion.div, {
     ref: containerRef,
-    variants: listVariants,
-    initial: "hidden",
-    animate: "visible",
-    // Стили .feed-list (display: flex, gap: 12px) 
-    // применяются к этому div через #feed-list в index.html
+    // variants: listVariants, // <-- УДАЛЕНО
+    // initial: "hidden", // <-- УДАЛЕНО
+    // animate: "visible", // <-- УДАЛЕНО
+    // layout: true, // <-- УДАЛЕНО (ЭТО БЫЛА ГЛАВНАЯ ОШИБКА)
     style: { 
         position: 'relative',
         display: 'flex',
@@ -34,9 +38,9 @@ function FeedList({profiles, onOpen, containerRef}) {
       initial: false
     },
       profiles.map((p, index) => h(FeedCard, {
-        key: p.user_id, // Ключ critical
+        key: p.user_id,
         u: p, 
-        index: index,
+        index: index, // Передаем index для ручной задержки (Система Б)
         onOpen: onOpen
       }))
     )

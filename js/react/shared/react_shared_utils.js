@@ -134,37 +134,36 @@ export const POPULAR_SKILLS = [
 /**
  * Общая константа: Анимации карточек
  *
- * ✅ ИСПРАВЛЕНИЕ: Мы ВОЗВРАЩАЕМ вариант "visible: (i) => ...".
- * Он нужен для "Автоматической волны" в react/feed/ (Ленте Людей).
- * Он НЕ МЕШАЕТ "Ручной волне" в react/posts/ (Ленте Запросов),
- * так как та использует явный объект animate: { ... }, а не 'visible'.
+ * ✅ ИСПРАВЛЕНИЕ: Убрана конкурирующая анимация "delay: i * 0.1".
+ * Анимацией "волны" теперь управляет ИСКЛЮЧИТЕЛЬНО `listVariants` 
+ * (через `staggerChildren`).
+ * Это исправляет "Ленту Людей" и не ломает "Ленту Запросов",
+ * так как та использует ручное переопределение.
  */
 export const cardVariants = isIOS 
   ? {
       hidden: { opacity: 0 },
-      // "visible" variant for iOS
-      visible: (i) => ({ 
+      // "visible" variant for iOS (БЕЗ 'delay')
+      visible: { 
         opacity: 1,
         transition: {
-          delay: (i || 0) * 0.05, 
           duration: 0.2,
           ease: "easeOut"
         }
-      }),
+      },
       exit: { opacity: 0, transition: { duration: 0.1 } }
     }
   : {
       hidden: { opacity: 0, x: -20 },
-      // "visible" variant for Desktop/Android
-      visible: (i) => ({ 
+      // "visible" variant for Desktop/Android (БЕЗ 'delay')
+      visible: { 
         opacity: 1, 
         x: 0,
         transition: {
-          delay: (i || 0) * 0.1, // "Волна" с задержкой 0.1с
           duration: 0.4,
           ease: "easeOut"
         }
-      }),
+      },
       exit: { opacity: 0, x: -10, transition: { duration: 0.2 } }
     };
 
