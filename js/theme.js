@@ -1,6 +1,6 @@
 // js/theme.js
 // ОБНОВЛЕНО (Glass): Добавлена функция applyGlass
-import { getLuminance, shadeColor } from './utils.js';
+import { getLuminance, shadeColor } from './vanilla_utils.js';
 
 /**
  * Применяет выбранную тему к UI

@@ -1,4 +1,4 @@
-// js/utils.js
+// js/vanilla_utils.js
 
 /**
  * Вычисляет яркость HEX-цвета

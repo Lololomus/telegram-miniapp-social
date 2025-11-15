@@ -1,4 +1,4 @@
-// react/feed/utils.js
+// react/feed/feed_utils.js
 //
 // Этот файл содержит ТОЛЬКО утилиты, уникальные для /react/feed/
 // (Локальный 't', 'EmptyState', 'TopSpacer').
@@ -21,7 +21,7 @@ export {
     POPULAR_SKILLS,
     cardVariants,
     listVariants
-} from '../shared/utils.js'; // <-- Корректный относительный путь
+} from '../shared/react_shared_utils.js'; // <-- Корректный относительный путь
 
 
 /**

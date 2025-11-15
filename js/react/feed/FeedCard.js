@@ -5,7 +5,7 @@ import React, { memo, useRef, useEffect, useState } from 'https://cdn.jsdelivr.n
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 
 // Локальные импорты
-import { t, isIOS, cardVariants } from './utils.js';
+import { t, isIOS, cardVariants } from './feed_utils.js';
 
 const h = React.createElement;
 
@@ -73,17 +73,22 @@ const FeedCard = memo(function FeedCard({u, index, onOpen}) {
 
   return h(motion.button, {
     layout: "position",
-    variants: cardVariants,
+    variants: cardVariants, // <-- Он импортирует ИСПРАВЛЕННЫЕ variants
+    
+    // --- ✅ УБЕДИТЕСЬ, ЧТО ЭТИ СТРОКИ НА МЕСТЕ ---
     custom: isIOS ? undefined : index,
     initial: "hidden",
-    animate: "visible",
+    animate: "visible", // <-- Эта строка должна быть "visible"
     exit: "exit",
-    
+    // --- КОНЕЦ ПРОВЕРКИ ---
+
+    // (ЗДЕСЬ НЕ ДОЛЖНО БЫТЬ 'delay' в transition)
     transition: {
       type: "spring",
       stiffness: 300,
       damping: 30,
     },
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
     onClick: () => onOpen(u),
     className: 'react-feed-card',

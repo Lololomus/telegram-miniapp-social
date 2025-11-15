@@ -5,7 +5,7 @@ import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion, AnimatePresence } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 
 // Локальные импорты
-import { listVariants, isIOS } from './utils.js';
+import { listVariants, isIOS } from './posts_utils.js';
 import PostCard from './PostCard.js';
 import MyPostCard from './MyPostCard.js';
 

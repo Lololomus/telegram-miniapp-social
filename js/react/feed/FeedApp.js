@@ -27,7 +27,7 @@ import {
     PhoneShell,
     EmptyState,
     TopSpacer
-} from './utils.js';
+} from './feed_utils.js';
 
 // --- ИМПОРТЫ ЛОКАЛЬНЫХ КОМПОНЕНТОВ ---
 import FeedList from './FeedList.js';

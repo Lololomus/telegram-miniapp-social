@@ -1,4 +1,4 @@
-// react/posts/utils.js
+// react/posts/posts_utils.js
 //
 // Этот файл содержит ТОЛЬКО утилиты, уникальные для /react/posts/
 // (Расширенный 't', 'formatPostTime', 'CloseButton').
@@ -23,7 +23,7 @@ export {
     POPULAR_SKILLS,
     cardVariants,
     listVariants
-} from '../shared/utils.js'; // <-- ✅ ИСПРАВЛЕННЫЙ ПУТЬ
+} from '../shared/react_shared_utils.js'; // <-- ✅ ИСПРАВЛЕННЫЙ ПУТЬ
 
 
 /**

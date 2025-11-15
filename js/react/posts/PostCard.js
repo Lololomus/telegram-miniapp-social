@@ -3,7 +3,7 @@
 
 import React, { memo, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-import { t, formatPostTime, isIOS, cardVariants } from './utils.js';
+import { t, formatPostTime, isIOS, cardVariants } from './posts_utils.js';
 
 const h = React.createElement;
 const tg = window.Telegram?.WebApp;

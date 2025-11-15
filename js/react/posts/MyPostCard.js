@@ -6,7 +6,7 @@ import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm'
 
 // Локальные импорты
 import PostCard from './PostCard.js';
-import { isIOS, cardVariants } from './utils.js';
+import { isIOS, cardVariants } from './posts_utils.js';
 
 const h = React.createElement;
 const tg = window.Telegram?.WebApp;

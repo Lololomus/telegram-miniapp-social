@@ -9,7 +9,7 @@ import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 
 // --- ИМПОРТ ОБЩИХ УТИЛИТ ---
-import { tg, isIOS, t, postJSON } from './utils.js';
+import { tg, isIOS, t, postJSON } from '../shared/react_shared_utils.js';
 
 const h = React.createElement;
 

@@ -5,7 +5,7 @@ import React, { useState, useRef, useCallback } from 'https://cdn.jsdelivr.net/n
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 
 // Локальные импорты
-import { t, formatPostTime, isIOS } from './utils.js';
+import { t, formatPostTime, isIOS } from './posts_utils.js';
 
 const h = React.createElement;
 

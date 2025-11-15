@@ -16,7 +16,7 @@
 // --- ИМПОРТ МОДУЛЕЙ ---
 import { loadTranslations, t, supportedLangs } from './i18n.js';
 // import { getLuminance, shadeColor, formatLastSeen } from './utils.js'; // УДАЛЕНО formatLastSeen
-import { getLuminance, shadeColor } from './utils.js'; // (utils.js был почищен)
+import { getLuminance, shadeColor } from './vanilla_utils.js'; // (utils.js был почищен)
 // (НОВОЕ) Импортируем applyGlass
 import { applyTheme, updateThemeButtons, applyGlass } from './theme.js';
 // import { initCountrySelector, updateCountryListText, getTomSelectInstance, preloadFlags } from './countries.js?v=2'; // УДАЛЕНО
@@ -698,8 +698,8 @@ async function loadReactIslands() {
     window.REACT_ISLANDS_LOADED = true;
     console.log("🔄 Начинаем СИНХРОННУЮ загрузку React-островков...");
     try {
-        await loadScript('/js/react/feed/index.js?v=1.4');
-        await loadScript('/js/react/posts/index.js?v=1.4');
+        await loadScript('/js/react/feed/FeedApp.js?v=1.4');
+        await loadScript('/js/react/posts/PostsApp.js?v=1.4');
         console.log("✅ Все React-островки успешно загружены.");
     } catch (e) {
         console.error("❌ КРИТИЧЕСКАЯ ОШИБКА при загрузке React-скриптов:", e);

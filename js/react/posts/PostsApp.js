@@ -27,7 +27,7 @@ import {
     QuickFilterTags,
     ProfileFallback,
     PhoneShell
-} from './utils.js';
+} from './posts_utils.js';
 
 // --- ИМПОРТЫ ЛОКАЛЬНЫХ КОМПОНЕНТОВ ---
 import { SkeletonList } from './Skeleton.js';
