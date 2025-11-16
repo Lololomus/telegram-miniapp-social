@@ -26,6 +26,7 @@ export {
     FEED_ITEM_SPRING,
     FEED_ITEM_DELAY_STEP,
     buildFeedItemTransition,
+    EmptyState,
 } from '../shared/react_shared_utils.js';
 
 
@@ -126,20 +127,4 @@ export function CloseButton({ onClick, isIOS }) {
             h('line', { x1: '6', y1: '6', x2: '18', y2: '18' })
         )
     );
-}
-
-/**
- * Компонент-хелпер: Заглушка "Ничего не найдено" для ленты постов
- * (визуально такой же, как в ленте людей)
- */
-export function EmptyState({ text }) {
-    return h('div', {
-        style: {
-            textAlign: 'center',
-            padding: '40px 20px',
-            color: 'var(--main-hint-color, #999)',
-            fontSize: '16px',
-            opacity: 0.8,
-        }
-    }, text || 'Ничего не найдено');
 }

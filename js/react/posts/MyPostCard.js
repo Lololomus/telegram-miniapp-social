@@ -6,7 +6,7 @@ import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm'
 
 // Локальные импорты
 import PostCard from './PostCard.js';
-import { isIOS, cardVariants, buildFeedItemTransition } from './posts_utils.js';
+import { isIOS, cardVariants, FEED_ITEM_SPRING } from './posts_utils.js';
 
 const h = React.createElement;
 const tg = window.Telegram?.WebApp;
@@ -32,6 +32,7 @@ const MyPostCard = memo(function MyPostCard({
   const gestureTimerRef = useRef(null);
   const pointerStartRef = useRef(null);
   const cardRef = useRef(null);
+
   const POINTER_SLOP = 5;
 
   const handlePointerDown = (e) => {
@@ -46,10 +47,11 @@ const MyPostCard = memo(function MyPostCard({
     }
 
     gestureTimerRef.current = setTimeout(() => {
-      if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
+      if (tg?.HapticFeedback?.impactOccurred) {
+        tg.HapticFeedback.impactOccurred('heavy');
+      }
 
       onOpenContextMenu(post, cardRef.current);
-
       pointerStartRef.current = null;
 
       if (tg?.enableVerticalSwipes) {
@@ -62,7 +64,6 @@ const MyPostCard = memo(function MyPostCard({
     if (!pointerStartRef.current) return;
 
     const deltaY = Math.abs(e.pageY - pointerStartRef.current.y);
-
     if (deltaY > POINTER_SLOP) {
       clearTimeout(gestureTimerRef.current);
       pointerStartRef.current = null;
@@ -84,53 +85,40 @@ const MyPostCard = memo(function MyPostCard({
     // значит, это был Tap!
     if (pointerStartRef.current) {
       onOpenPostSheet(post);
+      pointerStartRef.current = null;
     }
-
-    pointerStartRef.current = null;
   };
-  // --- Конец логики жестов ---
 
-  const isActive = isContextMenuOpen;
-  const verticalShift = isActive ? -(menuLayout?.verticalAdjust || 0) : 0;
+  // --- Конец логики жестов ---
 
   return h(
     motion.div,
     {
       ref: cardRef,
+      // ВНЕШНИЙ слой: только волна + layout, без подъёма
       layout: isIOS ? false : 'position',
-
       variants: cardVariants,
       custom: { i: index },
       initial: 'hidden',
+      animate: 'visible',
       exit: 'exit',
-
-      animate: {
-        opacity: 1,
-        x: 0,
-        scale: isActive ? 1.03 : 1,
-        y: verticalShift,
-      },
-
-      // ✅ Общий helper для анимации появления
-      transition: buildFeedItemTransition(index),
-
+      transition: FEED_ITEM_SPRING,
       style: {
         position: 'relative',
         width: '100%',
-        // marginBottom убран — используем gap контейнера
         borderRadius: 12,
         cursor: 'pointer',
-        zIndex: isContextMenuOpen ? 2001 : 'auto'
+        zIndex: isContextMenuOpen ? 2001 : 'auto',
       },
-
       onPointerDown: handlePointerDown,
       onPointerMove: handlePointerMove,
       onPointerUp: handlePointerUp,
       onPointerCancel: handlePointerUp,
       onContextMenu: (e) => e.preventDefault(),
+      key: postKey,
     },
 
-    // Рендерим PostCard ВНУТРИ этой обертки
+    // ВНУТРЕННИЙ PostCard занимается подъемом карточки
     h(PostCard, {
       post: post,
       index: index,
@@ -138,9 +126,9 @@ const MyPostCard = memo(function MyPostCard({
       onOpenPostSheet: onOpenPostSheet,
       onOpenContextMenu: onOpenContextMenu,
       onTagClick: () => {},
-      disableClick: true, // <-- ВАЖНО: отключаем клик у дочернего
+      disableClick: true, // клики обрабатывает MyPostCard
       showActionsSpacer: false,
-      isWrapped: true, // Сообщаем PostCard, что он "обернут"
+      isWrapped: true, // можно оставить как маркер, сейчас не влияет
       isContextMenuOpen: isContextMenuOpen,
       menuLayout: menuLayout,
     }),

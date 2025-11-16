@@ -182,31 +182,66 @@ export const listVariants = {
   }
 };
 
-/**
- * Общий spring-конфиг для элементов ленты
- * (лента людей, лента запросов, мои запросы)
- */
+// Общий spring-конфиг для элементов ленты
+// (лента людей, лента запросов, мои запросы)
 export const FEED_ITEM_SPRING = {
   type: "spring",
   stiffness: 300,
   damping: 30,
 };
 
-/**
- * Шаг задержки между элементами (эффект "волны").
- * На iOS задержка отключена, чтобы не тормозить WebView.
- */
+// Шаг задержки между элементами (эффект "волны").
+// На iOS задержка отключена, чтобы не тормозить WebView.
 export const FEED_ITEM_DELAY_STEP = isIOS ? 0 : 0.1;
 
-/**
- * Общий хелпер для transition появления карточки в ленте.
- * index — позиция карточки в списке (0, 1, 2, ...).
- */
+// Общий хелпер для transition появления карточки в ленте.
+// index — позиция карточки в списке (0, 1, 2, ...).
 export function buildFeedItemTransition(index = 0) {
-  const safeIndex = (typeof index === 'number' && isFinite(index)) ? index : 0;
+  const safeIndex =
+    typeof index === "number" && isFinite(index) ? index : 0;
+
+  const delay = FEED_ITEM_DELAY_STEP * safeIndex;
 
   return {
+    // Волна появления — задержка по индексу для opacity/x и базового spring
     ...FEED_ITEM_SPRING,
-    delay: FEED_ITEM_DELAY_STEP * safeIndex,
+    delay,
+
+    // Подпрыгивание при long‑press (scale/y) — БЕЗ задержки
+    scale: {
+      ...FEED_ITEM_SPRING,
+      delay: 0,
+    },
+    y: {
+      ...FEED_ITEM_SPRING,
+      delay: 0,
+    },
   };
+}
+
+// Общий EmptyState для всех лент (люди, запросы и т.п.)
+export function EmptyState({ text, visible }) {
+  return h(
+    'div',
+    {
+      style: {
+        textAlign: 'center',
+        padding: '48px 24px',
+        color: 'rgba(255, 255, 255, 0.9)',
+        fontSize: '18px',
+        fontWeight: 500,
+        letterSpacing: '0.01em',
+        textShadow: '0 0 18px rgba(0, 0, 0, 0.35)',
+
+        // плавное появление/исчезновение
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(6px)',
+        transition: 'opacity 180ms ease-out, transform 180ms ease-out',
+
+        pointerEvents: 'none',
+        userSelect: 'none',
+      },
+    },
+    text || 'Ничего не найдено',
+  );
 }

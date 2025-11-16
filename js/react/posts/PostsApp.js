@@ -64,14 +64,13 @@ function App({ mountInto, overlayHost }) {
   const [allSkills] = useState(POPULAR_SKILLS);
   
   // Состояния для поиска
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState([]);
-  const [statusFilter, setStatusFilter] = useState(null);
-  
-  // Применяем debounce ко всем фильтрам
+  const [searchQuery, setSearchQuery] = useState('');        // сырая строка из input
+  const [selectedSkills, setSelectedSkills] = useState([]);  // выбранные навыки (клики + модалка)
+  const [statusFilter, setStatusFilter] = useState(null);    // выбранный статус
+
+  // Дебаунсим ТОЛЬКО текстовый ввод,
+  // чтобы не бомбить сервер / тяжёлую фильтрацию при печати
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const debouncedSelectedSkills = useDebounce(selectedSkills, 300);
-  const debouncedStatusFilter = useDebounce(statusFilter, 300);
 
   const [showMyPostsOnly, setShowMyPostsOnly] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
@@ -198,8 +197,9 @@ function App({ mountInto, overlayHost }) {
 
   // Фильтрация постов (поиск + теги + статус)
   useEffect(() => {
-    // Поиск по тексту (С ДЕБАУНСОМ)
+    // Поиск по тексту — С ДЕБАУНСОМ
     const qLower = (debouncedSearchQuery || '').toLowerCase().trim();
+
     const terms = qLower
       ? qLower
           .replace(/,/g, ' ')
@@ -232,7 +232,7 @@ function App({ mountInto, overlayHost }) {
       const statusMatch =
         !currentStatus || p.post_type === currentStatus;
 
-      // Фильтр по тегам
+      // Фильтр по тегам (каждый выбранный скилл должен быть в посте)
       const tagMatch =
         selectedSkillsLower.length === 0 ||
         selectedSkillsLower.every((selSkill) =>
@@ -293,25 +293,48 @@ function App({ mountInto, overlayHost }) {
     skillButton.addEventListener('click', handleClick); return () => skillButton.removeEventListener('click', handleClick);
   }, [selectedSkills]);
 
-  // Коллбэк для нажатия на тег
+  // Коллбэк для нажатия на тег (БЕЗ дебаунса для тегов)
   const onToggleSkill = useCallback((skill) => {
-    const lowerSkill = skill.toLowerCase(); let newSelectedSkills;
-    const isSelected = selectedSkills.some(s => s.toLowerCase() === lowerSkill);
-    if (isSelected) { newSelectedSkills = selectedSkills.filter(s => s.toLowerCase() !== lowerSkill); } 
-    else { const canonicalSkill = allSkills.find(s => s.toLowerCase() === lowerSkill) || skill; newSelectedSkills = [...selectedSkills, canonicalSkill].sort((a, b) => a.localeCompare(b)); }
-    
-    setSelectedSkills(newSelectedSkills); 
-    const newInputValue = newSelectedSkills.join(', ');
-    setSearchQuery(newInputValue);
-    
-    if (inputRef.current && inputRef.current.value !== newInputValue) { 
-        inputRef.current.value = newInputValue; 
+    const lowerSkill = skill.toLowerCase();
+    let newSelectedSkills;
+
+    const isSelected = selectedSkills.some(
+      (s) => s.toLowerCase() === lowerSkill,
+    );
+
+    if (isSelected) {
+      // снимаем тег
+      newSelectedSkills = selectedSkills.filter(
+        (s) => s.toLowerCase() !== lowerSkill,
+      );
+    } else {
+      // добавляем тег в каноническом виде из POPULAR_SKILLS (если есть)
+      const canonicalSkill =
+        allSkills.find((s) => s.toLowerCase() === lowerSkill) || skill;
+
+      newSelectedSkills = [...selectedSkills, canonicalSkill].sort((a, b) =>
+        a.localeCompare(b),
+      );
     }
+
+    // 1. Мгновенно обновляем список выбранных тегов
+    setSelectedSkills(newSelectedSkills);
+
+    // 2. Обновляем value у текстового поля (для визуальной синхронизации)
+    const newInputValue = newSelectedSkills.join(', ');
+    if (inputRef.current && inputRef.current.value !== newInputValue) {
+      inputRef.current.value = newInputValue;
+    }
+
+    // 3. Сбрасываем фильтр по статусу (как и раньше)
     if (statusFilterInputRef.current) {
-        statusFilterInputRef.current.value = '';
+      statusFilterInputRef.current.value = '';
     }
     setStatusFilter(null);
-    
+
+    // ВАЖНО: НЕ трогаем searchQuery здесь.
+    // Дебаунс теперь влияет только на реальный ввод с клавиатуры,
+    // а клики по тегам фильтруют список сразу.
   }, [selectedSkills, allSkills]);
 
   // --- Коллбэки для модальных окон ---
@@ -509,8 +532,10 @@ function App({ mountInto, overlayHost }) {
         }),
 
     // Пустое состояние (НЕ во время загрузки)
-    (!isLoading && filtered.length === 0) &&
-      h(EmptyState, { text: t('feed_empty') }),
+    h(EmptyState, {
+      text: t('feed_empty'),
+      visible: !isLoading && filtered.length === 0,
+    }),
     
     // Модальные окна
     h(Suspense, { fallback: h(ProfileFallback) },

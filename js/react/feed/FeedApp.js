@@ -305,6 +305,7 @@ function App({ mountInto, overlayHost }) {
     filtered.length === 0 &&
       h(EmptyState, {
         text: t('feed_empty'),
+        visible: filtered.length === 0,
       }),
 
     h(

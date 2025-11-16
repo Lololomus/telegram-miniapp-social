@@ -24,6 +24,7 @@ export {
     FEED_ITEM_SPRING,
     FEED_ITEM_DELAY_STEP,
     buildFeedItemTransition,
+    EmptyState, 
 } from '../shared/react_shared_utils.js';
 
 
@@ -46,22 +47,6 @@ export const t = (k, d={}) => {
   Object.entries(d).forEach(([k,v])=>{ s = s.replace(new RegExp(`{${k}}`,'g'), v); });
   return s;
 };
-
-/**
- * Компонент-хелпер: Заглушка "Ничего не найдено"
- * (Взят из react-feed.js)
- */
-export function EmptyState({ text }) {
-  return h('div', {
-    style: {
-      textAlign: 'center',
-      padding: '40px 20px',
-      color: 'var(--main-hint-color, #999)',
-      fontSize: '16px',
-      opacity: 0.8
-    }
-  }, text || 'Ничего не найдено');
-}
 
 /**
  * Компонент-хелпер: TopSpacer (пустышка для отступа)
