@@ -1280,9 +1280,21 @@ function loadScript(src, retries = 3) {
         
         // (ВОССТАНОВЛЕН ОБРАБОТЧИК)
         if (elements.feed.openSkillsModalButtonFeed) {
-             elements.feed.openSkillsModalButtonFeed.addEventListener('click', () => {
-                // Этот код слушает React (react-feed.js)
-             });
+            elements.feed.openSkillsModalButtonFeed.addEventListener('click', () => {
+                // Берём текущий список выбранных навыков из state,
+                // если он ещё не инициализирован — используем пустой массив
+                const skills = Array.isArray(state.selectedSkills)
+                    ? state.selectedSkills
+                    : [];
+
+                // Открываем общую модалку выбора навыков
+                document.dispatchEvent(new CustomEvent('openSkillsModal', {
+                    detail: {
+                        source: 'feed',  // важно: тип источника, по нему потом работает onBack
+                        skills           // предварительно выбранные навыки
+                    }
+                }));
+            });
         }
         
         // (ВОССТАНОВЛЕН ОБРАБОТЧИК)
