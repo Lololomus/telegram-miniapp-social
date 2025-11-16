@@ -5,7 +5,7 @@ import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion, AnimatePresence } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 
 // Локальные импорты
-import { listVariants, isIOS } from './posts_utils.js';
+import { isIOS } from './posts_utils.js';
 import PostCard from './PostCard.js';
 import MyPostCard from './MyPostCard.js';
 
@@ -15,59 +15,72 @@ const h = React.createElement;
  * Компонент PostsList
  * (Вынесен из react-posts-feed.js)
  */
-function PostsList({ posts, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onTagClick, isMyPosts, onEditPost, onDeletePost, containerRef, contextMenuPost, menuLayout }) {
-  
-  return h(motion.div, {
-    ref: containerRef,
-    variants: listVariants,
-    initial: "hidden",
-    animate: "visible",
-    // Стили из feed.css .feed-list (gap: 12px) 
-    // будут применены к этому div, когда мы удалим #posts-list
-    // (пока оставляем так)
-    style: { 
-        position: 'relative'
-    }
-  },
-    h(AnimatePresence, {
-      initial: false,
-      mode: isIOS ? "sync" : "popLayout"
+function PostsList({
+  posts,
+  onOpenProfile,
+  onOpenPostSheet,
+  onOpenContextMenu,
+  onTagClick,
+  isMyPosts,
+  onEditPost,
+  onDeletePost,
+  containerRef,
+  contextMenuPost,
+  menuLayout,
+}) {
+  return h(
+    motion.div,
+    {
+      ref: containerRef,
+      // Делаем контейнер таким же, как в FeedList:
+      // flex-колонка + gap 12px, без variants/initial/animate.
+      style: {
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+      },
     },
+    h(
+      AnimatePresence,
+      {
+        mode: isIOS ? 'sync' : 'popLayout',
+        initial: false,
+      },
       posts.map((p, index) => {
         const key = p.post_id;
-        // Определяем, активна ли эта карточка
         const isContextMenuOpen = contextMenuPost?.post_id === p.post_id;
-        
+
         if (isMyPosts) {
-          // Рендерим MyPostCard (обертка с long-press)
+          // Мои посты (обёртка с long-press)
           return h(MyPostCard, {
-            key: key,
+            key,
             post: p,
-            index: index,
-            onOpenProfile: onOpenProfile,
-            onOpenPostSheet: onOpenPostSheet,
-            onOpenContextMenu: onOpenContextMenu,
+            index,
+            onOpenProfile,
+            onOpenPostSheet,
+            onOpenContextMenu,
             onEdit: onEditPost,
             onDelete: onDeletePost,
-            isContextMenuOpen: isContextMenuOpen,
-            menuLayout: menuLayout
-          });
-        } else {
-          // Рендерим обычную PostCard (для общей ленты)
-          return h(PostCard, {
-            key: key,
-            post: p,
-            index: index,
-            onOpenProfile: onOpenProfile,
-            onOpenPostSheet: onOpenPostSheet,
-            onOpenContextMenu: onOpenContextMenu,
-            onTagClick: onTagClick,
-            isContextMenuOpen: isContextMenuOpen,
-            menuLayout: menuLayout
+            isContextMenuOpen,
+            menuLayout,
           });
         }
-      })
-    )
+
+        // Общая лента запросов
+        return h(PostCard, {
+          key,
+          post: p,
+          index,
+          onOpenProfile,
+          onOpenPostSheet,
+          onOpenContextMenu,
+          onTagClick,
+          isContextMenuOpen,
+          menuLayout,
+        });
+      }),
+    ),
   );
 }
 

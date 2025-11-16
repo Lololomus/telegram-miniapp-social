@@ -1,4 +1,4 @@
-// react/posts/index.js (ESM)
+// react/posts/PostsApp.js (ESM)
 // (Бывший /js/react-posts-feed.js)
 // 
 // Этот файл был очищен от ~2000 строк кода компонентов.
@@ -26,7 +26,8 @@ import {
     isIOS,
     QuickFilterTags,
     ProfileFallback,
-    PhoneShell
+    PhoneShell,
+    EmptyState
 } from './posts_utils.js';
 
 // --- ИМПОРТЫ ЛОКАЛЬНЫХ КОМПОНЕНТОВ ---
@@ -195,36 +196,64 @@ function App({ mountInto, overlayHost }) {
     }
   }, [showMyPostsOnly]); 
 
-  // Главный useEffect фильтрации
+  // Фильтрация постов (поиск + теги + статус)
   useEffect(() => {
-    const qLower = debouncedSearchQuery.toLowerCase(); 
-    const terms = qLower.replace(/,/g, ' ').split(' ').map(s => s.trim()).filter(Boolean);
-    const selectedSkillsLower = debouncedSelectedSkills.map(s => s.toLowerCase());
-    
-    if (!posts || posts.length === 0) { 
-        setFiltered([]); 
-        return; 
+    // Поиск по тексту (С ДЕБАУНСОМ)
+    const qLower = (debouncedSearchQuery || '').toLowerCase().trim();
+    const terms = qLower
+      ? qLower
+          .replace(/,/g, ' ')
+          .split(' ')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    // Теги — БЕЗ дебаунса, как в ленте людей
+    const selectedSkillsLower = (selectedSkills || []).map((s) =>
+      s.toLowerCase(),
+    );
+
+    // Статус — тоже БЕЗ дебаунса
+    const currentStatus = statusFilter;
+
+    if (!posts || posts.length === 0) {
+      setFiltered([]);
+      return;
     }
-    
-    const newFiltered = posts.filter(p => {
-      const postSkillsLower = (p.skill_tags || []).map(s => s.toLowerCase());
+
+    const newFiltered = posts.filter((p) => {
+      const postSkillsLower = (p.skill_tags || []).map((s) =>
+        s.toLowerCase(),
+      );
       const authorNameLower = (p.author?.first_name || '').toLowerCase();
       const contentLower = (p.content || '').toLowerCase();
-      
-      const statusMatch = !debouncedStatusFilter || p.post_type === debouncedStatusFilter;
-      const tagMatch = selectedSkillsLower.length === 0 || selectedSkillsLower.every(selSkill => postSkillsLower.includes(selSkill));
-      const textMatch = terms.length === 0 || terms.every(term => 
-          authorNameLower.includes(term) || 
-          contentLower.includes(term) || 
-          postSkillsLower.some(skill => skill.includes(term))
-      );
-      
+
+      // Фильтр по статусу
+      const statusMatch =
+        !currentStatus || p.post_type === currentStatus;
+
+      // Фильтр по тегам
+      const tagMatch =
+        selectedSkillsLower.length === 0 ||
+        selectedSkillsLower.every((selSkill) =>
+          postSkillsLower.includes(selSkill),
+        );
+
+      // Фильтр по тексту (имя, текст, навыки)
+      const textMatch =
+        terms.length === 0 ||
+        terms.every(
+          (term) =>
+            authorNameLower.includes(term) ||
+            contentLower.includes(term) ||
+            postSkillsLower.some((skill) => skill.includes(term)),
+        );
+
       return statusMatch && tagMatch && textMatch;
     });
-    
+
     setFiltered(newFiltered);
-    
-  }, [posts, debouncedSearchQuery, debouncedSelectedSkills, debouncedStatusFilter]);
+  }, [posts, debouncedSearchQuery, selectedSkills, statusFilter]);
 
   // Слушатель инпута поиска
   useEffect(() => {
@@ -478,6 +507,10 @@ function App({ mountInto, overlayHost }) {
           contextMenuPost: contextMenuState.post,
           menuLayout: menuLayout
         }),
+
+    // Пустое состояние (НЕ во время загрузки)
+    (!isLoading && filtered.length === 0) &&
+      h(EmptyState, { text: t('feed_empty') }),
     
     // Модальные окна
     h(Suspense, { fallback: h(ProfileFallback) },

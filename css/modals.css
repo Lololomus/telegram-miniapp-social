@@ -32,13 +32,9 @@
 .modal-content .action-button.secondary { margin-top: 15px; }
 
 /* --- Стили для модального окна навыков --- */
-/* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Меняем позиционирование и убираем padding */
 #skills-modal {
     display: none; 
     flex-direction: column; 
-    /* height: 100%; */ /* <-- УДАЛЕНО */
-    
-    /* --- ДОБАВЛЕНО --- */
     position: fixed;
     top: 0;
     left: 0;
@@ -49,28 +45,26 @@
     height: 100vh; /* Фоллбэк */
     z-index: 1001; /* Выше, чем .react-sheet-content (1000) */
     padding: 0; /* <-- УБИРАЕМ PADDING, который был у .screen */
-    /* --- КОНЕЦ --- */
+    overflow-y: auto; /* Вся модалка скроллится целиком вместе с фильтрами и списком */
     
     background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
     transition: background-color 0.3s;
 }
-/* --- КОНЕЦ ИСПРАВЛЕНИЯ --- */
 
-/* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Добавляем padding сюда */
+/* ✅ ИСПРАВЛЕНИЕ: Шапка модалки навыков */
 #skills-modal .form-header {
-    padding: 20px 20px 10px 20px;
-    margin-bottom: 0; /* Убираем, т.к. фильтр будет следующим */
+    padding: 14px 20px 6px 20px;
+    margin-bottom: 4px; /* Чуть меньше зазора до фильтра */
     flex-shrink: 0; /* Не сжимать заголовок */
 }
 
 #skills-modal-list-container {
-  flex-grow: 1;
-  overflow-y: auto;
+  flex-grow: 0;
+  overflow-y: visible; /* Скролл теперь на всём #skills-modal */
   border-radius: 10px;
   padding: 0 20px;
   margin: 0;
-  min-height: 0; /* ВАЖНО для flex-grow в Safari */
-  padding-bottom: 120px; /* Увеличиваем, чтобы контент не заходил под кнопку */
+  padding-bottom: 120px; /* Чтобы контент не заходил под кнопку "Выбрать" */
   background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
   border: none;
   transition: background-color 0.3s;
@@ -129,13 +123,11 @@
 
 /* --- Стили для нового фильтра статусов --- */
 .status-filter-group {
-    /* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Добавляем padding сюда */
-    padding: 0 20px; /* Синхронизируем с .form-header */
-    margin-bottom: 15px;
-    border-bottom: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    padding-bottom: 20px;
+    /* Фильтр статусов теперь прокручивается вместе со списком навыков */
+    padding: 0 20px 12px 20px; /* Синхронизируем с .form-header */
+    margin-bottom: 8px;
+    border-bottom: none; /* Убираем белую разделяющую линию */
     transition: border-color 0.3s;
-    flex-shrink: 0; /* Не сжимать фильтр */
 }
 .status-filter-group-title {
     font-size: 15px;

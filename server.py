@@ -72,8 +72,8 @@ VALIDATION_LIMITS = {
     'education_count': 5,
     
     # Посты
-    'post_content': 500,
-    'post_full_description': 5000,
+    'post_content': 200,
+    'post_full_description': 2000,
     'post_skills_json': 2000 # Лимит на JSON-строку
 }
 # --- КОНЕЦ НОВОГО БЛОКА ---
@@ -102,11 +102,14 @@ def serve_locales(filename):
 # --- Маршруты API (без изменений) ---
 @app.route('/config')
 def get_config():
+    # --- ИЗМЕНЕНИЕ: Добавляем лимиты валидации в конфиг ---
     return jsonify({
         'backendUrl': BACKEND_URL,
         'botUsername': os.getenv('BOT_USERNAME'),
-        'appSlug': os.getenv('APP_SLUG')
+        'appSlug': os.getenv('APP_SLUG'),
+        'validationLimits': VALIDATION_LIMITS 
     })
+    # --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
@@ -145,7 +148,7 @@ def send_telegram_message(user_id, profile_data, photo_path, lang='ru'):
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
         payload = {"chat_id": user_id, "photo": photo_url, "caption": caption, "parse_mode": "Markdown"}
     else:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        url = f"https.api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         payload = {"chat_id": user_id, "text": caption, "parse_mode": "Markdown", "disable_web_page_preview": True}
     try:
         response = requests.post(url, json=payload)

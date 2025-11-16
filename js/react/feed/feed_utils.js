@@ -20,8 +20,11 @@ export {
     ProfileFallback,
     POPULAR_SKILLS,
     cardVariants,
-    listVariants
-} from '../shared/react_shared_utils.js'; // <-- Корректный относительный путь
+    listVariants,
+    FEED_ITEM_SPRING,
+    FEED_ITEM_DELAY_STEP,
+    buildFeedItemTransition,
+} from '../shared/react_shared_utils.js';
 
 
 /**

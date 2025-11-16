@@ -12,6 +12,7 @@
 // --- ИЗМЕНЕНИЕ: Добавлена синхронизация ручного ввода тегов в модалке поста ---
 // --- ИЗМЕНЕНИЕ: Добавлен обработчик для кнопки #save-post-button ---
 // ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): Перестроена вся логика навигации на tg.BackButton
+// --- ИЗМЕНЕНИЕ (Задача 1): Логика счетчиков перенесена в main() и использует state.VALIDATION_LIMITS ---
 
 // --- ИМПОРТ МОДУЛЕЙ ---
 import { loadTranslations, t, supportedLangs } from './i18n.js';
@@ -79,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
             fullDescriptionField: document.getElementById('post-full-description-field'), // НОВОЕ ПОЛЕ
             skillsField: document.getElementById('post-skills-field'),
             openSkillsModalButton: document.getElementById('select-post-skills-button')
+            // --- ИЗМЕНЕНИЕ: Ссылки на счетчики (contentCounter, fullDescriptionCounter)
+            // будут добавлены в main() после их создания
         },
 
         // --- Элементы формы ---
@@ -205,6 +208,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
          skeletonTemplate: document.getElementById('skeleton-card-template')
     };
+
+    // --- (ИЗМЕНЕНИЕ) ---
+    // Код создания счетчиков УДАЛЕН отсюда. Он перенесен в main()
+    // --- (КОНЕЦ ИЗМЕНЕНИЯ) ---
+
 
     // --- (ИЗМЕНЕНИЕ) ---
     // ГЛОБАЛЬНОЕ СОСТОЯНИЕ и SKILL_CATEGORIES теперь импортируются из ./app-state.js
@@ -586,6 +594,19 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.postModal.fullDescriptionField.value = ''; // Очищаем новое поле
         elements.postModal.skillsField.value = '';
 
+        // --- ИЗМЕНЕНИЕ: Обновляем счетчики из state.VALIDATION_LIMITS ---
+        if (elements.postModal.contentCounter) {
+            const limit = state.VALIDATION_LIMITS?.post_content || 500;
+            elements.postModal.contentField.maxLength = limit;
+            elements.postModal.contentCounter.textContent = `0 / ${limit}`;
+        }
+        if (elements.postModal.fullDescriptionCounter) {
+            const limit = state.VALIDATION_LIMITS?.post_full_description || 2000;
+            elements.postModal.fullDescriptionField.maxLength = limit;
+            elements.postModal.fullDescriptionCounter.textContent = `0 / ${limit}`;
+        }
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
         // --- ИЗМЕНЕНИЕ: TomSelect удален ---
         // initPostTypeSelect();
         // --- КОНЕЦ ИЗМЕНЕНИЯ ---
@@ -767,6 +788,21 @@ function loadScript(src, retries = 3) {
             document.addEventListener('openCreatePostModal', () => {
                 showCreatePostModal();
             });
+
+        // --- ИЗМЕНЕНИЕ: Добавляем слушатели для счетчиков ---
+        if (elements.postModal.contentField && elements.postModal.contentCounter) {
+            elements.postModal.contentField.addEventListener('input', () => {
+                const limit = state.VALIDATION_LIMITS?.post_content || 500;
+                elements.postModal.contentCounter.textContent = `${elements.postModal.contentField.value.length} / ${limit}`;
+            });
+        }
+        if (elements.postModal.fullDescriptionField && elements.postModal.fullDescriptionCounter) {
+            elements.postModal.fullDescriptionField.addEventListener('input', () => {
+                const limit = state.VALIDATION_LIMITS?.post_full_description || 2000;
+                elements.postModal.fullDescriptionCounter.textContent = `${elements.postModal.fullDescriptionField.value.length} / ${limit}`;
+            });
+        }
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
         tg.MainButton.onClick(() => {
             if (elements.formContainer.style.display === 'block') {
@@ -1354,9 +1390,16 @@ function loadScript(src, retries = 3) {
         state.CONFIG.backendUrl = state.CONFIG.backendUrl || window.location.origin; 
         api.setApiConfig(state.CONFIG);
         
+        // --- ИЗМЕНЕНИЕ: Сохраняем лимиты в state и window ---
+        state.VALIDATION_LIMITS = configData.validationLimits || {};
+        
         // ✅ СНАЧАЛА устанавливаем глобальный конфиг
         window.__CONFIG = state.CONFIG;
+        // Добавляем лимиты в глобальный конфиг для React
+        window.__CONFIG.VALIDATION_LIMITS = state.VALIDATION_LIMITS; 
         console.log("✅ Конфиг установлен:", state.CONFIG.backendUrl);
+        console.log("✅ Лимиты валидации загружены:", state.VALIDATION_LIMITS);
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
         // ✅ ТОЛЬКО ТЕПЕРЬ загружаем React (с ожиданием!)
         console.log("⏳ Загрузка React-островков...");
@@ -1367,6 +1410,27 @@ function loadScript(src, retries = 3) {
         
         // 5. (УДАЛЕНО) Пинг
         
+        // --- ИЗМЕНЕНИЕ: Создаем счетчики ПОСЛЕ загрузки конфига ---
+        const MAX_CONTENT = state.VALIDATION_LIMITS.post_content || 500;
+        const MAX_FULL_DESC = state.VALIDATION_LIMITS.post_full_description || 2000;
+
+        if (elements.postModal.contentField) {
+            elements.postModal.contentField.maxLength = MAX_CONTENT;
+            const contentCounter = document.createElement('div');
+            contentCounter.className = 'char-counter';
+            elements.postModal.contentField.insertAdjacentElement('afterend', contentCounter);
+            elements.postModal.contentCounter = contentCounter; // Сохраняем ссылку
+        }
+
+        if (elements.postModal.fullDescriptionField) {
+            elements.postModal.fullDescriptionField.maxLength = MAX_FULL_DESC;
+            const fullDescCounter = document.createElement('div');
+            fullDescCounter.className = 'char-counter';
+            elements.postModal.fullDescriptionField.insertAdjacentElement('afterend', fullDescCounter);
+            elements.postModal.fullDescriptionCounter = fullDescCounter; // Сохраняем ссылку
+        }
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
         // 6. События
         setupEventListeners();
         

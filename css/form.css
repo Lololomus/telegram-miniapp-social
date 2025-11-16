@@ -3,6 +3,8 @@
 /* --- ИЗМЕНЕНИЕ: Полностью удалены стили TomSelect --- */
 /* --- ИЗМЕНЕНИЕ: Добавлены стили для нативного <select> --- */
 /* --- ИЗМЕНЕНИЕ: Добавлены стили для <option> --- */
+/* --- ИЗМЕНЕНИЕ: Добавлены стили для .char-counter --- */
+/* --- ИЗМЕНЕНИЕ: Исправлен баг с чекбоксом --- */
 
 /* --- ФОРМА РЕДАКТИРОВАНИЯ --- */
 /* ... (Основные стили без изменений) ... */
@@ -232,38 +234,129 @@ textarea { min-height: 80px; }
 /* Группа полей дат */
 .date-input-group { margin-bottom: 10px; }
 .date-input-group:last-child { margin-bottom: 0; }
+
+/* --- ✅ ИЗМЕНЕНИЕ №1 --- */
+.date-group {
+    /* 1. Делаем блок с инпутом "inline", чтобы чекбокс мог встать с ним в один ряд. */
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 0; /* Убираем отступ, т.к. он теперь inline */
+}
+/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */
+
 .date-group label { margin-bottom: 4px; display: block; }
 .date-group input[type="text"] { max-width: 180px; display: inline-block; vertical-align: middle; }
 .date-input-group:last-child > input[type="text"] { margin-right: 10px; }
 
+/* --- ✅ ИЗМЕНЕНИЕ №2 --- */
 /* Чекбокс "по наст. врем" */
 .checkbox-label {
-    display: inline-block; vertical-align: middle; margin-top: 0; margin-left: 0;
+    display: inline-flex; 
+    align-items: center;  
+    vertical-align: middle; /* 2. Выравниваем по центру с инпутом */
+    
+    margin-top: 0; /* Убираем старый отступ */
+    margin-left: 10px; /* 3. "левее". Добавляем отступ от инпута */
+    
     font-size: 13px; 
     color: var(--main-hint-color, var(--tg-theme-hint-color, #999999)); 
-    cursor: pointer; white-space: nowrap; line-height: 1;
+    cursor: pointer; 
+    white-space: nowrap; 
+    line-height: 1;
     transition: color 0.3s;
 }
+/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */
+
+/* 1. Стили самого <input> (круглая кнопка) */
 .checkbox-label input[type="checkbox"] { 
-    width: auto; margin-right: 5px; flex-shrink: 0; vertical-align: middle; 
-}
-.checkbox-label input[type="checkbox"] {
-    appearance: none; -webkit-appearance: none; width: 15px; height: 15px;
+    appearance: none !important; 
+    -webkit-appearance: none !important; 
+    
+    width: 18px;  
+    height: 18px;
     border: 1.5px solid var(--main-hint-color, var(--tg-theme-hint-color, #999999)); 
-    border-radius: 4px; position: relative; cursor: pointer; outline: none;
+    border-radius: 50%; /* Делаем круглым */
+    position: relative; /* <-- ВАЖНО: для позиционирования галочки (::after) */
+    cursor: pointer; 
+    outline: none;
+    
+    display: inline-block !important; /* Больше не flex-контейнер */
+    
+    margin: 0;
+    margin-right: 6px; 
+    flex-shrink: 0; 
+    
+    /* === ПРИНУДИТЕЛЬНЫЙ СБРОС "ПАЛОЧКИ" === */
+    background: transparent !important;
+    background-image: none !important;
+    -webkit-mask: none !important;
+    mask: none !important; 
+    
     transition: background-color 0.2s, border-color 0.3s;
 }
+
+/* 2. Состояние :checked для <input> */
 .checkbox-label input[type="checkbox"]:checked { 
-    background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)); 
+    background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important; 
     border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important; 
 }
-.checkbox-label input[type="checkbox"]:checked::before { 
-    content: ''; display: block; position: absolute; top: 1px; left: 4px; 
-    width: 3px; height: 7px; 
-    border: solid var(--main-button-text-color, var(--tg-theme-button-text-color, #fff)); 
-    border-width: 0 2px 2px 0; transform: rotate(45deg); 
+
+/* 3. Псевдо-элемент ::before (ПРИНУДИТЕЛЬНО ПРЯЧЕМ) */
+.checkbox-label input[type="checkbox"]::before { 
+    content: '' !important; 
+    display: none !important; 
+    background: transparent !important;
+    background-image: none !important;
+    -webkit-mask: none !important; 
+    mask: none !important; 
 }
-.checkbox-label span { opacity: 0.9; vertical-align: middle; }
+
+/* 4. Псевдо-элемент ::after (ИСПОЛЬЗУЕМ ДЛЯ ГАЛОЧКИ) */
+.checkbox-label input[type="checkbox"]::after { 
+    /* === СБРОС СТИЛЕЙ "ПАЛОЧКИ" === */
+    content: '' !important;
+    display: none !important; /* Прячем по умолчанию */
+    background: transparent !important;
+    background-image: none !important;
+    -webkit-mask: none !important;
+    mask: none !important; 
+
+    width: auto; height: auto; border: none;
+    
+    /* Сбрасываем позиционирование (будет задано в :checked::after) */
+    position: static;
+    transform: none;
+}
+
+/* 5. Отображение ГАЛОЧКИ при :checked (через ::after) */
+.checkbox-label input[type="checkbox"]:checked::after { 
+    display: block !important; /* Показываем */
+    
+    /* === 3. РИСУЕМ ГАЛОЧКУ (Border-метод) === */
+    width: 5px; 
+    height: 10px; 
+    
+    border: solid var(--main-button-text-color, #fff) !important; 
+    border-width: 0 2.5px 2.5px 0 !important; /* L-форма */
+    
+    /* === 4. ЦЕНТРИРУЕМ ГАЛОЧКУ === */
+    position: absolute !important;
+    top: 50%;
+    left: 50%;
+    
+    transform: translate(-50%, -60%) rotate(45deg) !important; 
+    
+    /* Сдвигаем чуть вверх (из-за -60% по Y) */
+    margin: 0;
+}
+
+/* --- ✅ ИЗМЕНЕНИЕ №3 --- */
+.checkbox-label span { 
+    opacity: 0.9; 
+    /* vertical-align: middle; */ /* <-- УДАЛЕНО: Не нужно, т.к. родитель - flex */
+    /* margin-top: 1px; */ /* <-- УДАЛЕНО: Больше не нужно */
+}
+/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */
 
 input[type="text"]:disabled {
     background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) !important; 
@@ -302,6 +395,29 @@ input[type="text"]:disabled {
     margin-bottom: 0;
 }
 /* === КОНЕЦ СТИЛЕЙ ДЛЯ ДИНАМИЧЕСКИХ СЕКЦИЙ === */
+
+
+/* --- НОВЫЙ БЛОК: Счетчик символов --- */
+.char-counter {
+    display: block; /* Убедимся, что это блочный элемент */
+    font-size: 12px;
+    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+    opacity: var(--main-hint-opacity, 1);
+    text-align: right;
+    margin-top: 4px;
+    margin-right: 2px;
+    height: 15px; /* Резервируем место, чтобы форма не прыгала */
+    transition: color 0.3s, opacity 0.3s;
+}
+
+/* Применяем ко всем .form-group, содержащим textarea */
+/* (Это сработает и для React, и для ванильной модалки, если у нее есть .form-group) */
+.form-group textarea + .char-counter {
+    margin-top: -8px; /* Поднимаем счетчик ближе к textarea */
+    margin-bottom: 12px; /* Восстанавливаем отступ .form-group */
+}
+/* --- КОНЕЦ НОВОГО БЛОКА --- */
+
 
 /* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
 /* --- ИЗМЕНЕНИЕ: TomSelect удален, правила для <select> добавлены --- */

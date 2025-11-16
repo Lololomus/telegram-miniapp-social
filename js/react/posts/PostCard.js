@@ -3,7 +3,7 @@
 
 import React, { memo, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-import { t, formatPostTime, isIOS, cardVariants } from './posts_utils.js';
+import { t, formatPostTime, isIOS, cardVariants, buildFeedItemTransition } from './posts_utils.js';
 
 const h = React.createElement;
 const tg = window.Telegram?.WebApp;
@@ -12,18 +12,33 @@ const tg = window.Telegram?.WebApp;
  * Компонент PostCard
  * (Вынесен из react-posts-feed.js)
  */
-const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPostSheet, onOpenContextMenu, onTagClick, disableClick = false, styleOverride = {}, showActionsSpacer = false, isContextMenuOpen, menuLayout, isWrapped = false }) {
+const PostCard = memo(function PostCard({
+    post,
+    index,
+    onOpenProfile,
+    onOpenPostSheet,
+    onOpenContextMenu,
+    onTagClick,
+    disableClick = false,
+    styleOverride = {},
+    showActionsSpacer = false,
+    isContextMenuOpen,
+    menuLayout,
+    isWrapped = false,
+}) {
     const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
     const { content = 'Нет описания', post_type = 'default', skill_tags = [], created_at } = post;
-    const avatar = author.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
-    
-    const type_map = { 
-        'looking': { text: '🤝 Ищет', color: '#0A84FF' }, 
-        'offering': { text: '💼 Предлагает', color: '#34C759' }, 
-        'showcase': { text: '🚀 Демо', color: '#FF9500' } 
+    const avatar = author.photo_path
+        ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}`
+        : 'https://t.me/i/userpic/320/null.jpg';
+
+    const type_map = {
+        looking: { text: '🤝 Ищет', color: '#0A84FF' },
+        offering: { text: '💼 Предлагает', color: '#34C759' },
+        showcase: { text: '🚀 Демо', color: '#FF9500' },
     };
     const type_info = type_map[post_type] || { text: '📄 Запрос', color: '#8E8E93' };
-    
+
     const timeAgo = formatPostTime(created_at);
     const postKey = post.post_id || `temp-post-${Math.random()}`;
 
@@ -36,21 +51,21 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
     const handlePointerDown = (e) => {
         if (disableClick) return;
         pointerStartRef.current = { y: e.pageY };
-        
+
         if (tg?.disableVerticalSwipes) {
             tg.disableVerticalSwipes();
         }
-        
+
         if (gestureTimerRef.current) {
             clearTimeout(gestureTimerRef.current);
         }
 
         gestureTimerRef.current = setTimeout(() => {
             if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
-            
+
             onOpenContextMenu(post, cardRef.current);
-            
-            pointerStartRef.current = null; 
+
+            pointerStartRef.current = null;
 
             if (tg?.enableVerticalSwipes) {
                 tg.enableVerticalSwipes();
@@ -64,7 +79,7 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
         if (deltaY > POINTER_SLOP) {
             clearTimeout(gestureTimerRef.current);
             pointerStartRef.current = null;
-            
+
             if (tg?.enableVerticalSwipes) {
                 tg.enableVerticalSwipes();
             }
@@ -73,13 +88,13 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
 
     const handlePointerUp = (e) => {
         if (disableClick) return;
-        
+
         if (tg?.enableVerticalSwipes) {
             tg.enableVerticalSwipes();
         }
 
         clearTimeout(gestureTimerRef.current);
-        
+
         if (pointerStartRef.current) {
             const target = e.target;
             if (target.closest('[data-action="open-profile"]')) {
@@ -89,18 +104,18 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
                 onOpenPostSheet(post);
             }
         }
-        
+
         pointerStartRef.current = null;
     };
     // --- Конец логики жестов ---
 
     const isActive = isContextMenuOpen;
-    const verticalShift = (isActive && !isWrapped) ? -(menuLayout?.verticalAdjust || 0) : 0;
+    const verticalShift = isActive && !isWrapped ? -(menuLayout?.verticalAdjust || 0) : 0;
 
     return h(motion.div, {
         ref: cardRef,
         layout: disableClick ? undefined : (isIOS ? false : "position"),
-        layoutId: `postcard-${post.post_id}`,
+        // layoutId убираем, чтобы не было "прилёта сверху" при резких фильтрах
         
         variants: cardVariants,
         custom: { i: index },
@@ -125,157 +140,194 @@ const PostCard = memo(function PostCard({ post, index, onOpenProfile, onOpenPost
         style: { 
             padding: 15, 
             width: '100%', 
-            borderRadius: 12, 
-            marginBottom: '15px',
+            borderRadius: 12,
+            // marginBottom убран — вертикальный отступ теперь из gap в PostsList
             cursor: disableClick ? 'inherit' : 'pointer',
             ...styleOverride,
             position: 'relative',
             zIndex: isContextMenuOpen ? 2001 : 'auto'
         },
-        
-        onPointerDown: handlePointerDown,
-        onPointerMove: handlePointerMove,
-        onPointerUp: handlePointerUp,
-        onPointerCancel: handlePointerUp,
-        
-        onContextMenu: (e) => {
-            if (!disableClick) e.preventDefault();
-        },
-    },
-        h('div', {
-            style: {
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 10, 
-                marginBottom: 12
-            }
-        },
-            // Аватар
-            h('button', {
-                ['data-action']: 'open-profile',
-                style: {
-                    padding: 0,
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                }
+
+            onPointerDown: handlePointerDown,
+            onPointerMove: handlePointerMove,
+            onPointerUp: handlePointerUp,
+            onPointerCancel: handlePointerUp,
+
+            onContextMenu: (e) => {
+                if (!disableClick) e.preventDefault();
             },
-                h('div', { 
-                    style: { 
-                        height: 44, 
-                        width: 44, 
-                        borderRadius: '50%', 
-                        background: 'var(--secondary-bg-color)', 
-                        overflow: 'hidden'
-                    } 
-                },
-                    h('img', { 
-                        src: avatar, 
-                        alt: '', 
-                        loading: 'lazy',
-                        style: { width: '100%', height: '100%', objectFit: 'cover' } 
-                    })
-                )
-            ),
-            
-            // Имя и время
-            h('div', {
+        },
+        h(
+            'div',
+            {
                 style: {
-                    flex: 1,
-                    minWidth: 0,
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    marginRight: '10px' 
-                }
+                    alignItems: 'center',
+                    gap: 10,
+                    marginBottom: 12,
+                },
             },
-                h('button', {
+            // Аватар
+            h(
+                'button',
+                {
                     ['data-action']: 'open-profile',
                     style: {
                         padding: 0,
                         border: 'none',
                         background: 'none',
                         cursor: 'pointer',
-                        textAlign: 'left',
-                        font: 'inherit'
-                    }
+                        flexShrink: 0,
+                    },
                 },
-                    h('div', { 
-                        style: { 
-                            fontWeight: 600, 
-                            fontSize: 16,
-                            whiteSpace: 'nowrap', 
-                            overflow: 'hidden', 
-                            textOverflow: 'ellipsis',
-                            color: 'var(--main-text-color, #000)' 
-                        } 
-                    }, author.first_name || 'User')
+                h(
+                    'div',
+                    {
+                        style: {
+                            height: 44,
+                            width: 44,
+                            borderRadius: '50%',
+                            background: 'var(--secondary-bg-color)',
+                            overflow: 'hidden',
+                        },
+                    },
+                    h('img', {
+                        src: avatar,
+                        alt: '',
+                        loading: 'lazy',
+                        style: { width: '100%', height: '100%', objectFit: 'cover' },
+                    }),
                 ),
-                
-                timeAgo && h('div', { 
-                    style: { 
-                        fontSize: 14,
-                        color: 'var(--main-hint-color, #999)'
-                    } 
-                }, timeAgo)
             ),
-            
-            // Тег типа
-            h('div', { 
-                style: { 
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '6px 12px', 
-                    borderRadius: 8, 
-                    background: type_info.color, 
-                    color: '#FFFFFF', 
-                    fontSize: 13, 
-                    fontWeight: 600,
-                    flexShrink: 0,
-                    whiteSpace: 'nowrap'
-                } 
-            }, type_info.text),
 
-            showActionsSpacer && h('div', {
-                style: {
-                    width: '40px',
-                    flexShrink: 0
-                }
-            })
+            // Имя и время
+            h(
+                'div',
+                {
+                    style: {
+                        flex: 1,
+                        minWidth: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        marginRight: '10px',
+                    },
+                },
+                h(
+                    'button',
+                    {
+                        ['data-action']: 'open-profile',
+                        style: {
+                            padding: 0,
+                            border: 'none',
+                            background: 'none',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            font: 'inherit',
+                        },
+                    },
+                    h(
+                        'div',
+                        {
+                            style: {
+                                fontWeight: 600,
+                                fontSize: 16,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                color: 'var(--main-text-color, #000)',
+                            },
+                        },
+                        author.first_name || 'User',
+                    ),
+                ),
+
+                timeAgo &&
+                    h(
+                        'div',
+                        {
+                            style: {
+                                fontSize: 14,
+                                color: 'var(--main-hint-color, #999)',
+                            },
+                        },
+                        timeAgo,
+                    ),
+            ),
+
+            // Тег типа
+            h(
+                'div',
+                {
+                    style: {
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '6px 12px',
+                        borderRadius: 8,
+                        background: type_info.color,
+                        color: '#FFFFFF',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        flexShrink: 0,
+                        whiteSpace: 'nowrap',
+                    },
+                },
+                type_info.text,
+            ),
+
+            showActionsSpacer &&
+                h('div', {
+                    style: {
+                        width: '40px',
+                        flexShrink: 0,
+                    },
+                }),
         ),
-        
+
         // Контент
-        h('p', { 
-            style: { 
-                margin: 0, 
-                fontSize: 15, 
-                lineHeight: 1.5, 
-                color: 'var(--main-text-color, #000)', 
-                whiteSpace: 'pre-wrap',
-                maxHeight: '4.5em',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: '-webkit-box',
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical'
-            } 
-        }, content),
-        
+        h(
+            'p',
+            {
+                style: {
+                    margin: 0,
+                    fontSize: 15,
+                    lineHeight: 1.5,
+                    color: 'var(--main-text-color, #000)',
+                    whiteSpace: 'pre-wrap',
+                    maxHeight: '4.5em',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                },
+            },
+            content,
+        ),
+
         // Теги навыков
-        skill_tags.length > 0 && h('div', { 
-            style: { 
-                display: 'flex', 
-                flexWrap: 'wrap', 
-                gap: 6, 
-                marginTop: 12 
-            } 
-        },
-            ...skill_tags.map(tag => h('span', {
-                key: tag,
-                className: 'skill-tag skill-tag--display',
-            }, tag))
-        )
+        skill_tags.length > 0 &&
+            h(
+                'div',
+                {
+                    style: {
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 6,
+                        marginTop: 12,
+                    },
+                },
+                skill_tags.map((tag) =>
+                    h(
+                        'span',
+                        {
+                            key: tag,
+                            className: 'skill-tag skill-tag--display',
+                        },
+                        tag,
+                    ),
+                ),
+            ),
     );
 });
 

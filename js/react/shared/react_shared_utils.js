@@ -181,3 +181,32 @@ export const listVariants = {
     }
   }
 };
+
+/**
+ * Общий spring-конфиг для элементов ленты
+ * (лента людей, лента запросов, мои запросы)
+ */
+export const FEED_ITEM_SPRING = {
+  type: "spring",
+  stiffness: 300,
+  damping: 30,
+};
+
+/**
+ * Шаг задержки между элементами (эффект "волны").
+ * На iOS задержка отключена, чтобы не тормозить WebView.
+ */
+export const FEED_ITEM_DELAY_STEP = isIOS ? 0 : 0.1;
+
+/**
+ * Общий хелпер для transition появления карточки в ленте.
+ * index — позиция карточки в списке (0, 1, 2, ...).
+ */
+export function buildFeedItemTransition(index = 0) {
+  const safeIndex = (typeof index === 'number' && isFinite(index)) ? index : 0;
+
+  return {
+    ...FEED_ITEM_SPRING,
+    delay: FEED_ITEM_DELAY_STEP * safeIndex,
+  };
+}

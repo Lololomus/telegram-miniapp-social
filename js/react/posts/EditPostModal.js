@@ -10,6 +10,13 @@ import { t, isIOS } from './posts_utils.js';
 const h = React.createElement;
 const tg = window.Telegram?.WebApp;
 
+// --- ИЗМЕНЕНИЕ: Читаем лимиты из глобального конфига ---
+// (app.js загружает конфиг и кладет его в window.__CONFIG)
+const limits = window.__CONFIG?.VALIDATION_LIMITS || {};
+const MAX_CONTENT_LENGTH = limits.post_content || 500; // Фоллбэк на 500
+const MAX_FULL_DESC_LENGTH = limits.post_full_description || 2000; // Фоллбэк на 2000
+// --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
 /**
  * Компонент EditPostModal
  * (Вынесен из react-posts-feed.js)
@@ -194,7 +201,13 @@ function EditPostModal({ post, onClose, onSave }) {
               value: content,
               onChange: (e) => setContent(e.target.value),
               rows: 3,
-            })
+              maxLength: MAX_CONTENT_LENGTH // <-- ИСПОЛЬЗУЕМ ПЕРЕМЕННУЮ
+            }),
+            // --- НОВЫЙ БЛОК: Счетчик ---
+            h('div', { 
+                className: 'char-counter' 
+            }, `${content.length} / ${MAX_CONTENT_LENGTH}`)
+            // --- КОНЕЦ ---
           ),
           
           // 3. Полное описание
@@ -205,7 +218,13 @@ function EditPostModal({ post, onClose, onSave }) {
               value: fullDescription,
               onChange: (e) => setFullDescription(e.target.value),
               rows: 6,
-            })
+              maxLength: MAX_FULL_DESC_LENGTH // <-- ИСПОЛЬЗУЕМ ПЕРЕМЕННУЮ
+            }),
+            // --- НОВЫЙ БЛОК: Счетчик ---
+            h('div', { 
+                className: 'char-counter' 
+            }, `${fullDescription.length} / ${MAX_FULL_DESC_LENGTH}`)
+            // --- КОНЕЦ ---
           ),
           
           // 4. Теги (Кнопка)

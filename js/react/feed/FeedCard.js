@@ -11,7 +11,7 @@ import React, { memo, useRef, useEffect, useState } from 'https://cdn.jsdelivr.n
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 
 // Локальные импорты
-import { t, isIOS, cardVariants, tg } from './feed_utils.js';
+import { t, isIOS, cardVariants, tg, buildFeedItemTransition } from './feed_utils.js';
 
 const h = React.createElement;
 
@@ -106,13 +106,8 @@ const FeedCard = memo(function FeedCard({u, index, onOpen}) {
   };
   // --- Конец логики клика ---
 
-  // --- Логика "Системы Б" (Точная копия PostCard.js) ---
-  const transitionConfig = {
-      type: "spring",
-      stiffness: 300,
-      damping: 30,
-      delay: isIOS ? 0 : index * 0.1 // <-- Ручная задержка
-  };
+  // --- Логика "Системы Б" (теперь через shared helper) ---
+  const transitionConfig = buildFeedItemTransition(index);
 
   return h(motion.div, { // <-- ИЗМЕНЕНИЕ: 'motion.div'
     ref: cardRef,

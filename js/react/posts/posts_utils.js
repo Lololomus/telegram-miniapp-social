@@ -22,8 +22,11 @@ export {
     ProfileFallback,
     POPULAR_SKILLS,
     cardVariants,
-    listVariants
-} from '../shared/react_shared_utils.js'; // <-- ✅ ИСПРАВЛЕННЫЙ ПУТЬ
+    listVariants,
+    FEED_ITEM_SPRING,
+    FEED_ITEM_DELAY_STEP,
+    buildFeedItemTransition,
+} from '../shared/react_shared_utils.js';
 
 
 /**
@@ -32,7 +35,7 @@ export {
  */
 export const t = (k, d = {}) => {
     const dict = {
-        'feed_empty': 'Нет запросов', 'links': 'Ссылки', 'skills': 'Навыки',
+        'feed_empty': 'Ничего не найдено', 'links': 'Ссылки', 'skills': 'Навыки',
         'experience': 'Опыт работы', 'education': 'Образование', 'present_time': 'по наст. время',
         'post_type_looking': '🤝 Ищет', 'post_type_offering': '💼 Предлагает',
         'post_type_showcase': '🚀 Демо', 'post_type_default': 'Запрос',
@@ -123,4 +126,20 @@ export function CloseButton({ onClick, isIOS }) {
             h('line', { x1: '6', y1: '6', x2: '18', y2: '18' })
         )
     );
+}
+
+/**
+ * Компонент-хелпер: Заглушка "Ничего не найдено" для ленты постов
+ * (визуально такой же, как в ленте людей)
+ */
+export function EmptyState({ text }) {
+    return h('div', {
+        style: {
+            textAlign: 'center',
+            padding: '40px 20px',
+            color: 'var(--main-hint-color, #999)',
+            fontSize: '16px',
+            opacity: 0.8,
+        }
+    }, text || 'Ничего не найдено');
 }
