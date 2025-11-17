@@ -5,23 +5,34 @@
 
 /* --- Базовый стиль тега --- */
 .skill-tag {
-    /* ✅ ИСПРАВЛЕНИЕ #1: Используем flex для центрирования */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* ✅ ИСПРАВЛЕНИЕ #1: Убираем вертикальный padding, задаем высоту */
-    padding: 0 12px; /* Только горизонтальный */
-    height: 28px; /* Фиксированная высота */
-    border-radius: 14px; /* height / 2 */
-    
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1; /* ✅ ИСПРАВЛЕНИЕ #1: Убиваем line-height */
-    text-decoration: none;
-    white-space: nowrap;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.1s ease;
-    border: 1.5px solid transparent;
+  /* Внутренние переменные для геометрии */
+  --tag-height: calc(28px * var(--ui-scale, 1));
+  --tag-font-size: calc(13px * var(--ui-scale, 1));
+  --tag-padding-x: calc(12px * var(--ui-scale, 1));
+
+  /* Центрирование содержимого */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Геометрия через масштаб */
+  padding: 0 var(--tag-padding-x); /* Только горизонтальный */
+  height: var(--tag-height);
+  border-radius: calc(var(--tag-height) / 2);
+
+  font-size: var(--tag-font-size);
+  font-weight: 500;
+  line-height: 1; /* Убираем влияние line-height */
+
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition: background-color 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease,
+              opacity 0.2s ease,
+              transform 0.1s ease;
+  border: 1.5px solid transparent;
 }
 
 /* --- Модификатор: Тег для простого отображения --- */
@@ -36,64 +47,70 @@
 /* --- Модификатор: Тег для фильтра --- */
 /* Используется в быстрых фильтрах лент */
 .skill-tag--filter {
-    cursor: pointer;
-    flex-shrink: 0;
-    margin-right: 6px;
-    opacity: 0.9;
-    
-    /* ✅ ИСПРАВЛЕНИЕ #1: Корректируем высоту и padding */
-    height: 30px;
-    border-radius: 15px;
-    padding: 0 12px;
-    
-    /* Светлая тема: фон прозрачный, рамка/текст цветные */
-    background-color: transparent;
-    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-    color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-right: 6px;
+  opacity: 0.9;
+
+  /* Геометрия фильтр‑тегов через тот же scale */
+  --tag-filter-height: calc(30px * var(--ui-scale, 1));
+  height: var(--tag-filter-height);
+  border-radius: calc(var(--tag-filter-height) / 2);
+  padding: 0 var(--tag-padding-x);
+
+  /* Светлая тема: фон прозрачный, рамка/текст цветные */
+  background-color: transparent;
+  border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+  color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
 }
+
 .skill-tag--filter:last-child {
-    margin-right: 0;
+  margin-right: 0;
 }
+
 .skill-tag--filter:hover {
-    opacity: 0.7;
+  opacity: 0.7;
 }
+
 .skill-tag--filter.is-selected {
-    /* Светлая тема: фон цветной */
-    background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-    color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
-    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-    opacity: 1;
+  /* Светлая тема: фон цветной */
+  background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+  color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
+  border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+  opacity: 1;
 }
+
 .skill-tag--filter.is-selected:hover {
-    opacity: 1;
+  opacity: 1;
 }
 
 /* --- Модификатор: Тег для выбора в модалке --- */
 .skill-tag--selectable {
-    cursor: pointer;
-    
-    /* ✅ ИСПРАВЛЕНИЕ #1: Корректируем высоту и padding */
-    height: 34px; /* Чуть больше, как было (padding 8px + font 14*1.2) */
-    padding: 0 14px; 
-    
-    border-radius: 10px; /* Оставляем старый радиус */
-    font-size: 14px; 
-    
-    /* Светлая тема: фон светлый, текст темный */
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-    opacity: 1;
-}
-.skill-tag--selectable.selected {
-    /* Светлая тема: фон цветной */
-    background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-    color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
-    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-}
-.skill-tag--selectable:active {
-    transform: scale(0.97);
+  cursor: pointer;
+
+  /* Чуть крупнее, чем display-теги, тоже через scale */
+  --tag-selectable-height: calc(34px * var(--ui-scale, 1));
+  height: var(--tag-selectable-height);
+  padding: 0 calc(14px * var(--ui-scale, 1));
+  border-radius: 10px; /* Сохраняем старый радиус, чтобы не ломать дизайн */
+  font-size: calc(14px * var(--ui-scale, 1));
+
+  /* Светлая тема: фон светлый, текст темный */
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+  opacity: 1;
 }
 
+.skill-tag--selectable.selected {
+  /* Светлая тема: фон цветной */
+  background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+  color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
+  border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+}
+
+.skill-tag--selectable:active {
+  transform: scale(0.97);
+}
 
 /* === Переопределения для Тем === */
 

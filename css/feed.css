@@ -150,68 +150,71 @@
 */
 
 
-/* --- Стили для контейнера навыков и "+X" (используется только в react-feed.js) --- */
+/* Контейнер навыков в карточке (люди) */
 .feed-card-skills-container {
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap; /* Allow wrapping *within* the line before overflow */
-    gap: 6px;
-    max-height: 2.5em; /* <-- ВОССТАНОВЛЕНО (подбери точное значение, ~1 строка) */
-    overflow: hidden; /* <-- ВОССТАНОВЛЕНО */
-    position: relative; /* Для позиционирования "+X" */
-    min-height: 1.5em; /* Можно оставить */
-    
-    /* ✅ ИСПРАВЛЕНИЕ (Item 2): Выравниваем элементы по центру */
-    align-items: center;
+  margin-top: 10px;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+
+  /* высота строки: один тег + небольшой запас под бордер/субпиксели */
+  max-height: 32px;  /* либо под свою высоту тега: height(28) + 3–4px */
+  min-height: 28px;
+
+  overflow: hidden;
+  position: relative; /* для +X */
 }
+
 .feed-card-skills-more {
-    position: absolute;
-    right: 0;
-    /* ✅ ИСПРАВЛЕНИЕ (Item 2): Убрано 'bottom: 0' */
-    
-    /* ✅ ИСПРАВЛЕНИЕ (Item 2): Стили для имитации тега */
-    height: 28px; /* Match skill-tag height */
-    display: inline-flex;
-    align-items: center;
-    border-radius: 14px; /* Match skill-tag radius */
-    padding: 0 10px; /* Horizontal padding only */
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--main-hint-color);
-    background: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)); /* Match card background */
-    line-height: 1;
-    flex-shrink: 0;
-    
-    /* Плавный градиент для перекрытия (если нужно) */
-    padding-left: 15px;
-    background: linear-gradient(to right, 
-        transparent 0%, 
-        var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) 30%
-    );
+  z-index: 2; /* ⟵ важно: выше маски ::after */
+
+  --tag-height: calc(28px * var(--ui-scale, 1));
+  --tag-font-size: calc(13px * var(--ui-scale, 1));
+  --tag-more-padding-x: calc(10px * var(--ui-scale, 1));
+
+  height: var(--tag-height);
+  display: inline-flex;
+  align-items: center;
+  border-radius: calc(var(--tag-height) / 2);
+  padding: 0 var(--tag-more-padding-x);
+  font-size: var(--tag-font-size);
+  font-weight: 500;
+  color: var(--main-hint-color);
+  line-height: 1;
+  flex-shrink: 0;
+
+  padding-left: calc(15px * var(--ui-scale, 1));
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) 30%
+  );
 }
 
-/* Dark theme for +X */
+/* Тёмная тема для +X */
 body.theme-dark .feed-card-skills-more {
-    background: linear-gradient(to right, 
-        transparent 0%, 
-        var(--secondary-bg-color, #2c2c2e) 30%
-    );
-}
-/* Custom theme for +X */
-body.theme-custom .feed-card-skills-more {
-    background: linear-gradient(to right, 
-        transparent 0%, 
-        var(--secondary-bg-color) 30%
-    );
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--secondary-bg-color, #2c2c2e) 30%
+  );
 }
 
-/* УДАЛЕНЫ БЛОКИ:
-   body.theme-dark .quick-filters .skill-tag
-   body.theme-custom .quick-filters .skill-tag
-   (и их .is-selected)
-   Они теперь в /css/components/tags.css 
-*/
+/* Кастомная тема для +X */
+body.theme-custom .feed-card-skills-more {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--secondary-bg-color) 30%
+  );
+}
 
 /* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
 

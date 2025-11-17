@@ -26,21 +26,56 @@ import * as api from './api.js';
 import * as ui  from './ui-helpers.js?v=1.4';
 const UI = ui;
 
-// --- (ИЗМЕНЕНИЕ) ---
 // Импортируем состояние и помощники из новых файлов
 import { state, SKILL_CATEGORIES } from './app-state.js';
 import { setupDynamicList } from './app-form-helpers.js';
-// --- (КОНЕЦ ИЗМЕНЕНИЯ) ---
-
 
 // ✅ АКТИВИРУЕМ REACT-ОСТРОВ ДЛЯ ЛЕНТЫ
 window.REACT_FEED = true;
+
+// --- ГЛОБАЛЬНЫЙ UI-SCALE ---
+// Масштабируем UI в зависимости от ширины WebView Telegram.
+// Базовая ширина = 390px (условный iPhone 14 Pro).
+function initUiScale(tg) {
+  try {
+    const setScale = () => {
+      // Берём ширину из Telegram, а при разработке в браузере — из window.innerWidth
+      const vw = (tg && typeof tg.viewportWidth === 'number')
+        ? tg.viewportWidth
+        : (typeof window !== 'undefined' ? window.innerWidth : 390);
+
+      let scale = vw / 390; // референсная ширина
+      if (scale < 0.9) scale = 0.9;   // не даём стать слишком мелким
+      if (scale > 1.15) scale = 1.15; // и слишком крупным
+
+      document.documentElement.style.setProperty('--ui-scale', String(scale));
+    };
+
+    // Первичная установка
+    setScale();
+
+    // Обновляем при изменении viewport внутри Telegram
+    if (tg && typeof tg.onEvent === 'function') {
+      tg.onEvent('viewportChanged', setScale);
+    }
+
+    // Фолбэк: изменение размеров окна (Desktop Telegram / devtools / браузер)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', setScale);
+    }
+  } catch (e) {
+    console.warn('initUiScale error', e);
+  }
+}
 
 // --- ИНИЦИАЛИЗАЦИЯ ---
 const tg = window.Telegram.WebApp;
 
 // Расширяем viewport
 tg.expand();
+
+// Инициализируем масштаб UI
+initUiScale(tg);
 
 document.addEventListener('DOMContentLoaded', () => {
 
