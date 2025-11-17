@@ -1312,7 +1312,74 @@ function loadScript(src, retries = 3) {
                 );
             });
         }
-        
+
+        // --- ОБРАБОТЧИК КНОПКИ НАВЫКОВ В МОДАЛКЕ ПОСТА ---
+        if (elements.postModal.openSkillsModalButton && elements.skills.modal && elements.skills.listContainer) {
+        elements.postModal.openSkillsModalButton.addEventListener('click', () => {
+            // Источник: модалка создания поста
+            state.skillsModalSource = 'postModal';
+
+            // Текущие навыки из поля модалки поста
+            const currentSkills = elements.postModal.skillsField.value
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s);
+
+            state.selectedSkills = [...currentSkills];
+
+            // Та же логика переключения навыков, но для модалки поста
+            function onToggleSkillInPostModal(skill) {
+            if (state.selectedSkills.includes(skill)) {
+                state.selectedSkills = state.selectedSkills.filter((s) => s !== skill);
+            } else {
+                state.selectedSkills.push(skill);
+            }
+
+            UI.renderSkillSelectionForm(
+                elements.skills.listContainer,
+                state.selectedSkills,
+                SKILL_CATEGORIES,
+                t,
+                onToggleSkillInPostModal, // рекурсивная передача
+            );
+            }
+
+            // Первичный рендер списка навыков
+            UI.renderSkillSelectionForm(
+            elements.skills.listContainer,
+            state.selectedSkills,
+            SKILL_CATEGORIES,
+            t,
+            onToggleSkillInPostModal,
+            );
+
+            // Сбрасываем анимацию появления
+            elements.skills.modal.classList.remove('screen-fade-in');
+
+            // Куда вернёт «Назад» из модалки навыков
+            const onBackAction = () => {
+            UI.showView(
+                elements.postModal.modal,   // вернуться в модалку поста
+                elements.allViews,
+                elements.spinner,
+                tg,
+                t,
+                loadPostsFeedData,          // при необходимости обновить ленту запросов
+            );
+            };
+
+            // Показываем модалку навыков
+            UI.showView(
+            elements.skillsModal,
+            elements.allViews,
+            elements.spinner,
+            tg,
+            t,
+            onBackAction,
+            );
+        });
+        }        
+
         // (ВОССТАНОВЛЕН ОБРАБОТЧИК)
         if (elements.feed.openSkillsModalButtonFeed) {
             elements.feed.openSkillsModalButtonFeed.addEventListener('click', () => {
