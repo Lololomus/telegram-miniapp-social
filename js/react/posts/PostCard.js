@@ -10,6 +10,7 @@ import {
   isIOS,
   cardVariants,
   FEED_ITEM_SPRING, // берем spring из shared utils
+  buildFeedItemTransition,
 } from './posts_utils.js';
 
 const h = React.createElement;
@@ -128,64 +129,69 @@ const PostCard = memo(function PostCard({
 
   // --- Конец логики жестов ---
 
-  const isActive = isContextMenuOpen;
-  const liftY =
+    const isActive = isContextMenuOpen;
+    const liftY =
     isActive && !isWrapped ? -(menuLayout?.verticalAdjust || 0) : 0;
 
-  return h(
+    return h(
     motion.div,
     {
-      ref: cardRef,
-      // ВНЕШНИЙ слой: только layout + волна (через cardVariants/listVariants)
-      layout: disableClick ? undefined : (isIOS ? false : 'position'),
-      variants: cardVariants,
-      custom: { i: index },
-      initial: 'hidden',
-      animate: 'visible',
-      exit: 'exit',
-      transition: FEED_ITEM_SPRING, // без задержки по индексу
-      key: postKey,
-      className: 'react-feed-card-wrapper',
-      style: {
+        ref: cardRef,
+        layout: disableClick ? undefined : (isIOS ? false : 'position'),
+        variants: cardVariants,
+        custom: { i: index },
+        initial: 'hidden',
+        exit: 'exit',
+        // как в FeedCard: базовое состояние без зависимостей
+        animate: {
+        opacity: 1,
+        x: 0,
+        scale: 1,
+        y: 0,
+        },
+        // тут снова волна по индексу, но scale/y не задействованы
+        transition: buildFeedItemTransition(index),
+        key: postKey,
+        className: 'react-feed-card-wrapper',
+        style: {
         width: '100%',
         cursor: disableClick ? 'inherit' : 'pointer',
         position: 'relative',
         zIndex: isContextMenuOpen ? 2001 : 'auto',
         ...styleOverride,
-      },
-      onPointerDown: handlePointerDown,
-      onPointerMove: handlePointerMove,
-      onPointerUp: handlePointerUp,
-      onPointerCancel: handlePointerUp,
-      onContextMenu: (e) => {
+        },
+        onPointerDown: handlePointerDown,
+        onPointerMove: handlePointerMove,
+        onPointerUp: handlePointerUp,
+        onPointerCancel: handlePointerUp,
+        onContextMenu: (e) => {
         if (!disableClick) e.preventDefault();
-      },
+        },
     },
 
-    // ВНУТРЕННИЙ слой: визуальная карточка со стеклом + подъем при long‑press
-    h(
-      motion.div,
-      {
-        className: 'react-feed-card', // <- тут живет стекло (blur, градиент)
-        animate: {
-          scale: isActive ? 1.03 : 1,
-          y: liftY,
-        },
-        transition: {
-          type: 'spring',
-          stiffness: 320,
-          damping: 32,
-        },
-        style: {
-          padding: 15,
-          width: '100%',
-          borderRadius: 12,
-          overflow: 'hidden',
-          // фон и blur берутся из CSS .react-feed-card
-        },
+  // внутренний motion.div (react-feed-card) оставляем как есть:
+  // он продолжает анимировать scale/y через liftY без delay
+  h(
+    motion.div,
+    {
+      className: 'react-feed-card',
+      animate: {
+        scale: isActive ? 1.03 : 1,
+        y: liftY,
       },
-
-      // --- Хедер карточки (аватар + имя + время + тип) ---
+      transition: {
+        type: 'spring',
+        stiffness: 320,
+        damping: 32,
+      },
+      style: {
+        padding: 15,
+        width: '100%',
+        borderRadius: 12,
+        overflow: 'hidden',
+      },
+    },
+    // --- Хедер карточки (аватар + имя + время + тип) ---
       h(
         'div',
         {
