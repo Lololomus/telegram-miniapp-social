@@ -64,7 +64,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--skills-section-gap-y);
+}
+
+/* 1. Контейнер со списком навыков (Языки, Фронтенд и т.д.) */
+#skills-modal-list-container {
   padding: 0 16px 100px 16px;
+}
+
+/* 2. Группа фильтров (Тип запроса) */
+#skills-modal > .status-filter-group {
+  padding: 0 16px;
+  margin-bottom: 24px;
 }
 
 .skill-category { margin: 0; padding: 0; }
@@ -490,4 +500,55 @@ body.theme-glass-overlay .action-button.secondary:active {
 .react-sheet-content select {
     -webkit-user-select: default !important;
     user-select: default !important;
+}
+
+/* --- УЛУЧШЕНИЕ ЦВЕТНЫХ КНОПОК (СТЕКЛО 60%) --- */
+/* Замени этим кодом предыдущий блок в конце css/modals.css */
+
+/* 1. База: белый текст, тень */
+body.theme-dark.theme-glass-overlay .status-tag {
+    font-weight: 600;
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-width: 1px;
+    border-style: solid;
+    transition: all 0.2s ease;
+}
+
+/* 2. СИНИЙ (Ищу специалиста) */
+body.theme-dark.theme-glass-overlay .status-tag[data-status="looking"] {
+    background-color: rgba(10, 132, 255, 0.15);
+    border-color: rgba(10, 132, 255, 0.4);
+}
+/* Активный: 60% непрозрачности */
+body.theme-dark.theme-glass-overlay .status-tag[data-status="looking"].active {
+    background-color: rgba(10, 132, 255, 0.6); 
+    border-color: rgba(10, 132, 255, 0.9);
+    box-shadow: 0 4px 15px rgba(10, 132, 255, 0.4);
+}
+
+/* 3. ЗЕЛЕНЫЙ (Предлагаю услуги) */
+body.theme-dark.theme-glass-overlay .status-tag[data-status="offering"] {
+    background-color: rgba(52, 199, 89, 0.15);
+    border-color: rgba(52, 199, 89, 0.4);
+}
+/* Активный: 60% непрозрачности */
+body.theme-dark.theme-glass-overlay .status-tag[data-status="offering"].active {
+    background-color: rgba(52, 199, 89, 0.6);
+    border-color: rgba(52, 199, 89, 0.9);
+    box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4);
+}
+
+/* 4. ОРАНЖЕВЫЙ (Демонстрация) */
+body.theme-dark.theme-glass-overlay .status-tag[data-status="showcase"] {
+    background-color: rgba(255, 149, 0, 0.15);
+    border-color: rgba(255, 149, 0, 0.4);
+}
+/* Активный: 60% непрозрачности */
+body.theme-dark.theme-glass-overlay .status-tag[data-status="showcase"].active {
+    background-color: rgba(255, 149, 0, 0.6);
+    border-color: rgba(255, 149, 0, 0.9);
+    box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);
 }
