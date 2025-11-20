@@ -33,63 +33,78 @@
 
 /* --- Стили для модального окна навыков --- */
 #skills-modal {
-    display: none; 
-    flex-direction: column; 
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* Используем dvh (dynamic viewport height) для мобильных, с фоллбэком на vh */
-    height: 100dvh; 
-    height: 100vh; /* Фоллбэк */
-    z-index: 1001; /* Выше, чем .react-sheet-content (1000) */
-    padding: 0; /* <-- УБИРАЕМ PADDING, который был у .screen */
-    overflow-y: auto; /* Вся модалка скроллится целиком вместе с фильтрами и списком */
-    
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    transition: background-color 0.3s;
-}
+  display: flex;
+  flex-direction: column;
 
-/* ✅ ИСПРАВЛЕНИЕ: Шапка модалки навыков */
-#skills-modal .form-header {
-    padding: 14px 20px 6px 20px;
-    margin-bottom: 4px; /* Чуть меньше зазора до фильтра */
-    flex-shrink: 0; /* Не сжимать заголовок */
-}
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 
-#skills-modal-list-container {
-  flex-grow: 0;
-  overflow-y: visible; /* Скролл теперь на всём #skills-modal */
-  border-radius: 10px;
-  padding: 0 20px;
-  margin: 0;
-  padding-bottom: 120px; /* Чтобы контент не заходил под кнопку "Выбрать" */
+  height: 100dvh;
+  height: 100vh;
+
+  z-index: 1001;
+
+  padding: var(--modal-header-offset) var(--screen-padding-x) 0;
+
+  overflow-y: auto;
   background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-  border: none;
   transition: background-color 0.3s;
 }
 
-/* --- Стили для ВЫБОРА навыков (в модальном окне) --- */
-.skill-category {
-    /* ✅ ИСПРАВЛЕНИЕ (Проблема 3): Убираем padding отсюда */
-    margin-bottom: 20px; 
-    padding: 0;
+/* На широких экранах центрируем всю модалку как колонку */
+@media (min-width: 700px) {
+  #skills-modal {
+    max-width: 600px;     /* как .screen */
+    margin: 0 auto;       /* центр по горизонтали */
+    left: 0;
+    right: 0;
+  }
 }
+
+/* Центрируем и ограничиваем ширину основных блоков внутри модалки */
+/* Шапка модалки навыков — синхронизирована с экранами */
+#skills-modal .form-header {
+  /* Верхний отступ даёт padding у #skills-modal, здесь только низ */
+  padding: 0 0 6px 0;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  text-align: center;
+}
+#skills-modal > .status-filter-group,
+/* Контейнер всех категорий навыков */
+#skills-modal-list-container {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--skills-section-gap-y); /* одинаковый вертикальный интервал между секциями */
+  padding: 0 16px 24px 16px;        /* горизонтальный отступ как у "Тип запроса" */
+}
+
+.skill-category {
+  /* Отступы между секциями даёт gap у #skills-modal-list-container */
+  margin: 0;
+  padding: 0;
+}
+
+/* Больше не нужен отдельный отступ для последней секции */
 .skill-category:last-child { margin-bottom: 0; }
 .skill-category-title {
     font-size: 15px; font-weight: 600;
     color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: none;
+    margin: 0 0 2px 0; padding-bottom: 8px; border-bottom: none;
 }
-.skill-list { display: flex; flex-wrap: wrap; gap: 10px; }
 
-/* УДАЛЕНЫ БЛОКИ:
-   .skill-selectable-tag 
-   .skill-selectable-tag.selected 
-   Они теперь определены в /css/components/tags.css 
-*/
-
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--skills-tags-gap); /* одинаковый gap между тегами */
+}
 
 /* (ИСПРАВЛЕНО) Новый контейнер для позиционирования */
 .fab-modal-save-container {
@@ -123,11 +138,11 @@
 
 /* --- Стили для нового фильтра статусов --- */
 .status-filter-group {
-    /* Фильтр статусов теперь прокручивается вместе со списком навыков */
-    padding: 0 20px 12px 20px; /* Синхронизируем с .form-header */
-    margin-bottom: 8px;
-    border-bottom: none; /* Убираем белую разделяющую линию */
-    transition: border-color 0.3s;
+  /* Фильтр статусов теперь прокручивается вместе со списmargin-bottomком навыков */
+  padding: 0 16px 0 16px;              /* те же 16px, что у списка секций */
+  margin-bottom: var(--skills-section-gap-y); /* такой же отступ, как между секциями */
+  border-bottom: none;
+  transition: border-color 0.3s;
 }
 .status-filter-group-title {
     font-size: 15px;
@@ -136,9 +151,9 @@
     margin: 0 0 12px 0;
 }
 .status-filter-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--skills-tags-gap); /* тот же gap, что у skill-list */
 }
 
 /* Стили для самих кнопок статуса */
@@ -225,6 +240,14 @@ body.theme-glass-overlay .modal-content {
     border-radius: var(--glass-radius-main);
 }
 
+/* Улучшаем читаемость заголовков в режиме стекла */
+body.theme-glass-overlay .skill-category-title,
+body.theme-glass-overlay .status-filter-group-title {
+    color: var(--main-text-color); /* Был hint-color (серый), стал белый */
+    opacity: 0.9; /* Чуть приглушаем, но не делаем серым */
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3); /* Тень для контраста на стекле */
+}
+
 /* --- Стили для модалки создания запроса --- */
 #create-post-modal {
   display: none;
@@ -285,13 +308,20 @@ body.theme-glass-overlay .status-filter-group {
 body.theme-glass-overlay .status-tag {
     background-color: var(--glass-bg-input);
     border: var(--glass-border);
-    color: var(--main-text-color);
-    opacity: 0.8;
+    /* БЫЛО: color: var(--main-text-color); opacity: 0.8; */
+    /* СТАЛО: Принудительно белый цвет для читаемости + убрали прозрачность текста */
+    color: #ffffff; 
+    opacity: 1; 
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
+
+/* Активный статус остается ярким */
 body.theme-glass-overlay .status-tag.active {
     opacity: 1;
     color: #ffffff;
     border-color: transparent;
+    /* Добавим свечение активному тегу */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 body.theme-glass-overlay .status-tag[data-status="looking"].active {
     background-color: #0A84FF;
@@ -522,16 +552,6 @@ body.theme-glass-overlay .react-sheet-chevron-close.is-ios {
     background-color: var(--glass-bg-ios-fallback-secondary);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-}
-
-/* --- ИЗМЕНЕНИЕ: Все стили TomSelect удалены отсюда --- */
-
-/* Сброс paddingTop для модальных окон, 
-  чтобы они игнорировали 60px из app.js 
-*/
-#skills-modal.screen,
-#create-post-modal.screen {
-    padding-top: 40px !important; 
 }
 
 /* === 🚫 ANTI-SELECT ДЛЯ REACT-МОДАЛОК 🚫 === */

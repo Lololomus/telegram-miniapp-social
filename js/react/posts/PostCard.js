@@ -9,8 +9,9 @@ import {
   formatPostTime,
   isIOS,
   cardVariants,
-  FEED_ITEM_SPRING, // берем spring из shared utils
+  FEED_ITEM_SPRING,
   buildFeedItemTransition,
+  useTwoLineSkillsOverflow,
 } from './posts_utils.js';
 
 const h = React.createElement;
@@ -338,31 +339,50 @@ const PostCard = memo(function PostCard({
         },
         content,
       ),
-
-      // --- Теги навыков ---
-      skill_tags.length > 0 &&
-        h(
-          'div',
-          {
-            style: {
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 6,
-              marginTop: 12,
-            },
-          },
-          skill_tags.map((tag) =>
-            h(
-              'span',
-              {
-                key: tag,
-                className: 'skill-tag skill-tag--display',
-              },
-              tag,
-            ),
-          ),
-        ),
+      h(PostSkillTags, {
+          skills: skill_tags,
+      }),
     ),
+  );
+});
+
+/**
+ * Отдельный компонент для тегов.
+ * Изолирует расчет ширины от ре-рендеров текста.
+ * Теги здесь НЕКЛИКАБЕЛЬНЫ (onClick убран).
+ */
+const PostSkillTags = memo(function PostSkillTags({ skills }) {
+  const containerRef = useRef(null);
+  
+  const overflow = useTwoLineSkillsOverflow(containerRef, skills.length);
+
+  if (!skills || skills.length === 0) return null;
+
+  return h(
+    'div',
+    {
+      layout: false, 
+      ref: containerRef,
+      className: 'feed-card-skills-container',
+      style: { marginTop: 12 },
+    },
+    skills.slice(0, overflow.visibleCount).map((skill, index) =>
+      h(
+        'span',
+        {
+          key: skill + index,
+          className: 'skill-tag skill-tag--display',
+          style: { cursor: 'default' }, // Явно показываем, что кликать нельзя
+        },
+        skill,
+      )
+    ),
+    overflow.hiddenCount > 0 &&
+      h(
+        'span',
+        { className: 'feed-card-skills-more' },
+        `+${overflow.hiddenCount}`,
+      )
   );
 });
 

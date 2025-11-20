@@ -1,4 +1,5 @@
 // react/feed/FeedList.js
+
 // Компонент, отвечающий за рендеринг списка профилей людей.
 
 import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
@@ -6,7 +7,7 @@ import { motion, AnimatePresence } from 'https://cdn.jsdelivr.net/npm/framer-mot
 
 // Локальные импорты
 // ИЗМЕНЕНИЕ: Убираем listVariants, он больше не нужен
-import { isIOS } from './feed_utils.js'; 
+import { isIOS } from './feed_utils.js';
 import FeedCard from './FeedCard.js';
 
 const h = React.createElement;
@@ -16,7 +17,6 @@ const h = React.createElement;
  * (Вынесен из react-feed.js)
  */
 function FeedList({profiles, onOpen, containerRef}) {
-  
   // ИЗМЕНЕНИЕ: Мы убираем 'variants', 'initial', 'animate'
   // И, ГЛАВНОЕ, 'layout: true' из родителя.
   // Это устраняет Конфликт №3.
@@ -26,11 +26,11 @@ function FeedList({profiles, onOpen, containerRef}) {
     // initial: "hidden", // <-- УДАЛЕНО
     // animate: "visible", // <-- УДАЛЕНО
     // layout: true, // <-- УДАЛЕНО (ЭТО БЫЛА ГЛАВНАЯ ОШИБКА)
-    style: { 
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px'
+    style: {
+      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px'
     }
   },
     h(AnimatePresence, {
@@ -39,7 +39,7 @@ function FeedList({profiles, onOpen, containerRef}) {
     },
       profiles.map((p, index) => h(FeedCard, {
         key: p.user_id,
-        u: p, 
+        u: p,
         index: index, // Передаем index для ручной задержки (Система Б)
         onOpen: onOpen
       }))

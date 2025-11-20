@@ -6,7 +6,7 @@
 //
 // ИСПРАВЛЕНИЕ: Добавлены POPULAR_SKILLS, cardVariants, listVariants
 
-import React, { useState, useEffect } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 const h = React.createElement;
 
 // --- Глобальные переменные ---
@@ -65,6 +65,117 @@ export function useDebounce(value, delay) {
     };
   }, [value, delay]);
   return debouncedValue;
+}
+
+// Максимум 2 строки тегов по ширине контейнера.
+// Работает так:
+// 1) На первом рендере рендерятся все теги (visibleCount = itemsLength).
+// 2) useLayoutEffect один раз измеряет ширину каждого <span.skill-tag--display>.
+// 3) Ширины сохраняются в ref и больше не зависят от DOM.
+// 4) По контейнеру считаем, сколько тегов поместится в 2 строки с учётом gap и места под +X.
+// 5) Возвращаем { visibleCount, hiddenCount } — FEED/Post используют slice(0, visibleCount).
+// Поддерживает пересчет при загрузке шрифтов.
+export function useTwoLineSkillsOverflow(containerRef, itemsLength) {
+  const [overflow, setOverflow] = useState(() => ({
+    visibleCount: itemsLength,
+    hiddenCount: 0,
+  }));
+
+  const tagWidthsRef = useRef([]);
+  const hasMeasuredRef = useRef(false);
+  
+  // Проверка загрузки шрифтов
+  const [fontsLoaded, setFontsLoaded] = useState(() => {
+      return document.fonts ? document.fonts.status === 'loaded' : true;
+  });
+
+  useEffect(() => {
+    if (document.fonts && !fontsLoaded) {
+      document.fonts.ready.then(() => setFontsLoaded(true));
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    // Сброс при смене данных
+    tagWidthsRef.current = [];
+    hasMeasuredRef.current = false;
+    setOverflow({ visibleCount: itemsLength, hiddenCount: 0 });
+  }, [itemsLength]);
+
+  useLayoutEffect(() => {
+    const container = containerRef?.current;
+    if (!container || !itemsLength) return;
+
+    const recompute = () => {
+      // 1. БЕЗОПАСНОСТЬ: Если контейнер скрыт (ширина 0), 
+      // НЕ ПЕРЕСЧИТЫВАЕМ, чтобы не получить 0 видимых тегов.
+      // Просто оставляем предыдущее состояние (return).
+      if (container.clientWidth <= 0) return;
+
+      // Защита от бага, когда теги есть, но у них ширина 0
+      const tagNodes = Array.from(container.querySelectorAll('.skill-tag--display'));
+      if (tagNodes.length > 0 && tagNodes[0].getBoundingClientRect().width === 0) return;
+
+      // --- Стандартная логика измерения (без изменений) ---
+      const CONTAINER_SAFE_BUFFER = 15;
+      const containerWidth = container.clientWidth - CONTAINER_SAFE_BUFFER;
+      
+      // Кешируем ширины, если еще нет
+      if (!hasMeasuredRef.current || (fontsLoaded && tagWidthsRef.current.length !== itemsLength)) {
+          if (tagNodes.length === itemsLength) {
+              tagWidthsRef.current = tagNodes.map(n => n.getBoundingClientRect().width);
+              hasMeasuredRef.current = true;
+          } else {
+              return; // DOM не готов
+          }
+      }
+
+      // Расчет visibleCount
+      let currentLineWidth = 0;
+      let currentRow = 1;
+      let visible = 0;
+      const widths = tagWidthsRef.current;
+      
+      // Если ширины изменились (зум), считаем коэффициент
+      let scale = 1;
+      if (tagNodes.length > 0 && widths.length > 0 && widths[0] > 0) {
+          scale = tagNodes[0].getBoundingClientRect().width / widths[0];
+      }
+
+      for (let i = 0; i < itemsLength; i++) {
+         const w = widths[i] * scale;
+         const gap = (currentLineWidth === 0) ? 0 : 6;
+         // Если это последняя строка и останутся элементы, резервируем место под "+N" (75px)
+         const isLastRow = (currentRow === 2);
+         const extraSpace = (isLastRow && (itemsLength - (i + 1) > 0)) ? (6 + 75) : 0;
+
+         if (currentLineWidth + gap + w + extraSpace <= containerWidth) {
+             currentLineWidth += gap + w;
+             visible++;
+         } else {
+             if (currentRow === 1) {
+                 currentRow++;
+                 currentLineWidth = 0;
+                 i--; // пробуем этот тег на новой строке
+             } else {
+                 break; // не влезло во 2 строку
+             }
+         }
+      }
+      
+      setOverflow({ visibleCount: visible, hiddenCount: itemsLength - visible });
+    };
+
+    // Используем ResizeObserver для реакции на изменение ширины
+    const ro = new ResizeObserver(recompute);
+    ro.observe(container);
+    // И один раз запускаем сразу
+    recompute();
+
+    return () => ro.disconnect();
+  }, [itemsLength, containerRef, fontsLoaded]);
+
+  return overflow;
 }
 
 /**

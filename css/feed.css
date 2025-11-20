@@ -132,88 +132,47 @@
     border: 1px solid var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
     /* Плавная смена темы */
     transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
-    /* ✅ ИСПРАВЛЕНИЕ #8: Отступ УБРАН отсюда и перенесен в .feed-list (gap)
-       и в MyPostCard (margin-bottom) */
-    /* margin-bottom: 15px; */
-    
+    transform: translateZ(0); 
+    will-change: transform, opacity;
+    backface-visibility: hidden; /* Для iOS иногда помогает */
     /* ✅ ИСПРАВЛЕНИЕ (Long-Press Bug): Запрещаем выделение текста */
     -webkit-user-select: none; /* Safari */
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+ */
     user-select: none; /* Standard */
 }
-/* .react-feed-card:last-child { margin-bottom: 0; } */ /* <-- УДАЛЕНО */
-
-/* УДАЛЕН БЛОК:
-   .feed-card-skill (и его :hover, .dark, .custom)
-   Он теперь .skill-tag--display в /css/components/tags.css 
-*/
-
 
 /* Контейнер навыков в карточке (люди) */
 .feed-card-skills-container {
   margin-top: 10px;
-
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 6px;
-
-  /* высота строки: один тег + небольшой запас под бордер/субпиксели */
-  max-height: 32px;  /* либо под свою высоту тега: height(28) + 3–4px */
-  min-height: 28px;
-
+  
+  /* ✅ ФОРМУЛА:
+     (56px * scale) = Высота контента.
+     + 7px = Gap (6px) + 1px микро-буфер.
+     Это очень плотно, чтобы не дать шанса 3-й строке мигнуть. */
+  max-height: calc(56px * var(--ui-scale, 1) + 7px);
+  
+  align-content: flex-start;
   overflow: hidden;
-  position: relative; /* для +X */
+  min-height: 28px;
+  
+  /* box-sizing должен быть content-box по умолчанию для div, 
+     но если у тебя глобально стоит border-box, то padding входит в высоту.
+     Давай явно укажем border-box и учтем padding в формуле. */
+  box-sizing: border-box;
+  padding-bottom: 1px;
+
+  contain: none;
+  min-height: 28px; /* Чтобы блок никогда не схлопывался в 0 */
 }
 
-.feed-card-skills-more {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-
-  z-index: 2; /* ⟵ важно: выше маски ::after */
-
-  --tag-height: calc(28px * var(--ui-scale, 1));
-  --tag-font-size: calc(13px * var(--ui-scale, 1));
-  --tag-more-padding-x: calc(10px * var(--ui-scale, 1));
-
-  height: var(--tag-height);
-  display: inline-flex;
-  align-items: center;
-  border-radius: calc(var(--tag-height) / 2);
-  padding: 0 var(--tag-more-padding-x);
-  font-size: var(--tag-font-size);
-  font-weight: 500;
-  color: var(--main-hint-color);
-  line-height: 1;
-  flex-shrink: 0;
-
-  padding-left: calc(15px * var(--ui-scale, 1));
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) 30%
-  );
-}
-
-/* Тёмная тема для +X */
-body.theme-dark .feed-card-skills-more {
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    var(--secondary-bg-color, #2c2c2e) 30%
-  );
-}
-
-/* Кастомная тема для +X */
-body.theme-custom .feed-card-skills-more {
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    var(--secondary-bg-color) 30%
-  );
+/* Временная проверка (или фикс), добавьте в конец css */
+.react-feed-card div {
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 /* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
@@ -277,7 +236,79 @@ body.theme-glass-overlay .feed-card-skills-more {
     );
 }
 
-/* --- ✅ ИЗМЕНЕНИЕ: Старые стили .post-actions-button и .post-actions-menu УДАЛЕНЫ --- */
+.feed-card-skills-more {
+  z-index: 2;
+  
+  --tag-height: calc(28px * var(--ui-scale, 1));
+  --tag-font-size: calc(13px * var(--ui-scale, 1));
+  --tag-padding-x: calc(10px * var(--ui-scale, 1));
+
+  /* ГЕОМЕТРИЯ */
+  box-sizing: border-box;
+  height: var(--tag-height);
+  
+  /* ✅ ФИКС ПИКСЕЛЯ: Убираем рамку полностью.
+     Так как высота зафиксирована (28px), кнопка останется того же размера,
+     что и теги, но исчезнет слой, создающий артефакт. */
+  border: none; 
+
+  display: inline-flex;
+  align-items: center;
+  
+  border-radius: calc(var(--tag-height) / 2);
+  flex-shrink: 0;
+  
+  font-size: var(--tag-font-size);
+  font-weight: 500;
+  color: var(--main-hint-color);
+  
+  line-height: normal; 
+
+  /* Отступы */
+  padding-right: var(--tag-padding-x);
+  padding-left: calc(var(--tag-padding-x) + 6px); 
+  
+  /* ✅ ГРАДИЕНТ: Сдвигаем начало цвета на 2px.
+     0px - 2px: Абсолютная прозрачность.
+     Это убьет любой пиксель на самом краю. */
+  background: linear-gradient(
+    to right, 
+    rgba(239, 239, 239, 0) 2px, 
+    rgba(239, 239, 239, 1) 40%
+  );
+}
+
+/* --- ТЕМЫ (Обновляем сдвиг 2px для всех) --- */
+
+/* Тёмная тема */
+body.theme-dark .feed-card-skills-more {
+    background: linear-gradient(
+        to right,
+        rgba(44, 44, 46, 0) 2px, 
+        rgba(44, 44, 46, 1) 40%
+    );
+}
+
+/* Кастомная тема */
+body.theme-custom .feed-card-skills-more {
+    background: linear-gradient(
+        to right,
+        rgba(0,0,0,0) 2px, 
+        var(--secondary-bg-color) 40%
+    );
+}
+
+/* Glass-тема */
+body.theme-glass-overlay .feed-card-skills-more {
+    color: var(--main-text-color);
+    /* border-color больше не нужен, так как border: none */
+    opacity: 0.9;
+    background: linear-gradient(
+        to right,
+        rgba(0,0,0,0) 2px, 
+        var(--glass-bg-secondary) 40%
+    );
+}
 
 /* --- ========================================================== --- */
 /* --- ✅ НОВОЕ (Long-Press Menu v2): Новые стили для плавающего меню --- */

@@ -8,9 +8,17 @@
 * { box-sizing: border-box; }
 /* ✅ Safe Area для fullscreen режима */
 :root {
-    /* Вычисляем safe area из Telegram API */
-    --safe-area-inset-top: env(safe-area-inset-top, 0px);
-    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+
+  --header-offset: 12px;
+  --modal-header-offset: 6px;
+
+  --screen-padding-x: 20px;
+
+  /* Универсальные отступы для модалки навыков */
+  --skills-section-gap-y: 18px;   /* расстояние между блоками категорий */
+  --skills-tags-gap: 10px;        /* gap между тегами и строками тегов */
 }
 
 body {
@@ -36,10 +44,14 @@ body {
 h1 { font-size: 24px; font-weight: 600; margin-bottom: 15px; text-align: center; }
 h2 { font-size: 20px; font-weight: 600; margin: 0 0 15px 0; text-align: center; }
 .screen {
-    width: 100%;
-    display: none;
-    padding: 20px; /* ДОБАВЛЕН PADDING ВНУТРЬ КАЖДОГО ЭКРАНА */
-    max-width: 600px;
+
+  width: 100%;
+  display: none;
+
+  /* Сверху — единый отступ до заголовка, по бокам как раньше */
+  padding: var(--header-offset) var(--screen-padding-x) 20px;
+
+  max-width: 600px;
 }
 
 /* Экран приветствия */

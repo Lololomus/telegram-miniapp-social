@@ -240,46 +240,36 @@ body.theme-custom .profile-stats-container {
 body.theme-dark .stat-item { border-right-color: var(--secondary-bg-color); }
 body.theme-custom .stat-item { border-right-color: var(--main-bg-color); }
 
-
-/* --- ИСПРАВЛЕНИЕ: (Шаг 5) УДАЛЕНА АНИМАЦИЯ max-height --- */
+/* --- Контейнер навыков --- */
 .skills-container {
     flex-wrap: wrap; 
     justify-content: center; 
-    gap: 8px; /* ГАРАНТИРУЕМ ПРОБЕЛЫ */
+    gap: 6px; 
     margin: 15px 0 0 0; 
-    overflow: hidden; 
-    display: none; /* Скрыто по умолчанию */
-
-    /* УДАЛЕН transition: max-height */
+    padding-bottom: 4px; /* Отступ снизу для развернутого состояния */
+    
+    /* Скрыто по умолчанию */
+    display: none; 
+    align-content: flex-start;
+    transition: none; 
+    overflow: hidden;
 }
 
-/* Показываем контейнер, если он не пустой */
 .skills-container:not(.is-empty) {
     display: flex;
 }
 
-/* Отступ сверху (оставляем без изменений) */
-.profile-stats-container + .skills-container {
-     margin-top: 25px;
-}
-
-/* Начальная (свернутая) высота */
+/* --- ВЫСОТА ДЛЯ СВЕТЛОЙ ТЕМЫ (По умолчанию) --- */
 .skills-container:not(.expanded) { 
-    max-height: 70px; /* Оставляем max-height, но БЕЗ transition */
+    /* Та же формула: 56px * scale + 8px */
+    max-height: calc(56px * var(--ui-scale, 1) + 8px);
 }
 
-/* Конечная (развернутая) высота */
+/* --- РАЗВЕРНУТОЕ СОСТОЯНИЕ --- */
 .skills-container.expanded { 
-    max-height: 1000px; /* Достаточно большое значение */
+    max-height: none; 
+    overflow: visible; /* Чтобы тени не обрезались */
 }
-
-/* УДАЛЕНЫ БЛОКИ:
-   .skill-tag-fade-in
-   .skill-tag-fade-out
-   .skill-tag
-   (и их .dark, .custom)
-   Они теперь в /css/components/tags.css и /css/animations.css
-*/
 
 .show-more-skills-container {
     display: flex; /* <-- ДОБАВЬ ЭТО */

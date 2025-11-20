@@ -27,6 +27,7 @@ export {
     FEED_ITEM_DELAY_STEP,
     buildFeedItemTransition,
     EmptyState,
+    useTwoLineSkillsOverflow,
 } from '../shared/react_shared_utils.js';
 
 

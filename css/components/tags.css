@@ -1,28 +1,28 @@
 /* css/components/tags.css */
 /* Единые стили для всех тегов навыков */
-/* ОБНОВЛЕНО (Glass): Добавлены "стеклянные" стили */
-/* ✅ ИСПРАВЛЕНИЕ #1: Унификация высоты тегов */
 
 /* --- Базовый стиль тега --- */
 .skill-tag {
-  /* Внутренние переменные для геометрии */
+  /* Внутренние переменные */
   --tag-height: calc(28px * var(--ui-scale, 1));
   --tag-font-size: calc(13px * var(--ui-scale, 1));
   --tag-padding-x: calc(12px * var(--ui-scale, 1));
 
-  /* Центрирование содержимого */
+  /* ✅ ГЕОМЕТРИЯ (Фикс дергания): */
+  /* Включаем рамку и отступы в общую высоту */
+  box-sizing: border-box;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  /* Геометрия через масштаб */
-  padding: 0 var(--tag-padding-x); /* Только горизонтальный */
+  padding: 0 var(--tag-padding-x);
   height: var(--tag-height);
   border-radius: calc(var(--tag-height) / 2);
 
   font-size: var(--tag-font-size);
   font-weight: 500;
-  line-height: 1; /* Убираем влияние line-height */
+  line-height: normal;
 
   text-decoration: none;
   white-space: nowrap;
@@ -32,121 +32,106 @@
               border-color 0.2s ease,
               opacity 0.2s ease,
               transform 0.1s ease;
+
+  /* ✅ БАЗОВАЯ РАМКА: 1.5px прозрачная.
+     Она есть у всех тегов во всех темах, чтобы размер был одинаковым. */
   border: 1.5px solid transparent;
 }
 
-/* --- Модификатор: Тег для простого отображения --- */
-/* Используется в профиле и карточках ленты */
+/* --- 1. Тег для отображения (Профиль, Лента) --- */
 .skill-tag--display {
-    /* Светлая тема: фон цветной */
+    /* Светлая тема: Синий фон, белый текст */
     background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
     color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
+    /* Рамка остается прозрачной (или совпадает с фоном) */
+    border-color: transparent;
     opacity: 0.85;
 }
 
-/* --- Модификатор: Тег для фильтра --- */
-/* Используется в быстрых фильтрах лент */
+/* --- 2. Тег для фильтра (Лента) --- */
 .skill-tag--filter {
   cursor: pointer;
   flex-shrink: 0;
   margin-right: 6px;
   opacity: 0.9;
 
-  /* Геометрия фильтр‑тегов через тот же scale */
+  /* У фильтров своя высота */
   --tag-filter-height: calc(30px * var(--ui-scale, 1));
   height: var(--tag-filter-height);
   border-radius: calc(var(--tag-filter-height) / 2);
   padding: 0 var(--tag-padding-x);
 
-  /* Светлая тема: фон прозрачный, рамка/текст цветные */
+  /* Стиль: Прозрачный фон, цветная рамка */
   background-color: transparent;
   border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
   color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
 }
 
-.skill-tag--filter:last-child {
-  margin-right: 0;
-}
-
-.skill-tag--filter:hover {
-  opacity: 0.7;
-}
+.skill-tag--filter:last-child { margin-right: 0; }
+.skill-tag--filter:hover { opacity: 0.7; }
 
 .skill-tag--filter.is-selected {
-  /* Светлая тема: фон цветной */
+  /* Активный фильтр: Синий фон */
   background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
   color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
   border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
   opacity: 1;
 }
+.skill-tag--filter.is-selected:hover { opacity: 1; }
 
-.skill-tag--filter.is-selected:hover {
-  opacity: 1;
-}
-
-/* --- Модификатор: Тег для выбора в модалке --- */
+/* --- 3. Тег для выбора (Модалка) --- */
 .skill-tag--selectable {
   cursor: pointer;
-
-  /* Чуть крупнее, чем display-теги, тоже через scale */
   --tag-selectable-height: calc(34px * var(--ui-scale, 1));
   height: var(--tag-selectable-height);
   padding: 0 calc(14px * var(--ui-scale, 1));
-  border-radius: 10px; /* Сохраняем старый радиус, чтобы не ломать дизайн */
+  border-radius: 10px;
   font-size: calc(14px * var(--ui-scale, 1));
 
-  /* Светлая тема: фон светлый, текст темный */
   background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
   color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-  opacity: 1;
 }
 
 .skill-tag--selectable.selected {
-  /* Светлая тема: фон цветной */
   background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
   color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
   border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
 }
+.skill-tag--selectable:active { transform: scale(0.97); }
 
-.skill-tag--selectable:active {
-  transform: scale(0.97);
-}
 
-/* === Переопределения для Тем === */
+/* === ТЕМЫ (ВОЗВРАЩАЕМ СТИЛИ) === */
 
 /* --- Темная тема --- */
 
-/* Теги для отображения (в профиле/карточках) - КОНТУРНЫЕ */
+/* Теги отображения: Темный фон + Синяя рамка */
 body.theme-dark .skill-tag--display {
     background-color: var(--main-bg-color, #1c1c1d);
     color: var(--main-button-color, #0a84ff);
-    border: 1px solid var(--main-button-color, #0a84ff);
+    
+    /* ✅ ВАЖНО: Красим рамку, которая уже зарезервирована в базовом классе.
+       Размер тега НЕ изменится, он останется 28px. */
+    border-color: var(--main-button-color, #0a84ff);
+    
     opacity: 1;
-    /* ✅ ИСПРАВЛЕНИЕ #1: Убедимся, что высота не сбита */
-    height: 28px;
 }
 
-/* Теги для фильтра (быстрые фильтры) - КОНТУРНЫЕ (но фон чуть темнее) */
+/* Фильтры в темной теме */
 body.theme-dark .skill-tag--filter {
     border-color: var(--main-button-color, #0a84ff);
     color: var(--main-button-color, #0a84ff);
     background-color: var(--secondary-bg-color, #2c2c2e);
     opacity: 0.9;
 }
-body.theme-dark .skill-tag--filter:hover {
-    opacity: 0.7;
-}
+body.theme-dark .skill-tag--filter:hover { opacity: 0.7; }
 body.theme-dark .skill-tag--filter.is-selected {
     background-color: var(--main-button-color, #0a84ff);
     color: var(--main-button-text-color, #ffffff);
     border-color: var(--main-button-color, #0a84ff);
     opacity: 1;
 }
-body.theme-dark .skill-tag--filter.is-selected:hover {
-    opacity: 1;
-}
 
-/* Теги для выбора (в модалке) */
+/* Теги выбора в темной теме */
 body.theme-dark .skill-tag--selectable {
     background-color: var(--secondary-bg-color, #2c2c2e);
     color: var(--main-text-color, #ffffff);
@@ -159,14 +144,11 @@ body.theme-dark .skill-tag--selectable.selected {
 
 
 /* --- Кастомная тема --- */
-
 body.theme-custom .skill-tag--display {
     background-color: var(--main-bg-color);
     color: var(--main-button-color);
-    border: 1px solid var(--main-button-color);
+    border-color: var(--main-button-color);
     opacity: 1;
-    /* ✅ ИСПРАВЛЕНИЕ #1: Убедимся, что высота не сбита */
-    height: 28px;
 }
 body.theme-custom .skill-tag--filter {
      border-color: var(--main-button-color);
@@ -187,39 +169,30 @@ body.theme-custom .skill-tag--selectable.selected {
     border-color: var(--main-button-color);
 }
 
-/* Анимации появления/исчезновения (используются в profile.css) */
-.skill-tag-fade-in {
-    animation: skillTagFadeIn 0.3s ease-out both;
-}
-.skill-tag-fade-out {
-    animation: skillTagFadeOut 0.25s ease-out forwards;
-}
+/* --- Анимации --- */
+.skill-tag-fade-in { animation: skillTagFadeIn 0.3s ease-out both; }
+.skill-tag-fade-out { animation: skillTagFadeOut 0.25s ease-out forwards; }
 
-/* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
 
-/* 1. Теги отображения (в профиле, на карточках) */
+/* --- Glass-тема (Стекло) --- */
 body.theme-glass-overlay .skill-tag--display {
     background-color: var(--glass-bg-secondary);
     border: var(--glass-border);
     color: var(--main-text-color);
     opacity: 0.9;
 }
-/* В светлой теме делаем их чуть ярче */
 body.theme-light.theme-glass-overlay .skill-tag--display {
     background-color: rgba(255,255,255, 0.4);
     border: 1px solid rgba(255,255,255, 0.7);
     color: #000;
     opacity: 1;
 }
-/* В темной теме */
 body.theme-dark.theme-glass-overlay .skill-tag--display {
     background-color: rgba(60,60,60, 0.5);
     border: 1px solid rgba(255,255,255, 0.1);
     color: #fff;
     opacity: 1;
 }
-
-/* 2. Теги фильтра (в ленте) */
 body.theme-glass-overlay .skill-tag--filter {
     background-color: var(--glass-bg-input);
     border: var(--glass-border);
@@ -232,8 +205,6 @@ body.theme-glass-overlay .skill-tag--filter.is-selected {
     border-color: var(--main-button-color);
     opacity: 1;
 }
-
-/* 3. Теги выбора (в модалке) */
 body.theme-glass-overlay .skill-tag--selectable {
     background-color: var(--glass-bg-input);
     border: var(--glass-border);
