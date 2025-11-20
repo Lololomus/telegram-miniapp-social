@@ -26,6 +26,7 @@ export {
     buildFeedItemTransition,
     EmptyState, 
     useTwoLineSkillsOverflow,
+    useControlMode,
 } from '../shared/react_shared_utils.js';
 
 

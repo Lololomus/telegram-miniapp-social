@@ -335,6 +335,7 @@ const PostCard = memo(function PostCard({
             display: '-webkit-box',
             WebkitLineClamp: 3,
             WebkitBoxOrient: 'vertical',
+            pointerEvents: 'none',
           },
         },
         content,
@@ -364,7 +365,7 @@ const PostSkillTags = memo(function PostSkillTags({ skills }) {
       layout: false, 
       ref: containerRef,
       className: 'feed-card-skills-container',
-      style: { marginTop: 12 },
+      style: { marginTop: 12, pointerEvents: 'none' },
     },
     skills.slice(0, overflow.visibleCount).map((skill, index) =>
       h(

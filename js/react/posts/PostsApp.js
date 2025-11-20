@@ -27,7 +27,7 @@ import {
     QuickFilterTags,
     ProfileFallback,
     PhoneShell,
-    EmptyState
+    EmptyState,
 } from './posts_utils.js';
 
 // --- ИМПОРТЫ ЛОКАЛЬНЫХ КОМПОНЕНТОВ ---
@@ -76,7 +76,7 @@ function App({ mountInto, overlayHost }) {
   const [editingPost, setEditingPost] = useState(null);
   const inputRef = useRef(null);
   const statusFilterInputRef = useRef(null);
-  
+
   const listContainerRef = useRef(null);
   
   const handleBackToAllPosts = useCallback(() => {
@@ -337,17 +337,39 @@ function App({ mountInto, overlayHost }) {
     // а клики по тегам фильтруют список сразу.
   }, [selectedSkills, allSkills]);
 
-  // --- Коллбэки для модальных окон ---
+  // --- Коллбэки для модальных окон (ИСПРАВЛЕНО: Optimistic UI) ---
   const handleOpenProfile = useCallback(async (author) => {
-    if (!author || !author.user_id) { console.error("REACT Posts: Invalid author data:", author); return; }
+    if (!author || !author.user_id) { 
+        console.error("REACT Posts: Invalid author data:", author); 
+        return; 
+    }
+    
     if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light');
+    
+    // 1. Мгновенное открытие с тем, что есть
     setPostToShow(null);
     setContextMenuState({ post: null, targetElement: null });
     setMenuLayout({ verticalAdjust: 0, menuHeight: 0 });
+    
+    // Сразу ставим базовый профиль (чтобы шторка поехала)
+    setProfileToShow(author);
+
+    // 2. В фоне подгружаем детали
     try {
       const resp = await postJSON(`${cfg.backendUrl}/get-user-by-id`, { initData: tg?.initData, target_user_id: author.user_id });
-      if (resp?.ok && resp.profile) { setProfileToShow(resp.profile); } else { setProfileToShow(author); }
-    } catch(e) { console.error("REACT Posts: Error loading full profile:", e); setProfileToShow(author); }
+      if (resp?.ok && resp.profile) { 
+          // Обновляем стейт, если пользователь все еще смотрит этот профиль
+          setProfileToShow(prev => {
+              if (prev && prev.user_id === author.user_id) {
+                  return resp.profile;
+              }
+              return prev;
+          });
+      } 
+    } catch(e) { 
+        console.error("REACT Posts: Error loading full profile:", e); 
+        // Оставляем как есть (базовые данные лучше, чем ошибка)
+    }
   }, [cfg]);
   const handleCloseProfile = useCallback(() => { setProfileToShow(null); }, []);
   

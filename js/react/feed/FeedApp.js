@@ -259,27 +259,34 @@ function App({ mountInto, overlayHost }) {
     });
   };
 
-  // --- 9. Открытие профиля пользователя ---
+  // --- 9. Открытие профиля пользователя (Optimistic UI) ---
   const onOpen = async (user) => {
-    if (!cfg || !cfg.backendUrl) {
-      setSelected(user);
-      return;
-    }
+    // 1. МГНОВЕННО показываем то, что есть (данные из карточки)
+    // Пользователь сразу видит анимацию открытия, не ожидая сети.
+    setSelected(user);
 
+    if (!cfg || !cfg.backendUrl) return;
+
+    // 2. В фоне запрашиваем полные данные (био, ссылки и т.д.)
     try {
       const resp = await postJSON(`${cfg.backendUrl}/get-user-by-id`, {
         initData: tg?.initData,
         target_user_id: user.user_id,
       });
 
+      // 3. Когда данные пришли — обновляем стейт
       if (resp?.ok && resp.profile) {
-        setSelected(resp.profile);
-      } else {
-        setSelected(user);
+        // Проверка: обновляем, только если пользователь всё еще смотрит ЭТОГО юзера
+        setSelected((current) => {
+            if (current && current.user_id === user.user_id) {
+                return resp.profile;
+            }
+            return current;
+        });
       }
     } catch (e) {
-      console.error('React-feed: Ошибка при загрузке профиля по id', e);
-      setSelected(user);
+      console.error('React-feed: Ошибка при фоновой загрузке профиля', e);
+      // Не страшно, пользователь видит хотя бы базовые данные
     }
   };
 

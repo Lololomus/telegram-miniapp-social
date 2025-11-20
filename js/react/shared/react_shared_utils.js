@@ -1,22 +1,155 @@
-// react/shared/utils.js
+// react/shared/react_shared_utils.js
 //
-// Этот файл содержит ОБЩИЕ утилиты и компоненты, 
-// которые используются в НЕСКОЛЬКИХ "островах" React 
-// (например, в /react/feed/ и /react/posts/).
-//
-// ИСПРАВЛЕНИЕ: Добавлены POPULAR_SKILLS, cardVariants, listVariants
+// Этот файл содержит ОБЩИЕ утилиты и компоненты.
+// ОБНОВЛЕНО:
+// 1. useBodyScrollLock -> Глобальный счетчик + только overflow: hidden (без position: fixed).
+// 2. useSwipeLock -> Глобальный счетчик с защитой от "мигания" при переходах.
 
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
+import { useDragControls } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
+
 const h = React.createElement;
 
 // --- Глобальные переменные ---
 export const tg = window.Telegram?.WebApp;
 export const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-/**
- * Функция перевода (i18n)
- * (Базовый словарь, используется в ProfileSheet)
- */
+// --- Управление режимом (Свайпы vs Нажатия) ---
+export const getControlMode = () => localStorage.getItem('control_mode') || 'swipes';
+
+export const setControlMode = (mode) => {
+    localStorage.setItem('control_mode', mode);
+    window.dispatchEvent(new Event('control-mode-changed'));
+};
+
+export function useControlMode() {
+    const [mode, setMode] = useState(getControlMode());
+    useEffect(() => {
+        const handler = () => setMode(getControlMode());
+        window.addEventListener('control-mode-changed', handler);
+        return () => window.removeEventListener('control-mode-changed', handler);
+    }, []);
+    return mode;
+}
+
+// --- ✅ ИСПРАВЛЕНО: Безопасная блокировка скролла (Глобальный счетчик) ---
+let scrollLockCount = 0;
+
+export function useBodyScrollLock() {
+    useLayoutEffect(() => {
+        // Если это первая блокировка — блокируем body
+        if (scrollLockCount === 0) {
+            document.body.style.overflow = 'hidden';
+            // Для надежности на iOS иногда нужно и html
+            document.documentElement.style.overflow = 'hidden';
+        }
+        scrollLockCount++;
+
+        return () => {
+            scrollLockCount--;
+            // Только если все блокировки сняты — разблокируем
+            if (scrollLockCount === 0) {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+            }
+        };
+    }, []);
+}
+
+// --- ✅ ИСПРАВЛЕНО: Умная блокировка свайпов (Глобальный счетчик) ---
+let swipeLockCount = 0;
+let swipeLockTimeout = null;
+
+function useSwipeLock() {
+    useEffect(() => {
+        // Очищаем таймер разблокировки, если он был запущен (мы успели открыть новую модалку)
+        if (swipeLockTimeout) {
+            clearTimeout(swipeLockTimeout);
+            swipeLockTimeout = null;
+        }
+
+        // Если это первая блокировка — выключаем свайпы
+        if (swipeLockCount === 0 && tg?.disableVerticalSwipes) {
+            tg.disableVerticalSwipes();
+        }
+        swipeLockCount++;
+        
+        return () => {
+            swipeLockCount--;
+            // Если больше нет блокировок — планируем включение свайпов
+            if (swipeLockCount === 0) {
+                swipeLockTimeout = setTimeout(() => {
+                    if (swipeLockCount === 0 && tg?.enableVerticalSwipes) {
+                        tg.enableVerticalSwipes();
+                    }
+                    swipeLockTimeout = null;
+                }, 100); // Даем 100мс на открытие следующей модалки
+            }
+        };
+    }, []);
+}
+
+// --- Единая логика шторки (DRY) ---
+export function useSheetLogic(onClose) {
+    const controlMode = useControlMode();
+    const dragControls = useDragControls();
+    
+    // 1. Блокируем скролл фона
+    useBodyScrollLock();
+
+    // 2. Блокируем системные свайпы
+    useSwipeLock();
+
+    return {
+        controlMode,
+        dragControls,
+        sheetProps: {
+            initial: { y: '100%' },
+            animate: { y: 0 },
+            exit: { y: '100%' },
+            transition: { type: 'tween', ease: 'circOut', duration: 0.3 },
+            
+            // Включаем драг только в режиме свайпов
+            drag: controlMode === 'swipes' ? "y" : false,
+            dragControls: dragControls,
+            dragListener: false, // Слушаем драг ТОЛЬКО на ручке (Handle)
+            
+            dragConstraints: { top: 0, bottom: 0 },
+            dragElastic: { top: 0, bottom: 0.2 },
+            
+            onDragEnd: (e, { offset, velocity }) => {
+                // Если утащили вниз больше чем на 100px или быстро свайпнули
+                if (offset.y > 100 || velocity.y > 100) {
+                    onClose();
+                }
+            }
+        }
+    };
+}
+
+// --- Компонент управления (Палочка / Крестик) ---
+export function SheetControls({ controlMode, dragControls, onClose }) {
+    if (controlMode === 'swipes') {
+        return h('div', { 
+            className: 'react-sheet-handle-wrapper',
+            onPointerDown: (e) => dragControls.start(e)
+        }, h('div', { className: 'react-sheet-handle-bar' }));
+    }
+    
+    // Режим кнопок (Шеврон)
+    return h('button', {
+        className: `react-sheet-chevron-close ${isIOS ? 'is-ios' : ''}`,
+        onClick: onClose,
+        'aria-label': 'Закрыть',
+    }, 
+        h('svg', { 
+            xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2.5', strokeLinecap: 'round', strokeLinejoin: 'round' 
+        }, h('polyline', { points: '6 9 12 15 18 9' }))
+    );
+}
+
+// --- Остальные утилиты (без изменений) ---
+
 export const t = (k, d = {}) => {
     const dict = {
         'feed_empty': 'Нет запросов',
@@ -30,15 +163,24 @@ export const t = (k, d = {}) => {
         'post_type_showcase': '🚀 Демо',
         'post_type_default': 'Запрос',
         'job_not_specified': 'Опыт не указан',
+        'action_edit': 'Редактировать',
+        'action_delete': 'Удалить',
+        'action_respond': 'Откликнуться',
+        'action_repost': 'Репост',
+        'action_view_profile': 'Профиль',
+        'action_cancel': 'Отмена',
+        'edit_post_title': 'Редактировать',
+        'post_type_label': 'Тип',
+        'post_content_label': 'Описание',
+        'post_full_description_label': 'Подробно',
+        'post_skills_label': 'Навыки',
+        'select_skills_button': 'Выбрать'
     };
     let s = dict[k] || k;
     Object.entries(d).forEach(([k, v]) => { s = s.replace(new RegExp(`{${k}}`, 'g'), v); });
     return s;
 };
 
-/**
- * Отправка JSON-запроса
- */
 export async function postJSON(url, body) {
     const res = await fetch(url, {
         method: 'POST',
@@ -51,9 +193,6 @@ export async function postJSON(url, body) {
     return await res.json();
 }
 
-/**
- * Хук Debounce
- */
 export function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -67,24 +206,13 @@ export function useDebounce(value, delay) {
   return debouncedValue;
 }
 
-// Максимум 2 строки тегов по ширине контейнера.
-// Работает так:
-// 1) На первом рендере рендерятся все теги (visibleCount = itemsLength).
-// 2) useLayoutEffect один раз измеряет ширину каждого <span.skill-tag--display>.
-// 3) Ширины сохраняются в ref и больше не зависят от DOM.
-// 4) По контейнеру считаем, сколько тегов поместится в 2 строки с учётом gap и места под +X.
-// 5) Возвращаем { visibleCount, hiddenCount } — FEED/Post используют slice(0, visibleCount).
-// Поддерживает пересчет при загрузке шрифтов.
 export function useTwoLineSkillsOverflow(containerRef, itemsLength) {
   const [overflow, setOverflow] = useState(() => ({
     visibleCount: itemsLength,
     hiddenCount: 0,
   }));
-
   const tagWidthsRef = useRef([]);
   const hasMeasuredRef = useRef(false);
-  
-  // Проверка загрузки шрифтов
   const [fontsLoaded, setFontsLoaded] = useState(() => {
       return document.fonts ? document.fonts.status === 'loaded' : true;
   });
@@ -96,7 +224,6 @@ export function useTwoLineSkillsOverflow(containerRef, itemsLength) {
   }, []);
 
   useLayoutEffect(() => {
-    // Сброс при смене данных
     tagWidthsRef.current = [];
     hasMeasuredRef.current = false;
     setOverflow({ visibleCount: itemsLength, hiddenCount: 0 });
@@ -107,36 +234,26 @@ export function useTwoLineSkillsOverflow(containerRef, itemsLength) {
     if (!container || !itemsLength) return;
 
     const recompute = () => {
-      // 1. БЕЗОПАСНОСТЬ: Если контейнер скрыт (ширина 0), 
-      // НЕ ПЕРЕСЧИТЫВАЕМ, чтобы не получить 0 видимых тегов.
-      // Просто оставляем предыдущее состояние (return).
       if (container.clientWidth <= 0) return;
-
-      // Защита от бага, когда теги есть, но у них ширина 0
       const tagNodes = Array.from(container.querySelectorAll('.skill-tag--display'));
       if (tagNodes.length > 0 && tagNodes[0].getBoundingClientRect().width === 0) return;
 
-      // --- Стандартная логика измерения (без изменений) ---
       const CONTAINER_SAFE_BUFFER = 15;
       const containerWidth = container.clientWidth - CONTAINER_SAFE_BUFFER;
       
-      // Кешируем ширины, если еще нет
       if (!hasMeasuredRef.current || (fontsLoaded && tagWidthsRef.current.length !== itemsLength)) {
           if (tagNodes.length === itemsLength) {
               tagWidthsRef.current = tagNodes.map(n => n.getBoundingClientRect().width);
               hasMeasuredRef.current = true;
           } else {
-              return; // DOM не готов
+              return;
           }
       }
 
-      // Расчет visibleCount
       let currentLineWidth = 0;
       let currentRow = 1;
       let visible = 0;
       const widths = tagWidthsRef.current;
-      
-      // Если ширины изменились (зум), считаем коэффициент
       let scale = 1;
       if (tagNodes.length > 0 && widths.length > 0 && widths[0] > 0) {
           scale = tagNodes[0].getBoundingClientRect().width / widths[0];
@@ -145,7 +262,6 @@ export function useTwoLineSkillsOverflow(containerRef, itemsLength) {
       for (let i = 0; i < itemsLength; i++) {
          const w = widths[i] * scale;
          const gap = (currentLineWidth === 0) ? 0 : 6;
-         // Если это последняя строка и останутся элементы, резервируем место под "+N" (75px)
          const isLastRow = (currentRow === 2);
          const extraSpace = (isLastRow && (itemsLength - (i + 1) > 0)) ? (6 + 75) : 0;
 
@@ -156,31 +272,24 @@ export function useTwoLineSkillsOverflow(containerRef, itemsLength) {
              if (currentRow === 1) {
                  currentRow++;
                  currentLineWidth = 0;
-                 i--; // пробуем этот тег на новой строке
+                 i--;
              } else {
-                 break; // не влезло во 2 строку
+                 break;
              }
          }
       }
-      
       setOverflow({ visibleCount: visible, hiddenCount: itemsLength - visible });
     };
 
-    // Используем ResizeObserver для реакции на изменение ширины
     const ro = new ResizeObserver(recompute);
     ro.observe(container);
-    // И один раз запускаем сразу
     recompute();
-
     return () => ro.disconnect();
   }, [itemsLength, containerRef, fontsLoaded]);
 
   return overflow;
 }
 
-/**
- * Компонент-хелпер: Быстрые фильтры
- */
 export function QuickFilterTags({ skills, selected, onToggle }) {
     if (!skills || skills.length === 0) return null;
     return skills.map(skill => h('button', {
@@ -191,9 +300,6 @@ export function QuickFilterTags({ skills, selected, onToggle }) {
     }, skill));
 }
 
-/**
- * Компонент-хелпер: Оболочка (нужна для createRoot)
- */
 export function PhoneShell({ children }) {
     return h('div', {
         style: {
@@ -205,9 +311,6 @@ export function PhoneShell({ children }) {
      }, children);
 }
 
-/**
- * Компонент-хелпер: Заглушка для Suspense
- */
 export function ProfileFallback() {
     return h('div', {
         style: {
@@ -233,54 +336,24 @@ export function ProfileFallback() {
     );
 }
 
-/**
- * Общая константа: Популярные навыки
- */
 export const POPULAR_SKILLS = [
     "Python", "JavaScript", "Java", "C#", "C++", "Go",
     "React", "Vue", "Angular", "Node.js", "Django", "Spring",
     "PostgreSQL", "MongoDB", "Docker", "Kubernetes", "Git", "Figma", "AWS"
 ].sort((a, b) => a.localeCompare(b));
 
-/**
- * Общая константа: Анимации карточек
- *
- * ✅ ИСПРАВЛЕНИЕ: Убрана конкурирующая анимация "delay: i * 0.1".
- * Анимацией "волны" теперь управляет ИСКЛЮЧИТЕЛЬНО `listVariants` 
- * (через `staggerChildren`).
- * Это исправляет "Ленту Людей" и не ломает "Ленту Запросов",
- * так как та использует ручное переопределение.
- */
 export const cardVariants = isIOS 
   ? {
       hidden: { opacity: 0 },
-      // "visible" variant for iOS (БЕЗ 'delay')
-      visible: { 
-        opacity: 1,
-        transition: {
-          duration: 0.2,
-          ease: "easeOut"
-        }
-      },
+      visible: { opacity: 1, transition: { duration: 0.2, ease: "easeOut" } },
       exit: { opacity: 0, transition: { duration: 0.1 } }
     }
   : {
       hidden: { opacity: 0, x: -20 },
-      // "visible" variant for Desktop/Android (БЕЗ 'delay')
-      visible: { 
-        opacity: 1, 
-        x: 0,
-        transition: {
-          duration: 0.4,
-          ease: "easeOut"
-        }
-      },
+      visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } },
       exit: { opacity: 0, x: -10, transition: { duration: 0.2 } }
     };
 
-/**
- * Общая константа: Анимация списка
- */
 export const listVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -293,44 +366,25 @@ export const listVariants = {
   }
 };
 
-// Общий spring-конфиг для элементов ленты
-// (лента людей, лента запросов, мои запросы)
 export const FEED_ITEM_SPRING = {
   type: "spring",
   stiffness: 300,
   damping: 30,
 };
 
-// Шаг задержки между элементами (эффект "волны").
-// На iOS задержка отключена, чтобы не тормозить WebView.
 export const FEED_ITEM_DELAY_STEP = isIOS ? 0 : 0.1;
 
-// Общий хелпер для transition появления карточки в ленте.
-// index — позиция карточки в списке (0, 1, 2, ...).
 export function buildFeedItemTransition(index = 0) {
-  const safeIndex =
-    typeof index === "number" && isFinite(index) ? index : 0;
-
+  const safeIndex = typeof index === "number" && isFinite(index) ? index : 0;
   const delay = FEED_ITEM_DELAY_STEP * safeIndex;
-
   return {
-    // Волна появления — задержка по индексу для opacity/x и базового spring
     ...FEED_ITEM_SPRING,
     delay,
-
-    // Подпрыгивание при long‑press (scale/y) — БЕЗ задержки
-    scale: {
-      ...FEED_ITEM_SPRING,
-      delay: 0,
-    },
-    y: {
-      ...FEED_ITEM_SPRING,
-      delay: 0,
-    },
+    scale: { ...FEED_ITEM_SPRING, delay: 0 },
+    y: { ...FEED_ITEM_SPRING, delay: 0 },
   };
 }
 
-// Общий EmptyState для всех лент (люди, запросы и т.п.)
 export function EmptyState({ text, visible }) {
   return h(
     'div',
@@ -343,12 +397,9 @@ export function EmptyState({ text, visible }) {
         fontWeight: 500,
         letterSpacing: '0.01em',
         textShadow: '0 0 18px rgba(0, 0, 0, 0.35)',
-
-        // плавное появление/исчезновение
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(6px)',
         transition: 'opacity 180ms ease-out, transform 180ms ease-out',
-
         pointerEvents: 'none',
         userSelect: 'none',
       },

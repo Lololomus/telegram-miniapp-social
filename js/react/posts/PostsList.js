@@ -17,6 +17,7 @@ const h = React.createElement;
  */
 function PostsList({
   posts,
+  controlMode,
   onOpenProfile,
   onOpenPostSheet,
   onOpenContextMenu,
