@@ -148,37 +148,13 @@ export function SheetControls({ controlMode, dragControls, onClose }) {
     );
 }
 
-// --- Остальные утилиты (без изменений) ---
-
 export const t = (k, d = {}) => {
-    const dict = {
-        'feed_empty': 'Нет запросов',
-        'links': 'Ссылки',
-        'skills': 'Навыки',
-        'experience': 'Опыт работы',
-        'education': 'Образование',
-        'present_time': 'по наст. время',
-        'post_type_looking': '🤝 Ищет',
-        'post_type_offering': '💼 Предлагает',
-        'post_type_showcase': '🚀 Демо',
-        'post_type_default': 'Запрос',
-        'job_not_specified': 'Опыт не указан',
-        'action_edit': 'Редактировать',
-        'action_delete': 'Удалить',
-        'action_respond': 'Откликнуться',
-        'action_repost': 'Репост',
-        'action_view_profile': 'Профиль',
-        'action_cancel': 'Отмена',
-        'edit_post_title': 'Редактировать',
-        'post_type_label': 'Тип',
-        'post_content_label': 'Описание',
-        'post_full_description_label': 'Подробно',
-        'post_skills_label': 'Навыки',
-        'select_skills_button': 'Выбрать'
-    };
-    let s = dict[k] || k;
-    Object.entries(d).forEach(([k, v]) => { s = s.replace(new RegExp(`{${k}}`, 'g'), v); });
-    return s;
+    if (typeof window.t === 'function') {
+        return window.t(k, d);
+    }
+
+    console.warn(`[i18n] Key '${k}' missed, window.t not ready`);
+    return k;
 };
 
 export async function postJSON(url, body) {

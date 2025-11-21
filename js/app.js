@@ -10,6 +10,8 @@ const UI = ui;
 import { state, SKILL_CATEGORIES } from './app-state.js';
 import { setupDynamicList } from './app-form-helpers.js';
 
+window.t = t;
+
 window.REACT_FEED = true;
 
 function initUiScale(tg) {
@@ -138,14 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
         settings: {
             langBtnRu: document.getElementById('lang-btn-ru'),
             langBtnEn: document.getElementById('lang-btn-en'),
-            
             glassToggleWrapper: document.getElementById('glass-toggle-wrapper'),
             glassToggle: document.getElementById('glass-toggle-switch'),
-            
-            // ✅ НОВЫЕ КНОПКИ УПРАВЛЕНИЯ
             controlBtnTaps: document.getElementById('control-btn-taps'),
             controlBtnSwipes: document.getElementById('control-btn-swipes'),
-            
             themeButtons: [
                 document.getElementById('theme-btn-auto'),
                 document.getElementById('theme-btn-light'),
@@ -247,12 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elements.settings.langBtnRu) elements.settings.langBtnRu.classList.toggle('active', state.currentLang === 'ru');
         if (elements.settings.langBtnEn) elements.settings.langBtnEn.classList.toggle('active', state.currentLang === 'en');
         
-        // Обновление текста кнопок управления
         if (elements.settings.controlBtnTaps) elements.settings.controlBtnTaps.textContent = t('control_mode_taps') || "Кнопки";
         if (elements.settings.controlBtnSwipes) elements.settings.controlBtnSwipes.textContent = t('control_mode_swipes') || "Жесты";
 
         [elements.profile.skillsToggleBtn, elements.detail.skillsToggleBtn].forEach(toggleButton => {
-            if (toggleButton && toggleButton.style.display !== 'none') {
+            if (toggleButton) {
                 const textSpan = toggleButton.querySelector('span:not(.arrow)');
                 if (textSpan) {
                     const isLess = toggleButton.classList.contains('less');
@@ -260,6 +257,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
+        const updateSectionTitle = (containerId, titleKey) => {
+            const container = document.getElementById(containerId);
+            if (container) {
+                const title = container.querySelector('.profile-section-title');
+                if (title) title.textContent = t(titleKey);
+            }
+        };
+        updateSectionTitle('profile-experience', 'experience_section_title');
+        updateSectionTitle('profile-education', 'education_section_title');
+        updateSectionTitle('detail-experience', 'experience_section_title');
+        updateSectionTitle('detail-education', 'education_section_title');
         
         if (elements.skills.modal.style.display !== 'none') {
             UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, (skill) => {
@@ -389,22 +398,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function saveProfileData() {
         tg.MainButton.showProgress();
+
         const listValidationErrorKey = validateDynamicLists();
         if (listValidationErrorKey) {
             tg.MainButton.hideProgress();
             UI.showToast(t(listValidationErrorKey), true);
             return; 
         }
+
         const formData = new FormData(); 
         formData.append('initData', tg.initData); 
         elements.form.nameField.classList.remove('input-shake'); 
+        elements.form.bioField.classList.remove('input-shake');
+        elements.form.skillsField.classList.remove('input-shake');
+        
         const nameToSave = elements.form.nameField.value.trim(); 
         if (!nameToSave) { 
             tg.MainButton.hideProgress(); 
-            UI.showToast(t('error_name_empty'), true); 
+            UI.showToast(t('error_name_empty') || 'Введите имя', true); 
             elements.form.nameField.classList.add('input-shake'); 
             return; 
         } 
+
+        const bioToSave = elements.form.bioField.value.trim();
+        if (!bioToSave || bioToSave.length < 10) {
+            tg.MainButton.hideProgress();
+            UI.showToast('Напишите о себе хотя бы пару слов (мин. 10 символов)', true);
+            elements.form.bioField.classList.add('input-shake');
+            elements.form.bioField.focus();
+            return;
+        }
+
+        const skillsValue = elements.form.skillsField.value.trim();
+        if (!skillsValue) {
+            tg.MainButton.hideProgress();
+            UI.showToast('Выберите хотя бы один навык', true);
+            elements.form.skillsField.classList.add('input-shake');
+            return;
+        }
+
         formData.append('first_name', nameToSave || tg.initDataUnsafe?.user?.first_name || ''); 
         formData.append('bio', elements.form.bioField.value.trim()); 
         const linksData = linksManager?.getItemsData ? linksManager.getItemsData() : []; 
@@ -450,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadPostsFeedData() {
         document.dispatchEvent(new CustomEvent('set-posts-feed-mode', { detail: { showMyPostsOnly: false, skills: [], status: null } }));
         elements.posts.searchInput.value = '';
+        if (elements.posts.postsStatusFilterInput) elements.posts.postsStatusFilterInput.value = '';
         UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
     }
 
@@ -625,7 +658,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.skillsModalSource === 'postsFeed' || state.skillsModalSource === 'editPostModal') {
                 let currentStatusKey = null;
                 if (state.skillsModalSource === 'postsFeed') {
-                    currentStatusKey = elements.posts.postsStatusFilterInput.value || null;
+                    // ✅ БЕРЕМ АКТУАЛЬНЫЙ СТАТУС ИЗ ИНПУТА
+                    currentStatusKey = elements.posts.postsStatusFilterInput ? elements.posts.postsStatusFilterInput.value : null;
                     statusContainer.style.display = 'block';
                 } else {
                     statusContainer.style.display = 'none';
@@ -672,7 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (state.skillsModalSource === 'feed') {
                 onBackAction = loadFeedData;
             } else if (state.skillsModalSource === 'postsFeed') {
-                onBackAction = loadPostsFeedData;
+                onBackAction = () => {
+                     UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
+                };
             } else if (state.skillsModalSource === 'editPostModal') {
                 onBackAction = loadPostsFeedData; 
             } else {
@@ -773,7 +809,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // ✅ НОВАЯ ЛОГИКА: Кнопки вместо Тогла для режима управления
         if (elements.settings.controlBtnTaps && elements.settings.controlBtnSwipes) {
             const currentMode = localStorage.getItem('control_mode') || 'taps';
             elements.settings.controlBtnTaps.classList.toggle('active', currentMode === 'taps');
@@ -867,6 +902,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elements.form.openSkillsModalButton) {
             elements.form.openSkillsModalButton.addEventListener('click', () => {
                 state.skillsModalSource = 'form';
+                
+                if (elements.skills.statusFilterContainer) {
+                    elements.skills.statusFilterContainer.style.display = 'none';
+                }
+
                 const currentSkills = elements.form.skillsField.value.split(',').map(s => s.trim()).filter(s => s);
                 state.selectedSkills = [...currentSkills];
                 function onToggleSkillInFormModal(skill) {
@@ -893,7 +933,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const onBackAction = () => { UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData); };
             UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t, onBackAction);
         });
-        }        
+        }
+
+        // ✅ ДОБАВЛЕНО: Слушатель для кнопки фильтров в ЛЕНТЕ ЗАПРОСОВ
+        if (elements.posts.openSkillsModalButton) {
+            elements.posts.openSkillsModalButton.addEventListener('click', () => {
+                // Пытаемся получить текущие навыки из поисковой строки (как запасной вариант)
+                const currentSearchVal = elements.posts.searchInput ? elements.posts.searchInput.value : '';
+                const skillsFromInput = currentSearchVal.split(',').map(s => s.trim()).filter(Boolean);
+                
+                document.dispatchEvent(new CustomEvent('openSkillsModal', { 
+                    detail: { 
+                        source: 'postsFeed', 
+                        skills: skillsFromInput 
+                    } 
+                }));
+            });
+        }
 
         if (elements.feed.openSkillsModalButtonFeed) {
             elements.feed.openSkillsModalButtonFeed.addEventListener('click', () => {
@@ -917,7 +973,19 @@ document.addEventListener('DOMContentLoaded', () => {
                    document.dispatchEvent(new CustomEvent('set-feed-mode', { detail: { skills: state.selectedSkills } }));
                    UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
                 } else if (state.skillsModalSource === 'postsFeed') {
-                    document.dispatchEvent(new CustomEvent('set-posts-feed-mode', { detail: { skills: state.selectedSkills, status: modalSelectedStatus ? modalSelectedStatus.key : null } }));
+                    const status = modalSelectedStatus ? modalSelectedStatus.key : null;
+                    
+                    // ✅ ИСПРАВЛЕНО: Обновляем скрытый инпут статуса, чтобы модалка "запомнила" его
+                    if (elements.posts.postsStatusFilterInput) {
+                        elements.posts.postsStatusFilterInput.value = status || '';
+                    }
+                    
+                    // ✅ ИСПРАВЛЕНО: Обновляем поисковую строку, чтобы пользователь видел выбранные навыки
+                    if (elements.posts.searchInput) {
+                        elements.posts.searchInput.value = state.selectedSkills.join(', ');
+                    }
+
+                    document.dispatchEvent(new CustomEvent('set-posts-feed-mode', { detail: { skills: state.selectedSkills, status: status } }));
                     UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
                 } else if (state.skillsModalSource === 'editPostModal') {
                     document.dispatchEvent(new CustomEvent('skills-updated-for-post', { detail: { skills: state.selectedSkills } }));
@@ -927,6 +995,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+    }
+
+    // --- ОБРАБОТКА ОФЛАЙНА ---
+    function handleOffline() {
+        UI.showToast('📡 Нет соединения с интернетом', true); // true = красный/ошибка
+        // Опционально: заблокировать MainButton
+        if (tg.MainButton.isVisible) tg.MainButton.disable();
+    }
+
+    function handleOnline() {
+        UI.showToast('🟢 Соединение восстановлено', false); // false = обычный/успех
+        if (tg.MainButton.isVisible) tg.MainButton.enable();
+        
+        // Если мы были в ленте, можно попробовать перезагрузить данные
+        // if (state.activeTab === 'feed') loadFeedData(); 
+    }
+
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    
+    // Проверка при запуске
+    if (!navigator.onLine) {
+        handleOffline();
     }
 
     async function main() {

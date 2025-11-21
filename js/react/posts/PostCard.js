@@ -1,15 +1,11 @@
 // react/posts/PostCard.js
-// Компонент отображения одной карточки поста.
-
 import React, { memo, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-
 import {
   t,
   formatPostTime,
   isIOS,
   cardVariants,
-  FEED_ITEM_SPRING,
   buildFeedItemTransition,
   useTwoLineSkillsOverflow,
 } from './posts_utils.js';
@@ -17,10 +13,6 @@ import {
 const h = React.createElement;
 const tg = window.Telegram?.WebApp;
 
-/**
- * Компонент PostCard
- * (Вынесен из react-posts-feed.js)
- */
 const PostCard = memo(function PostCard({
   post,
   index,
@@ -36,12 +28,7 @@ const PostCard = memo(function PostCard({
   isWrapped = false,
 }) {
   const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
-  const {
-    content = 'Нет описания',
-    post_type = 'default',
-    skill_tags = [],
-    created_at,
-  } = post;
+  const { content = 'Нет описания', post_type = 'default', skill_tags = [], created_at } = post;
 
   const avatar = author.photo_path
     ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}`
@@ -57,304 +44,145 @@ const PostCard = memo(function PostCard({
   const timeAgo = formatPostTime(created_at);
   const postKey = post.post_id || `temp-post-${Math.random()}`;
 
-  // --- Логика жестов (Long-Press / Tap) ---
   const gestureTimerRef = useRef(null);
   const pointerStartRef = useRef(null);
   const cardRef = useRef(null);
-
   const POINTER_SLOP = 5;
 
   const handlePointerDown = (e) => {
-    if (disableClick) return;
-
+    // Если меню открыто, блокируем начало жестов
+    if (disableClick || isContextMenuOpen) return;
+    
     pointerStartRef.current = { y: e.pageY };
-
-    if (tg?.disableVerticalSwipes) {
-      tg.disableVerticalSwipes();
-    }
-
-    if (gestureTimerRef.current) {
-      clearTimeout(gestureTimerRef.current);
-    }
+    if (tg?.disableVerticalSwipes) tg.disableVerticalSwipes();
+    if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
 
     gestureTimerRef.current = setTimeout(() => {
-      if (tg?.HapticFeedback?.impactOccurred) {
-        tg.HapticFeedback.impactOccurred('heavy');
-      }
-
+      if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
       onOpenContextMenu(post, cardRef.current);
-      pointerStartRef.current = null;
-
-      if (tg?.enableVerticalSwipes) {
-        tg.enableVerticalSwipes();
-      }
+      pointerStartRef.current = null; 
+      if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
     }, 300);
   };
 
   const handlePointerMove = (e) => {
     if (disableClick || !pointerStartRef.current) return;
-
     const deltaY = Math.abs(e.pageY - pointerStartRef.current.y);
     if (deltaY > POINTER_SLOP) {
       clearTimeout(gestureTimerRef.current);
       pointerStartRef.current = null;
-
-      if (tg?.enableVerticalSwipes) {
-        tg.enableVerticalSwipes();
-      }
+      if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
     }
   };
 
   const handlePointerUp = (e) => {
-    if (disableClick) return;
-
-    if (tg?.enableVerticalSwipes) {
-      tg.enableVerticalSwipes();
-    }
-
+    // Блокируем обработку клика, если меню открыто
+    if (disableClick || isContextMenuOpen) return;
+    
+    if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
     clearTimeout(gestureTimerRef.current);
-
+    
     if (pointerStartRef.current) {
       const target = e.target;
-
       if (target.closest('[data-action="open-profile"]')) {
         e.stopPropagation();
         onOpenProfile(author);
       } else {
         onOpenPostSheet(post);
       }
-
       pointerStartRef.current = null;
     }
   };
 
-  // --- Конец логики жестов ---
+  const isActive = isContextMenuOpen;
+  const liftY = isActive && !isWrapped ? -(menuLayout?.verticalAdjust || 0) : 0;
 
-    const isActive = isContextMenuOpen;
-    const liftY =
-    isActive && !isWrapped ? -(menuLayout?.verticalAdjust || 0) : 0;
-
-    return h(
+  return h(
     motion.div,
     {
-        ref: cardRef,
-        layout: disableClick ? undefined : (isIOS ? false : 'position'),
-        variants: cardVariants,
-        custom: { i: index },
-        initial: 'hidden',
-        exit: 'exit',
-        // как в FeedCard: базовое состояние без зависимостей
-        animate: {
-        opacity: 1,
-        x: 0,
-        scale: 1,
-        y: 0,
-        },
-        // тут снова волна по индексу, но scale/y не задействованы
-        transition: buildFeedItemTransition(index),
-        key: postKey,
-        className: 'react-feed-card-wrapper',
-        style: {
+      ref: cardRef,
+      layout: disableClick ? undefined : (isIOS ? false : 'position'),
+      variants: cardVariants,
+      initial: 'hidden',
+      animate: 'visible', 
+      exit: 'exit',
+      transition: buildFeedItemTransition(index),
+      key: postKey,
+      className: 'react-feed-card-wrapper',
+      style: {
         width: '100%',
         cursor: disableClick ? 'inherit' : 'pointer',
         position: 'relative',
         zIndex: isContextMenuOpen ? 2001 : 'auto',
+        // ВАЖНО: Блокируем клики по самой карточке, когда меню открыто. 
+        // Клик пройдет насквозь в Backdrop меню.
+        pointerEvents: isContextMenuOpen ? 'none' : 'auto', 
         ...styleOverride,
-        },
-        onPointerDown: handlePointerDown,
-        onPointerMove: handlePointerMove,
-        onPointerUp: handlePointerUp,
-        onPointerCancel: handlePointerUp,
-        onContextMenu: (e) => {
-        if (!disableClick) e.preventDefault();
-        },
+      },
+      onPointerDown: handlePointerDown,
+      onPointerMove: handlePointerMove,
+      onPointerUp: handlePointerUp,
+      onContextMenu: (e) => { if (!disableClick) e.preventDefault(); },
     },
-
-  // внутренний motion.div (react-feed-card) оставляем как есть:
-  // он продолжает анимировать scale/y через liftY без delay
-  h(
-    motion.div,
-    {
-      className: 'react-feed-card',
-      animate: {
-        scale: isActive ? 1.03 : 1,
-        y: liftY,
+    h(
+      motion.div,
+      {
+        className: 'react-feed-card',
+        animate: { scale: isActive ? 1.03 : 1, y: liftY },
+        transition: { type: 'spring', stiffness: 300, damping: 30 },
+        style: { padding: 15, width: '100%', borderRadius: 12, overflow: 'hidden' },
       },
-      transition: {
-        type: 'spring',
-        stiffness: 320,
-        damping: 32,
-      },
-      style: {
-        padding: 15,
-        width: '100%',
-        borderRadius: 12,
-        overflow: 'hidden',
-      },
-    },
-    // --- Хедер карточки (аватар + имя + время + тип) ---
       h(
         'div',
-        {
-          style: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            marginBottom: 12,
-          },
-        },
-        // Аватар
+        { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 } },
         h(
           'button',
           {
             'data-action': 'open-profile',
-            style: {
-              padding: 0,
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              flexShrink: 0,
-            },
+            style: { padding: 0, border: 'none', background: 'none', cursor: 'pointer', flexShrink: 0 },
           },
           h(
             'div',
-            {
-              style: {
-                height: 44,
-                width: 44,
-                borderRadius: '50%',
-                background: 'var(--secondary-bg-color)',
-                overflow: 'hidden',
-              },
-            },
-            h('img', {
-              src: avatar,
-              alt: '',
-              loading: 'lazy',
-              style: { width: '100%', height: '100%', objectFit: 'cover' },
-            }),
+            { style: { height: 44, width: 44, borderRadius: '50%', background: 'var(--secondary-bg-color)', overflow: 'hidden' } },
+            h('img', { src: avatar, alt: '', loading: 'lazy', style: { width: '100%', height: '100%', objectFit: 'cover' } }),
           ),
         ),
-
-        // Имя и время
         h(
           'div',
-          {
-            style: {
-              flex: 1,
-              minWidth: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              marginRight: '10px',
-            },
-          },
+          { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, marginRight: '10px' } },
           h(
             'button',
             {
               'data-action': 'open-profile',
-              style: {
-                padding: 0,
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                textAlign: 'left',
-                font: 'inherit',
-              },
+              style: { padding: 0, border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit' },
             },
             h(
               'div',
-              {
-                style: {
-                  fontWeight: 600,
-                  fontSize: 16,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  color: 'var(--main-text-color, #000)',
-                },
-              },
+              { style: { fontWeight: 600, fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--main-text-color, #000)' } },
               author.first_name || 'User',
             ),
           ),
-          timeAgo &&
-            h(
-              'div',
-              {
-                style: {
-                  fontSize: 14,
-                  color: 'var(--main-hint-color, #999)',
-                },
-              },
-              timeAgo,
-            ),
+          timeAgo && h('div', { style: { fontSize: 14, color: 'var(--main-hint-color, #999)' } }, timeAgo),
         ),
-
-        // Тег типа
         h(
           'div',
-          {
-            style: {
-              display: 'inline-flex',
-              alignItems: 'center',
-              padding: '6px 12px',
-              borderRadius: 8,
-              background: type_info.color,
-              color: '#FFFFFF',
-              fontSize: 13,
-              fontWeight: 600,
-              flexShrink: 0,
-              whiteSpace: 'nowrap',
-            },
-          },
+          { style: { display: 'inline-flex', alignItems: 'center', padding: '6px 12px', borderRadius: 8, background: type_info.color, color: '#FFFFFF', fontSize: 13, fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' } },
           type_info.text,
         ),
-
-        showActionsSpacer &&
-          h('div', {
-            style: {
-              width: '40px',
-              flexShrink: 0,
-            },
-          }),
+        showActionsSpacer && h('div', { style: { width: '40px', flexShrink: 0 } }),
       ),
-
-      // --- Контент поста ---
       h(
         'p',
-        {
-          style: {
-            margin: 0,
-            fontSize: 15,
-            lineHeight: 1.5,
-            color: 'var(--main-text-color, #000)',
-            whiteSpace: 'pre-wrap',
-            maxHeight: '4.5em',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-            pointerEvents: 'none',
-          },
-        },
+        { style: { margin: 0, fontSize: 15, lineHeight: 1.5, color: 'var(--main-text-color, #000)', whiteSpace: 'pre-wrap', maxHeight: '4.5em', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', pointerEvents: 'none' } },
         content,
       ),
-      h(PostSkillTags, {
-          skills: skill_tags,
-      }),
+      h(PostSkillTags, { skills: skill_tags }),
     ),
   );
 });
 
-/**
- * Отдельный компонент для тегов.
- * Изолирует расчет ширины от ре-рендеров текста.
- * Теги здесь НЕКЛИКАБЕЛЬНЫ (onClick убран).
- */
 const PostSkillTags = memo(function PostSkillTags({ skills }) {
   const containerRef = useRef(null);
-  
   const overflow = useTwoLineSkillsOverflow(containerRef, skills.length);
 
   if (!skills || skills.length === 0) return null;
@@ -368,22 +196,9 @@ const PostSkillTags = memo(function PostSkillTags({ skills }) {
       style: { marginTop: 12, pointerEvents: 'none' },
     },
     skills.slice(0, overflow.visibleCount).map((skill, index) =>
-      h(
-        'span',
-        {
-          key: skill + index,
-          className: 'skill-tag skill-tag--display',
-          style: { cursor: 'default' }, // Явно показываем, что кликать нельзя
-        },
-        skill,
-      )
+      h('span', { key: skill + index, className: 'skill-tag skill-tag--display', style: { cursor: 'default' } }, skill)
     ),
-    overflow.hiddenCount > 0 &&
-      h(
-        'span',
-        { className: 'feed-card-skills-more' },
-        `+${overflow.hiddenCount}`,
-      )
+    overflow.hiddenCount > 0 && h('span', { className: 'feed-card-skills-more' }, `+${overflow.hiddenCount}`)
   );
 });
 

@@ -35,19 +35,14 @@ export {
  * (Локальная, УПРОЩЕННАЯ версия, СПЕЦИАЛЬНО для ленты людей)
  * (Взята из react-feed.js)
  */
-export const t = (k, d={}) => {
-  const dict = {
-    'feed_empty': 'Ничего не найдено',
-    'job_not_specified': 'Опыт не указан',
-    'links': 'Ссылки',
-    'skills': 'Навыки',
-    'experience': 'Опыт работы',
-    'education': 'Образование',
-    'present_time': 'по наст. время'
-  };
-  let s = dict[k] || k;
-  Object.entries(d).forEach(([k,v])=>{ s = s.replace(new RegExp(`{${k}}`,'g'), v); });
-  return s;
+export const t = (k, d = {}) => {
+    // Пытаемся найти глобальную функцию
+    if (typeof window.t === 'function') {
+        return window.t(k, d);
+    }
+    // Если вдруг не нашли — возвращаем ключ (чтобы приложение не упало)
+    console.warn(`[i18n] Key '${k}' missed, window.t not ready`);
+    return k;
 };
 
 /**

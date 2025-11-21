@@ -517,3 +517,40 @@ body.theme-glass-overlay input[type="text"]:disabled {
     border-color: var(--glass-border) !important;
     opacity: 0.5;
 }
+
+/* --- GLASS MODE TEXT FIXES (Читаемость форм в стекле) --- */
+
+/* 1. Лейблы полей (Имя, О себе, Тип запроса...) */
+body.theme-dark.theme-glass-overlay .form-group label {
+    color: #ffffff !important;
+    opacity: 0.95 !important; /* Чуть прозрачнее заголовков, но ярче чем было */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    font-weight: 500;
+}
+
+/* 2. Заголовки секций (Ссылки, Опыт, Образование) */
+body.theme-dark.theme-glass-overlay .form-section h2 {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* 3. Чекбокс "По наст. время" */
+body.theme-dark.theme-glass-overlay .checkbox-label {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* 4. Счетчик символов */
+body.theme-dark.theme-glass-overlay .char-counter {
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* 5. Вложенные лейблы в динамических блоках (Опыт/Образование) 
+   Т.к. фон блока темный, лейблы делаем яркими */
+body.theme-dark.theme-glass-overlay .dynamic-item .form-group label {
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-shadow: none; /* Внутри плашки тень не так нужна, но цвет важен */
+}

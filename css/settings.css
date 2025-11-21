@@ -182,3 +182,40 @@ body.theme-glass-overlay .toggle-switch-label {
 body.theme-glass-overlay .toggle-switch-label::before {
     background-color: rgba(255,255,255, 0.8);
 }
+
+/* --- GLASS MODE TEXT FIXES (Читаемость настроек) --- */
+
+/* 1. Основные заголовки групп (Язык, Тема оформления...) */
+body.theme-dark.theme-glass-overlay .settings-group label {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    font-weight: 500;
+}
+
+/* 2. Подписи в блоке "Своя тема" (Цвет фона, Цвет текста...) */
+body.theme-dark.theme-glass-overlay .color-picker-row span {
+    color: #ffffff !important;
+    opacity: 0.95;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 3. Текст переключателя "Режим стекла" */
+body.theme-dark.theme-glass-overlay .glass-toggle-group label {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 4. Текст на кнопках выбора (Светлая, Темная, Русский...)
+   Делаем их белыми, так как фон кнопок полупрозрачный */
+body.theme-dark.theme-glass-overlay .theme-option-button,
+body.theme-dark.theme-glass-overlay .language-option-button {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Активная кнопка (синяя) и так читается хорошо, но можно усилить */
+body.theme-dark.theme-glass-overlay .theme-option-button.active,
+body.theme-dark.theme-glass-overlay .language-option-button.active {
+    text-shadow: none;
+}

@@ -188,15 +188,18 @@ body.theme-glass-overlay .modal-content {
   height: 100dvh;
   height: 100vh;
   z-index: 1001;
-  padding: 0;
+  padding: calc(var(--safe-area-inset-top) + var(--header-offset)) 0 0 0;
+  
   background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
   transition: background-color 0.3s;
 }
+
 #create-post-modal .form-header {
-  padding: 20px 20px 10px 20px;
+  padding: 0 20px 10px 20px;
   margin-bottom: 0;
   flex-shrink: 0;
 }
+
 #create-post-modal .form-content {
   flex: 1;
   overflow-y: auto;
@@ -268,46 +271,6 @@ body.theme-glass-overlay .react-sheet-content {
 
 body.theme-glass-overlay .react-sheet-content.is-ios {
     background-color: var(--glass-bg-ios-fallback);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
-
-.react-sheet-close-button {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    z-index: 10;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    background-color: var(--secondary-bg-color, #efefef);
-    color: var(--main-hint-color, #999999);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    transition: all 0.3s;
-}
-.react-sheet-close-button:active { transform: scale(0.9); }
-
-body.theme-dark .react-sheet-close-button {
-    background-color: var(--main-bg-color, #1c1c1d);
-    color: var(--main-hint-color, #98989e);
-}
-
-body.theme-glass-overlay .react-sheet-close-button {
-    background-color: var(--glass-bg-secondary);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: var(--glass-border);
-    color: var(--main-text-color);
-    opacity: 0.8;
-}
-
-body.theme-glass-overlay .react-sheet-close-button.is-ios {
-    background-color: var(--glass-bg-ios-fallback-secondary);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
 }
@@ -551,4 +514,13 @@ body.theme-dark.theme-glass-overlay .status-tag[data-status="showcase"].active {
     background-color: rgba(255, 149, 0, 0.6);
     border-color: rgba(255, 149, 0, 0.9);
     box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);
+}
+
+/* --- GLASS MODE TEXT FIXES (Заголовки как в модалке навыков) --- */
+body.theme-dark.theme-glass-overlay h1, 
+body.theme-dark.theme-glass-overlay h2,
+body.theme-dark.theme-glass-overlay .form-header h1 {
+    color: #ffffff !important;
+    opacity: 1;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Тень для читаемости на пестром фоне */
 }

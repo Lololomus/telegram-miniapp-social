@@ -31,10 +31,10 @@ function FABMenu({ onCreatePost, onMyPosts, onSaved, onSubscriptions }) {
     
     // Тексты для меню (можно вынести в 't' в utils.js, но пока оставим так для простоты)
     const menuItems = [
-        { icon: '➕', label: 'Создать запрос', action: onCreatePost, color: '#007AFF' },
-        { icon: '📝', label: 'Мои запросы', action: onMyPosts, color: '#34C759' },
-        { icon: '🔖', label: 'Сохраненное', action: onSaved, color: '#FF9500' },
-        { icon: '❤️', label: 'Лента подписок', action: onSubscriptions, color: '#FF3B30' }
+        { icon: '➕', label: t('fab_create_request'), action: onCreatePost, color: '#007AFF' },
+        { icon: '📝', label: t('fab_my_requests'), action: onMyPosts, color: '#34C759' },
+        { icon: '🔖', label: t('fab_saved'), action: onSaved, color: '#FF9500' },
+        { icon: '❤️', label: t('fab_subscriptions'), action: onSubscriptions, color: '#FF3B30' }
     ];
     
     return h('div', {

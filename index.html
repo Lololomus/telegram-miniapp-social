@@ -275,48 +275,49 @@
     </div>
     
     <div id="create-post-modal" class="screen" style="display: none;">
-    <div class="form-header">
-        <h1 data-i18n-key="create_post_title">Новый запрос</h1>
-    </div>
-
-    <div class="form-content">
-        <div class="form-group">
-        <label for="post-type-select" data-i18n-key="post_type_label">Тип запроса:</label>
-        <select id="post-type-select">
-            <option value="looking">🤝 Ищу специалиста</option>
-            <option value="offering">💼 Предлагаю услуги</option>
-            <option value="showcase">🚀 Демонстрация</option>
-        </select>
+        <div class="form-header">
+            <h1 data-i18n-key="create_post_title">Новый запрос</h1>
         </div>
 
-        <div class="form-group">
-        <label for="post-content-field" data-i18n-key="post_content_label">Краткое описание:</label>
-        <textarea id="post-content-field" rows="3" data-i18n-placeholder="post_content_placeholder"></textarea>
+        <div class="form-content">
+            <div class="form-group">
+                <label for="post-type-select" data-i18n-key="post_type_label">Тип запроса:</label>
+                <select id="post-type-select">
+                    <option value="looking" data-i18n-key="post_type_looking">🤝 Ищу специалиста</option>
+                    <option value="offering" data-i18n-key="post_type_offering">💼 Предлагаю услуги</option>
+                    <option value="showcase" data-i18n-key="post_type_showcase">🚀 Демонстрация</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="post-content-field" data-i18n-key="post_content_label">Краткое описание:</label>
+                <textarea id="post-content-field" rows="3" data-i18n-placeholder="post_content_placeholder"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="post-full-description-field" data-i18n-key="post_full_description_label">Полное описание (необязательно):</label>
+                <textarea id="post-full-description-field" rows="5" data-i18n-placeholder="post_full_description_placeholder"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="post-skills-field" data-i18n-key="post_skills_label">Теги (навыки):</label>
+                <div class="skills-input-group">
+                    <input type="text" id="post-skills-field" data-i18n-placeholder="skills_placeholder_posts" />
+                    <button type="button" id="select-post-skills-button" class="skills-input-button" aria-label="Выбрать навыки">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M10 7h8M10 12h8M10 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                            <circle cx="6" cy="7" r="1.5" fill="currentColor"></circle>
+                            <circle cx="6" cy="12" r="1.5" fill="currentColor"></circle>
+                            <circle cx="6" cy="17" r="1.5" fill="currentColor"></circle>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-        <label for="post-full-description-field" data-i18n-key="post_full_description_label">Полное описание (необязательно):</label>
-        <textarea id="post-full-description-field" rows="5" data-i18n-placeholder="post_full_description_placeholder"></textarea>
+        <div class="fab-modal-save-container">
+            <button id="save-post-button" class="action-button" data-i18n-key="publish">Опубликовать</button>
         </div>
-
-        <div class="form-group">
-        <label for="post-skills-field" data-i18n-key="post_skills_label">Теги (навыки):</label>
-        
-        <div class="skills-input-group">
-            <input type="text" id="post-skills-field" data-i18n-placeholder="skills_placeholder_posts" />
-            <button type="button" id="select-post-skills-button" class="skills-input-button" aria-label="Выбрать навыки">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M10 7h8M10 12h8M10 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                    <circle cx="6" cy="7" r="1.5" fill="currentColor"></circle>
-                    <circle cx="6" cy="12" r="1.5" fill="currentColor"></circle>
-                    <circle cx="6" cy="17" r="1.5" fill="currentColor"></circle>
-                </svg>
-            </button>
-        </div>
-        
-        </div>
-    </div><div class="fab-modal-save-container">
-        <button id="save-post-button" class="action-button" data-i18n-key="publish">Опубликовать</button>
     </div>
     </div>
     <template id="skeleton-card-template">

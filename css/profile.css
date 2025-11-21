@@ -552,19 +552,6 @@ body.theme-glass-overlay .fab-main-button:last-child {
     justify-content: center;
     gap: 8px;
 }
-/* Добавляем эмодзи через ::before */
-.post-detail-actions-row .action-button[onClick*="onRespond"]::before {
-    content: '🚀';
-    display: inline-block;
-}
-.post-detail-actions-row .action-button[onClick*="onRepost"]::before {
-    content: '🔗';
-    display: inline-block;
-}
-.post-detail-actions-row .action-button[onClick*="onOpenProfile"]::before {
-    content: '👤';
-    display: inline-block;
-}
 
 /* === 🚫 ANTI-SELECT ДЛЯ FAB И КОНТЕЙНЕРОВ ПРОФИЛЯ 🚫 === */
 .fab-main-container *,
