@@ -1,4 +1,4 @@
-// react/posts/PostsApp.js (ESM)
+// react/posts/PostsApp.js
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { createRoot } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/client/+esm';
@@ -45,10 +45,9 @@ function App({ mountInto }) {
   const [showMyPostsOnly, setShowMyPostsOnly] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   
-  // Реф для контейнера списка (если понадобится скролл)
   const listContainerRef = useRef(null);
   
-  // --- 1. ЗАГРУЗКА ДАННЫХ ---
+  // --- ЗАГРУЗКА ---
   const fetchPosts = useCallback(async () => {
     if (!cfg?.backendUrl) return; 
     setIsLoading(true);
@@ -66,7 +65,7 @@ function App({ mountInto }) {
     finally { setIsLoading(false); }
   }, [cfg, showMyPostsOnly]);
 
-  // --- 2. ИНИЦИАЛИЗАЦИЯ КОНФИГА ---
+  // --- ИНИЦИАЛИЗАЦИЯ ---
   useEffect(() => {
     (async () => {
         try {
@@ -78,33 +77,25 @@ function App({ mountInto }) {
 
   useEffect(() => { if (cfg) { fetchPosts(); } }, [cfg, fetchPosts]);
 
-  // Слушаем обновление постов (создание/удаление)
   useEffect(() => { 
       const handleUpdate = () => { fetchPosts(); }; 
       document.addEventListener('posts-updated', handleUpdate); 
       return () => document.removeEventListener('posts-updated', handleUpdate); 
   }, [fetchPosts]);
 
-  // --- 3. ВНЕШНИЕ СОБЫТИЯ (Фильтры из модалки, переключение режима) ---
+  // --- ВНЕШНИЕ СОБЫТИЯ ---
   useEffect(() => {
     const handleSetMode = (event) => {
         if (!event.detail) return;
-        
-        // Переключение "Мои посты"
         if (typeof event.detail.showMyPostsOnly === 'boolean') {
             const newMode = event.detail.showMyPostsOnly;
             if (newMode !== showMyPostsOnly) {
                 setPosts([]); setFiltered([]); setShowMyPostsOnly(newMode);
             }
         }
-        
-        // Установка навыков из модалки
         if (Array.isArray(event.detail.skills)) {
              setSelectedSkills(event.detail.skills);
-             // Мы не обновляем input.value здесь напрямую, это сделает отдельный useEffect
         }
-        
-        // Установка статуса (Looking/Offering)
         if (event.detail.status !== undefined) {
             setStatusFilter(event.detail.status);
         }
@@ -113,7 +104,6 @@ function App({ mountInto }) {
     return () => document.removeEventListener('set-posts-feed-mode', handleSetMode);
   }, [showMyPostsOnly]);
 
-  // Обновление заголовка
   useEffect(() => {
     const titleEl = document.querySelector('#posts-feed-container h1[data-i18n-key="feed_posts_title"]');
     if (!titleEl) return; 
@@ -121,17 +111,11 @@ function App({ mountInto }) {
     else titleEl.textContent = t('feed_posts_title');
   }, [showMyPostsOnly]); 
 
-  // --- 4. ФИЛЬТРАЦИЯ (ЯДРО ПОИСКА) ---
+  // --- ФИЛЬТРАЦИЯ ---
   useEffect(() => {
-    // Подготовка поискового запроса
     const qLower = (debouncedSearchQuery || '').toLowerCase().trim();
-    
-    // Разбиваем запрос на слова (по пробелам и запятым)
     const terms = qLower ? qLower.replace(/,/g, ' ').split(' ').map((s) => s.trim()).filter(Boolean) : [];
-    
-    // Выбранные теги (из модалки или быстрых фильтров)
     const selectedSkillsLower = (selectedSkills || []).map((s) => s.toLowerCase());
-    
     const currentStatus = statusFilter;
 
     if (!posts || posts.length === 0) { setFiltered([]); return; }
@@ -141,14 +125,8 @@ function App({ mountInto }) {
       const authorNameLower = (p.author?.first_name || '').toLowerCase();
       const contentLower = (p.content || '').toLowerCase();
       
-      // 1. Фильтр по статусу (Ищет/Предлагает)
       const statusMatch = !currentStatus || p.post_type === currentStatus;
-      
-      // 2. Фильтр по тегам (должны совпадать ВСЕ выбранные теги)
       const tagMatch = selectedSkillsLower.length === 0 || selectedSkillsLower.every((selSkill) => postSkillsLower.includes(selSkill));
-      
-      // 3. Текстовый поиск (Имя, Текст поста, Навыки внутри поста)
-      // Ищем каждое введенное слово
       const textMatch = terms.length === 0 || terms.every((term) => 
           authorNameLower.includes(term) || 
           contentLower.includes(term) || 
@@ -160,35 +138,25 @@ function App({ mountInto }) {
     setFiltered(newFiltered);
   }, [posts, debouncedSearchQuery, selectedSkills, statusFilter]);
 
-  // --- 5. СВЯЗКА С НАТИВНЫМ INPUT (ИСПРАВЛЕНО) ---
+  // --- UI СВЯЗКИ ---
   useEffect(() => {
     const input = document.getElementById('posts-search-input');
     if (!input) return;
-    
-    // Простой обработчик: просто берет текст. Никакой магии.
-    const onInput = () => {
-      setSearchQuery(input.value || '');
-    };
-    
+    const onInput = () => { setSearchQuery(input.value || ''); };
     input.addEventListener('input', onInput); 
     return () => { input.removeEventListener('input', onInput); };
   }, []);
 
-  // --- 6. СИНХРОНИЗАЦИЯ INPUT С ВЫБРАННЫМИ НАВЫКАМИ ---
-  // Если навыки изменились (через модалку), обновляем текст в поле поиска
   useEffect(() => {
     const input = document.getElementById('posts-search-input');
     if (!input) return;
-
     const newVal = selectedSkills.join(', ');
     if (input.value !== newVal) {
         input.value = newVal;
-        // Обновляем и стейт поиска, чтобы фильтрация сработала корректно
         setSearchQuery(newVal);
     }
   }, [selectedSkills]);
 
-  // Открытие модалки навыков (кнопка фильтра в поле поиска)
   useEffect(() => {
     const skillButton = document.getElementById('open-skills-modal-button-posts'); if (!skillButton) return;
     const handleClick = () => { 
@@ -200,25 +168,20 @@ function App({ mountInto }) {
     return () => skillButton.removeEventListener('click', handleClick);
   }, [selectedSkills]);
 
-  // Быстрый фильтр (клик по тегу)
   const onToggleSkill = useCallback((skill) => {
     const lowerSkill = skill.toLowerCase();
     let newSelectedSkills;
     const isSelected = selectedSkills.some((s) => s.toLowerCase() === lowerSkill);
-    
     if (isSelected) {
         newSelectedSkills = selectedSkills.filter((s) => s.toLowerCase() !== lowerSkill);
     } else {
       const canonicalSkill = allSkills.find((s) => s.toLowerCase() === lowerSkill) || skill;
       newSelectedSkills = [...selectedSkills, canonicalSkill].sort((a, b) => a.localeCompare(b));
     }
-    
     setSelectedSkills(newSelectedSkills);
-    // Сброс статуса при клике по тегам (как в эталоне, опционально)
-    // setStatusFilter(null); 
   }, [selectedSkills, allSkills]);
 
-  // --- МОДАЛЬНЫЕ ОКНА ---
+  // --- HANDLERS ---
   const handleOpenProfile = useCallback(async (author) => {
     if (!author || !author.user_id) return;
     if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light');
@@ -309,11 +272,63 @@ function App({ mountInto }) {
       e.preventDefault(); e.stopPropagation();
   }, []);
 
-  return h('div', { onContextMenu: preventSystemMenu, style: { padding: '0 12px 12px' } },
-    (isLoading && filtered.length === 0) ? h(SkeletonList, null) : h(PostsList, { 
-          posts: filtered, onOpenProfile: handleOpenProfile, onOpenPostSheet: handleOpenPostSheet, onOpenContextMenu: handleOpenContextMenu, onTagClick: onToggleSkill, isMyPosts: showMyPostsOnly, onEditPost: handleEditPost, onDeletePost: handleDeletePost, containerRef: listContainerRef, contextMenuPost: contextMenuState.post, menuLayout: menuLayout
-    }),
+  // --- RENDER ---
+  return h('div', { 
+      onContextMenu: preventSystemMenu, 
+      style: { 
+          padding: '0 12px 12px',
+          position: 'relative', // Якорь для абсолютного позиционирования скелетов
+          minHeight: '200px'
+      } 
+  },
+      // 🔥 ФИКС 1: AnimatePresence для чистого переключения без "призраков"
+      h(AnimatePresence, { mode: 'popLayout' }, 
+          (isLoading && filtered.length === 0) 
+              ? h(motion.div, {
+                  key: 'skeleton-layer',
+                  initial: { opacity: 1 },
+                  animate: { opacity: 1 },
+                  exit: { opacity: 0, transition: { duration: 0.2 } }, 
+                  style: { 
+                      position: 'absolute', // Лежит поверх контента
+                      top: 0, 
+                      left: '12px', 
+                      width: 'calc(100% - 24px)', 
+                      zIndex: 10, 
+                      pointerEvents: 'none'
+                  }
+                }, 
+                  h(SkeletonList, null)
+                )
+              : h(motion.div, {
+                  key: 'content-layer',
+                  initial: { opacity: 1 },
+                  animate: { opacity: 1 },
+                  exit: { opacity: 0 },
+                  style: { 
+                      position: 'relative', 
+                      width: '100%', 
+                      zIndex: 1 
+                  }
+                },
+                  h(PostsList, { 
+                      posts: filtered, 
+                      onOpenProfile: handleOpenProfile, 
+                      onOpenPostSheet: handleOpenPostSheet, 
+                      onOpenContextMenu: handleOpenContextMenu, 
+                      onTagClick: onToggleSkill, 
+                      isMyPosts: showMyPostsOnly, 
+                      onEditPost: handleEditPost, 
+                      onDeletePost: handleDeletePost, 
+                      containerRef: listContainerRef, 
+                      contextMenuPost: contextMenuState.post, 
+                      menuLayout: menuLayout
+                  })
+                )
+      ),
+      
     h(EmptyState, { text: t('feed_empty'), visible: !isLoading && filtered.length === 0 }),
+    
     h(Suspense, { fallback: h(ProfileFallback) },
         h(AnimatePresence, { mode: "sync" }, 
           profileToShow && h(ProfileSheet, { key: `profile-${profileToShow.user_id}`, user: profileToShow, onClose: handleCloseProfile }),
@@ -327,7 +342,6 @@ function App({ mountInto }) {
   );
 }
 
-// --- Монтирование ---
 window.REACT_FEED_POSTS = true;
 
 function mountReactPostsFeed() {
@@ -336,19 +350,13 @@ function mountReactPostsFeed() {
   if (!hostList) return;
   
   if (window.__REACT_POSTS_ROOT__) {
-      try {
-          console.log("REACT Posts: Unmounting previous root...");
-          window.__REACT_POSTS_ROOT__.unmount();
-      } catch (e) { console.warn(e); }
+      try { window.__REACT_POSTS_ROOT__.unmount(); } catch (e) { console.warn(e); }
       window.__REACT_POSTS_ROOT__ = null;
   }
 
   const zombies = document.querySelectorAll('.post-context-menu-backdrop, .post-context-menu-container, .react-sheet-content, .react-sheet-backdrop');
   zombies.forEach(el => {
-      if (el.parentNode === document.body) {
-          console.log("REACT Posts: Removing zombie element", el);
-          el.remove();
-      }
+      if (el.parentNode === document.body) el.remove();
   });
 
   hostList.innerHTML = '';
@@ -356,9 +364,7 @@ function mountReactPostsFeed() {
   try {
       const root = createRoot(hostList);
       window.__REACT_POSTS_ROOT__ = root;
-      
       root.render(h(PhoneShell, null, h(App, { mountInto: hostList })));
-      console.log("REACT Posts: Component mounted.");
   } catch (e) { console.error("REACT Posts: Failed to mount:", e); }
 }
 

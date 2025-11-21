@@ -44,13 +44,13 @@ const PostCard = memo(function PostCard({
   const timeAgo = formatPostTime(created_at);
   const postKey = post.post_id || `temp-post-${Math.random()}`;
 
+  // --- Логика жестов ---
   const gestureTimerRef = useRef(null);
   const pointerStartRef = useRef(null);
   const cardRef = useRef(null);
   const POINTER_SLOP = 5;
 
   const handlePointerDown = (e) => {
-    // Если меню открыто, блокируем начало жестов
     if (disableClick || isContextMenuOpen) return;
     
     pointerStartRef.current = { y: e.pageY };
@@ -76,12 +76,9 @@ const PostCard = memo(function PostCard({
   };
 
   const handlePointerUp = (e) => {
-    // Блокируем обработку клика, если меню открыто
     if (disableClick || isContextMenuOpen) return;
-    
     if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
     clearTimeout(gestureTimerRef.current);
-    
     if (pointerStartRef.current) {
       const target = e.target;
       if (target.closest('[data-action="open-profile"]')) {
@@ -97,16 +94,31 @@ const PostCard = memo(function PostCard({
   const isActive = isContextMenuOpen;
   const liftY = isActive && !isWrapped ? -(menuLayout?.verticalAdjust || 0) : 0;
 
+  // 🔥 ФИКС 2: Правильная анимация волны
+  // Мы используем transitionConfig напрямую в компоненте
+  const transitionConfig = buildFeedItemTransition(index);
+
   return h(
     motion.div,
     {
       ref: cardRef,
+      // Layout включен (как в оригинале), чтобы меню работало и карточки двигались красиво
       layout: disableClick ? undefined : (isIOS ? false : 'position'),
+      
       variants: cardVariants,
       initial: 'hidden',
-      animate: 'visible', 
       exit: 'exit',
-      transition: buildFeedItemTransition(index),
+      
+      // Явное управление состоянием для гарантии работы transition
+      animate: { 
+          opacity: 1, 
+          x: 0, 
+          scale: isActive ? 1.03 : 1, 
+          y: liftY 
+      },
+      
+      transition: transitionConfig, // Применяем волну
+      
       key: postKey,
       className: 'react-feed-card-wrapper',
       style: {
@@ -114,8 +126,6 @@ const PostCard = memo(function PostCard({
         cursor: disableClick ? 'inherit' : 'pointer',
         position: 'relative',
         zIndex: isContextMenuOpen ? 2001 : 'auto',
-        // ВАЖНО: Блокируем клики по самой карточке, когда меню открыто. 
-        // Клик пройдет насквозь в Backdrop меню.
         pointerEvents: isContextMenuOpen ? 'none' : 'auto', 
         ...styleOverride,
       },
@@ -128,7 +138,7 @@ const PostCard = memo(function PostCard({
       motion.div,
       {
         className: 'react-feed-card',
-        animate: { scale: isActive ? 1.03 : 1, y: liftY },
+        // Внутренняя пружина для плавности
         transition: { type: 'spring', stiffness: 300, damping: 30 },
         style: { padding: 15, width: '100%', borderRadius: 12, overflow: 'hidden' },
       },
