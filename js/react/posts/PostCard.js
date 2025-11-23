@@ -4,10 +4,10 @@ import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm'
 import {
   t,
   formatPostTime,
+  isMobile,
   isIOS,
   cardVariants,
-  buildFeedItemTransition,
-  useTwoLineSkillsOverflow,
+  FEED_ITEM_SPRING,
 } from './posts_utils.js';
 
 const h = React.createElement;
@@ -19,32 +19,20 @@ const PostCard = memo(function PostCard({
   onOpenProfile,
   onOpenPostSheet,
   onOpenContextMenu,
-  onTagClick,
   disableClick = false,
   styleOverride = {},
   showActionsSpacer = false,
   isContextMenuOpen,
-  menuLayout,
-  isWrapped = false,
+  isHighlight = false, 
 }) {
   const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
   const { content = 'Нет описания', post_type = 'default', skill_tags = [], created_at } = post;
-
-  const avatar = author.photo_path
-    ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}`
-    : 'https://t.me/i/userpic/320/null.jpg';
-
-  const type_map = {
-    looking: { text: t('post_type_looking'), color: '#0A84FF' },
-    offering: { text: t('post_type_offering'), color: '#34C759' },
-    showcase: { text: t('post_type_showcase'), color: '#FF9500' },
-  };
-
+  const avatar = author.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
+  const type_map = { looking: { text: t('post_type_looking'), color: '#0A84FF' }, offering: { text: t('post_type_offering'), color: '#34C759' }, showcase: { text: t('post_type_showcase'), color: '#FF9500' } };
   const type_info = type_map[post_type] || { text: t('post_type_default'), color: '#8E8E93' };
   const timeAgo = formatPostTime(created_at);
   const postKey = post.post_id || `temp-post-${Math.random()}`;
-
-  // --- Логика жестов ---
+  
   const gestureTimerRef = useRef(null);
   const pointerStartRef = useRef(null);
   const cardRef = useRef(null);
@@ -52,11 +40,9 @@ const PostCard = memo(function PostCard({
 
   const handlePointerDown = (e) => {
     if (disableClick || isContextMenuOpen) return;
-    
     pointerStartRef.current = { y: e.pageY };
     if (tg?.disableVerticalSwipes) tg.disableVerticalSwipes();
     if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
-
     gestureTimerRef.current = setTimeout(() => {
       if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
       onOpenContextMenu(post, cardRef.current);
@@ -64,69 +50,89 @@ const PostCard = memo(function PostCard({
       if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
     }, 300);
   };
-
   const handlePointerMove = (e) => {
     if (disableClick || !pointerStartRef.current) return;
     const deltaY = Math.abs(e.pageY - pointerStartRef.current.y);
-    if (deltaY > POINTER_SLOP) {
-      clearTimeout(gestureTimerRef.current);
-      pointerStartRef.current = null;
-      if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
-    }
+    if (deltaY > POINTER_SLOP) { clearTimeout(gestureTimerRef.current); pointerStartRef.current = null; if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes(); }
   };
-
   const handlePointerUp = (e) => {
     if (disableClick || isContextMenuOpen) return;
     if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
     clearTimeout(gestureTimerRef.current);
     if (pointerStartRef.current) {
       const target = e.target;
-      if (target.closest('[data-action="open-profile"]')) {
-        e.stopPropagation();
-        onOpenProfile(author);
-      } else {
-        onOpenPostSheet(post);
-      }
+      if (target.closest('[data-action="open-profile"]')) { e.stopPropagation(); onOpenProfile(author); } else { onOpenPostSheet(post); }
       pointerStartRef.current = null;
     }
   };
 
-  const isActive = isContextMenuOpen;
-  const liftY = isActive && !isWrapped ? -(menuLayout?.verticalAdjust || 0) : 0;
+  const layoutMode = (disableClick || isHighlight) ? undefined : (isMobile ? false : 'position');
+  
+  const cloneStyles = isHighlight ? {
+      boxShadow: '0 12px 40px rgba(0,0,0,0.4)', 
+      transition: 'none',
+      zIndex: 10,
+      backgroundColor: 'var(--secondary-bg-color)',
+      backdropFilter: 'none',
+      WebkitBackdropFilter: 'none',
+  } : {
+      transition: 'transform 0.2s ease, background-color 0.3s, border-color 0.3s',
+  };
 
-  // 🔥 ФИКС 2: Правильная анимация волны
-  // Мы используем transitionConfig напрямую в компоненте
-  const transitionConfig = buildFeedItemTransition(index);
+  // Анимации:
+  // На мобильных отключаем (пустой объект), чтобы не было мерцания всей карточки.
+  // На ПК оставляем волну.
+  const variants = isMobile 
+    ? {} 
+    : (isIOS 
+        ? cardVariants 
+        : {
+            hidden: { opacity: 0, x: -20 }, 
+            visible: { opacity: 1, x: 0 },
+            exit: { opacity: 0, x: -10 }
+        }
+    );
+
+  const isFirstBatch = index < 10; 
+  // На мобильных delay=0 (мгновенно). На ПК сохраняем волну.
+  const delayStep = 0.05; 
+  const delay = (!isMobile && isFirstBatch) ? index * delayStep : 0;
+
+  const fixedTransition = {
+      ...FEED_ITEM_SPRING, 
+      delay: delay,        
+      x: { ...FEED_ITEM_SPRING, delay: delay },
+      opacity: { duration: 0.2, delay: delay },
+      scale: { ...FEED_ITEM_SPRING, delay: delay }
+  };
+
+  const visibleState = { opacity: 1, x: 0, scale: 1 };
+  const shouldForceAnimate = isMobile || isFirstBatch || isHighlight;
 
   return h(
     motion.div,
     {
       ref: cardRef,
-      // Layout включен (как в оригинале), чтобы меню работало и карточки двигались красиво
-      layout: disableClick ? undefined : (isIOS ? false : 'position'),
+      layout: layoutMode,
+      variants: variants,
+      // На мобильных сразу visible
+      initial: isMobile ? "visible" : (isHighlight ? "visible" : "hidden"),
       
-      variants: cardVariants,
-      initial: 'hidden',
-      exit: 'exit',
+      animate: shouldForceAnimate ? visibleState : undefined,
+      whileInView: shouldForceAnimate ? undefined : visibleState,
+      viewport: shouldForceAnimate ? undefined : { once: true, amount: 0, margin: "200px" },
+
+      exit: "exit",
       
-      // Явное управление состоянием для гарантии работы transition
-      animate: { 
-          opacity: 1, 
-          x: 0, 
-          scale: isActive ? 1.03 : 1, 
-          y: liftY 
-      },
-      
-      transition: transitionConfig, // Применяем волну
+      transition: isMobile ? { duration: 0 } : (isHighlight ? { duration: 0 } : fixedTransition),
       
       key: postKey,
       className: 'react-feed-card-wrapper',
       style: {
         width: '100%',
-        cursor: disableClick ? 'inherit' : 'pointer',
+        cursor: disableClick ? 'default' : 'pointer',
         position: 'relative',
-        zIndex: isContextMenuOpen ? 2001 : 'auto',
-        pointerEvents: isContextMenuOpen ? 'none' : 'auto', 
+        pointerEvents: disableClick ? 'none' : 'auto',
         ...styleOverride,
       },
       onPointerDown: handlePointerDown,
@@ -138,9 +144,13 @@ const PostCard = memo(function PostCard({
       motion.div,
       {
         className: 'react-feed-card',
-        // Внутренняя пружина для плавности
-        transition: { type: 'spring', stiffness: 300, damping: 30 },
-        style: { padding: 15, width: '100%', borderRadius: 12, overflow: 'hidden' },
+        style: { 
+            padding: 15, 
+            width: '100%', 
+            borderRadius: 12, 
+            overflow: 'hidden',
+            ...cloneStyles 
+        },
       },
       h(
         'div',
@@ -154,12 +164,22 @@ const PostCard = memo(function PostCard({
           h(
             'div',
             { style: { height: 44, width: 44, borderRadius: '50%', background: 'var(--secondary-bg-color)', overflow: 'hidden' } },
-            h('img', { src: avatar, alt: '', loading: 'lazy', style: { width: '100%', height: '100%', objectFit: 'cover' } }),
+            // 🔥 ИСПРАВЛЕНИЕ МЕРЦАНИЯ АВАТАРА
+            // 1. Убрали loading="lazy" (теперь грузится сразу).
+            // 2. Добавили decoding="async" (не блокирует поток).
+            // 3. Добавили draggable="false" (чтобы не таскалось случайно).
+            h('img', { 
+                src: avatar, 
+                alt: '', 
+                decoding: 'async', 
+                draggable: 'false',
+                style: { width: '100%', height: '100%', objectFit: 'cover' } 
+            })
           ),
         ),
         h(
           'div',
-          { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, marginRight: '10px' } },
+          { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, marginRight: '5px' } },
           h(
             'button',
             {
@@ -176,39 +196,22 @@ const PostCard = memo(function PostCard({
         ),
         h(
           'div',
-          { style: { display: 'inline-flex', alignItems: 'center', padding: '6px 12px', borderRadius: 8, background: type_info.color, color: '#FFFFFF', fontSize: 13, fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' } },
+          { style: { display: 'inline-flex', alignItems: 'center', padding: '6px 10px', borderRadius: 8, background: type_info.color, color: '#FFFFFF', fontSize: 13, fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' } },
           type_info.text,
         ),
         showActionsSpacer && h('div', { style: { width: '40px', flexShrink: 0 } }),
       ),
-      h(
-        'p',
-        { style: { margin: 0, fontSize: 15, lineHeight: 1.5, color: 'var(--main-text-color, #000)', whiteSpace: 'pre-wrap', maxHeight: '4.5em', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', pointerEvents: 'none' } },
-        content,
-      ),
-      h(PostSkillTags, { skills: skill_tags }),
+      
+      h('p', { className: 'post-content-clamped' }, content),
+      
+      skill_tags && skill_tags.length > 0 && h(
+          'div',
+          { className: 'feed-card-skills-container' },
+          skill_tags.map((skill, i) => 
+              h('span', { key: i, className: 'skill-tag skill-tag--display', style: { cursor: 'default' } }, skill)
+          )
+      )
     ),
-  );
-});
-
-const PostSkillTags = memo(function PostSkillTags({ skills }) {
-  const containerRef = useRef(null);
-  const overflow = useTwoLineSkillsOverflow(containerRef, skills.length);
-
-  if (!skills || skills.length === 0) return null;
-
-  return h(
-    'div',
-    {
-      layout: false, 
-      ref: containerRef,
-      className: 'feed-card-skills-container',
-      style: { marginTop: 12, pointerEvents: 'none' },
-    },
-    skills.slice(0, overflow.visibleCount).map((skill, index) =>
-      h('span', { key: skill + index, className: 'skill-tag skill-tag--display', style: { cursor: 'default' } }, skill)
-    ),
-    overflow.hiddenCount > 0 && h('span', { className: 'feed-card-skills-more' }, `+${overflow.hiddenCount}`)
   );
 });
 

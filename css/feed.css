@@ -13,25 +13,30 @@
 .feed-list {
     display: flex;
     flex-direction: column;
-    gap: 12px; /* ✅ ИСПРАВЛЕНИЕ (Item 1): Уменьшен gap с 15px до 12px */
+    gap: 12px;
     width: 100%;
+    /* Важно для позиционирования абсолютных элементов (например, скелетонов при загрузке) */
+    position: relative; 
+    min-height: 100px;
 }
 
 /* --- СТИЛИ ДЛЯ ФИЛЬТРА ЛЕНТЫ --- */
-.feed-filter {
-    width: 100%;
-    margin-bottom: 8px;
-}
-#feed-search-input { /* ID используется и для ленты людей, и для постов */
-    width: 100%;
-    padding: 14px 18px;
-    font-size: 16px;
-    border-radius: 10px;
+/* --- ФИЛЬТРЫ --- */
+.feed-filter { width: 100%; margin-bottom: 8px; }
+
+#feed-search-input, #posts-search-input {
+    width: 100%; padding: 14px 18px; font-size: 16px; border-radius: 10px;
     border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
     background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
     color: var(--main-text-color, var(--tg-theme-text-color, #000000));
     transition: border-color 0.2s ease-out, background-color 0.2s ease-out;
 }
+
+#feed-search-input:focus, #posts-search-input:focus {
+    outline: none; border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+}
+
 #posts-search-input { /* Отдельный ID для поля поиска в постах */
     width: 100%;
     padding: 14px 18px;
@@ -43,130 +48,86 @@
     transition: border-color 0.2s ease-out, background-color 0.2s ease-out;
 }
 
-#feed-search-input:focus,
-#posts-search-input:focus {
-    outline: none;
-    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+/* --- БЫСТРЫЕ ФИЛЬТРЫ --- */
+.quick-filters {
+    margin-top: 0; display: flex; flex-wrap: nowrap; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; padding-bottom: 10px; width: 100%;
+    justify-content: flex-start; min-width: 0;
 }
-
-/* --- Стили для Быстрых фильтров (в ленте людей и постов) --- */
-.quick-filters { /* Используется обоими React-компонентами */
-    margin-top: 0;
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 10px;
-    width: 100%;
-    justify-content: flex-start;
-    min-width: 0;
-}
-/* УДАЛЕНЫ БЛОКИ:
-   .quick-filters .skill-tag
-   .quick-filters .skill-tag.is-selected
-   Они теперь .skill-tag--filter в /css/components/tags.css 
-*/
 .quick-filters::-webkit-scrollbar { height: 4px; }
 .quick-filters::-webkit-scrollbar-track { background: transparent; }
 .quick-filters::-webkit-scrollbar-thumb { background-color: var(--secondary-bg-color, #ccc); border-radius: 2px; }
 
-/* --- СТИЛИ ДЛЯ SKELETON-ЗАГРУЗКИ --- */
+/* --- SKELETON (Заглушки) --- */
 .skeleton-card {
     background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    border-radius: 12px;
-    padding: 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    width: 100%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    overflow: hidden;
-    position: relative; /* Для анимации */
+    border-radius: 12px; padding: 15px; display: flex; align-items: center;
+    gap: 15px; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    overflow: hidden; position: relative;
 }
-/* Эффект "мерцания" */
+/* Эффект мерцания */
 .skeleton-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        to right,
-        transparent 0%,
-        var(--main-bg-color, #ffffff) 50%,
-        transparent 100%
-    );
-    opacity: 0.15;
-    animation: shimmer 1.5s infinite linear;
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to right, transparent 0%, var(--main-bg-color, #ffffff) 50%, transparent 100%);
+    opacity: 0.15; animation: shimmer 1.5s infinite linear;
 }
-.skeleton-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: var(--main-bg-color, #ffffff);
-    flex-shrink: 0;
-    opacity: 0.3;
-}
-.skeleton-info {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.skeleton-line {
-    width: 100%;
-    height: 16px;
-    border-radius: 4px;
-    background-color: var(--main-bg-color, #ffffff);
-    opacity: 0.3;
-}
+.skeleton-avatar { width: 50px; height: 50px; border-radius: 50%; background-color: var(--main-bg-color, #ffffff); flex-shrink: 0; opacity: 0.3; }
+.skeleton-info { flex-grow: 1; display: flex; flex-direction: column; gap: 8px; }
+.skeleton-line { width: 100%; height: 16px; border-radius: 4px; background-color: var(--main-bg-color, #ffffff); opacity: 0.3; }
 .skeleton-line.short { width: 60%; }
 
-/* --- Стили для React-карточек (FeedCard в react-feed.js и PostCard в react-posts-feed.js) --- */
-/* Используется обоими компонентами */
+/* --- REACT КАРТОЧКА (ATOM) --- */
 .react-feed-card {
-    /* Базовые стили для светлой темы и "Авто" */
     background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
     border: 1px solid var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    /* Плавная смена темы */
     transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
-    transform: translateZ(0); 
-    will-change: transform, opacity;
-    backface-visibility: hidden; /* Для iOS иногда помогает */
-    /* ✅ ИСПРАВЛЕНИЕ (Long-Press Bug): Запрещаем выделение текста */
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+ */
-    user-select: none; /* Standard */
+    transform: translateZ(0); will-change: transform, opacity;
+    backface-visibility: hidden;
+    
+    /* Защита от случайного выделения текста при скролле/жестах */
+    -webkit-user-select: none; 
+    -moz-user-select: none; 
+    -ms-user-select: none; 
+    user-select: none;
 }
 
-/* Контейнер навыков в карточке (люди) */
-.feed-card-skills-container {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  
-  /* ✅ ФОРМУЛА:
-     (56px * scale) = Высота контента.
-     + 7px = Gap (6px) + 1px микро-буфер.
-     Это очень плотно, чтобы не дать шанса 3-й строке мигнуть. */
-  max-height: calc(56px * var(--ui-scale, 1) + 7px);
-  
-  align-content: flex-start;
-  overflow: hidden;
-  min-height: 28px;
-  
-  /* box-sizing должен быть content-box по умолчанию для div, 
-     но если у тебя глобально стоит border-box, то padding входит в высоту.
-     Давай явно укажем border-box и учтем padding в формуле. */
-  box-sizing: border-box;
-  padding-bottom: 1px;
+/* 1. Оптимизация текста поста */
+.post-content-clamped {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--main-text-color, #000000);
+    white-space: pre-wrap;
+    
+    /* Жесткое ограничение высоты (~3 строки) */
+    max-height: 4.5em; 
+    overflow: hidden; 
+    position: relative;
+    
+    /* Градиентная маска внизу вместо троеточия (дешевле для браузера чем line-clamp) */
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    
+    /* Текст не кликабелен внутри карточки (клик идет на карточку) */
+    pointer-events: none;
+}
 
-  contain: none;
-  min-height: 28px; /* Чтобы блок никогда не схлопывался в 0 */
+/* 2. Оптимизация контейнера навыков */
+.feed-card-skills-container {
+    margin-top: 12px;
+    display: flex;
+    /* Запрещаем перенос строк, чтобы не было скачков высоты */
+    flex-wrap: nowrap; 
+    gap: 6px;
+    /* Обрезаем всё, что не влезает */
+    overflow: hidden; 
+    width: 100%;
+    position: relative;
+    pointer-events: none;
+    
+    /* Маска справа, плавно скрывающая невлезшие теги */
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
 }
 
 /* Временная проверка (или фикс), добавьте в конец css */

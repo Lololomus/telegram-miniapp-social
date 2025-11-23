@@ -1,17 +1,11 @@
 // react/posts/posts_utils.js
-//
-// Этот файл содержит ТОЛЬКО утилиты, уникальные для /react/posts/
-// (Расширенный 't', 'formatPostTime', 'CloseButton').
-// Все остальное импортируется из /react/shared/utils.js
-//
-// ИСПРАВЛЕНИЕ: Путь к 'shared' был '../../react/shared/utils.js', стал '../shared/utils.js'
+// Утилиты для ленты постов (расширяет shared)
 
 import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 const h = React.createElement;
 
 // --- ИМПОРТ ОБЩИХ УТИЛИТ ---
-// Мы импортируем их, чтобы затем ре-экспортировать 
-// для удобства других компонентов в этой папке.
+// Мы ре-экспортируем их, чтобы компоненты могли брать всё из одного места
 export {
     tg,
     isIOS,
@@ -27,13 +21,18 @@ export {
     FEED_ITEM_DELAY_STEP,
     buildFeedItemTransition,
     EmptyState,
-    useTwoLineSkillsOverflow,
+    // useTwoLineSkillsOverflow больше не экспортируем, так как перешли на CSS
     useControlMode,
     useBodyScrollLock,
     useSheetLogic,
     SheetControls,
 } from '../shared/react_shared_utils.js';
 
+// --- HYBRID CORE: Детектор мобильных устройств ---
+// Включает Android и iOS. Используется для отключения тяжелых layout-анимаций.
+export const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+// Локальная функция перевода (обертка)
 export const t = (k, d = {}) => {
     if (typeof window.t === 'function') {
         return window.t(k, d);
@@ -41,6 +40,7 @@ export const t = (k, d = {}) => {
     return k;
 };
 
+// Форматирование времени (например: "5м", "2ч", "1д")
 export function formatPostTime(timestamp) {
     if (!timestamp) return '';
     try {

@@ -16,6 +16,9 @@ function EditPostModal({ post, onClose, onSave }) {
   const [skillTags, setSkillTags] = useState((post.skill_tags || []).join(', '));
   const [currentSkillsArray, setCurrentSkillsArray] = useState(post.skill_tags || []);
   
+  // ✅ НОВОЕ СОСТОЯНИЕ: Скрывает модалку визуально, но не размонтирует её
+  const [isHidden, setIsHidden] = useState(false);
+  
   const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
 
   useEffect(() => { 
@@ -23,14 +26,31 @@ function EditPostModal({ post, onClose, onSave }) {
           if (event.detail && Array.isArray(event.detail.skills)) { 
               setCurrentSkillsArray(event.detail.skills); 
               setSkillTags(event.detail.skills.join(', ')); 
-          } 
+          }
+          // ✅ КОГДА НАВЫКИ ОБНОВИЛИСЬ (Сохранили) -> ПОКАЗЫВАЕМСЯ ОБРАТНО
+          setIsHidden(false);
       }; 
+      
+      // ✅ НОВОЕ: Слушаем событие "Отмены" (нажали "Назад" в навыках)
+      const handleSkillsCancel = () => {
+          setIsHidden(false);
+      };
+
       document.addEventListener('skills-updated-for-post', handleSkillsUpdate); 
-      return () => document.removeEventListener('skills-updated-for-post', handleSkillsUpdate); 
+      document.addEventListener('skills-modal-canceled', handleSkillsCancel); // Слушаем отмену
+
+      return () => {
+          document.removeEventListener('skills-updated-for-post', handleSkillsUpdate);
+          document.removeEventListener('skills-modal-canceled', handleSkillsCancel);
+      };
   }, []);
   
   const handleOpenSkillsModal = useCallback(() => { 
       if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light'); 
+      
+      // ✅ ПЕРЕД ОТКРЫТИЕМ -> СКРЫВАЕМ СЕБЯ
+      setIsHidden(true);
+
       document.dispatchEvent(new CustomEvent('openSkillsModal', { 
           detail: { source: 'editPostModal', skills: currentSkillsArray } 
       })); 
@@ -44,11 +64,16 @@ function EditPostModal({ post, onClose, onSave }) {
       onSave({ post_type: postType, content: content.trim(), full_description: fullDescription.trim(), skill_tags: currentSkillsArray }); 
   };
 
-  // ИСПОЛЬЗУЕМ PORTAL (рендерим в body)
-  // Z-Index 3001 гарантирует, что это окно будет ПОВЕРХ контекстного меню (Z ~2000)
+  // Если скрыто - просто рендерим "пустой" портал или div с display: none
+  // Важно: мы используем display: none, чтобы React не уничтожил состояние (текст, скролл)
+  
   return createPortal(
     h(motion.div, {
-      style: { position: 'fixed', inset: 0, zIndex: 3001, display: 'flex', alignItems: 'flex-end', pointerEvents: 'auto', overflow: 'hidden' },
+      style: { 
+          position: 'fixed', inset: 0, zIndex: 3001, 
+          display: isHidden ? 'none' : 'flex', // ✅ ЛОГИКА ВИДИМОСТИ
+          alignItems: 'flex-end', pointerEvents: 'auto', overflow: 'hidden' 
+      },
       initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }
     },
       h(motion.div, { onClick: onClose, style: { position: 'absolute', inset: 0, background: 'rgba(0,0,0,.5)', cursor: 'pointer' } }),

@@ -710,7 +710,10 @@ document.addEventListener('DOMContentLoaded', () => {
                      UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
                 };
             } else if (state.skillsModalSource === 'editPostModal') {
-                onBackAction = loadPostsFeedData; 
+                onBackAction = () => {
+                    document.dispatchEvent(new CustomEvent('skills-modal-canceled'));
+                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
+                }; 
             } else {
                 onBackAction = loadProfileData;
             }

@@ -33,7 +33,7 @@
   bottom: 0;
   height: 100dvh;
   height: 100vh;
-  z-index: 1001;
+  z-index: 4000; 
   padding: var(--modal-header-offset) var(--screen-padding-x) 0;
   overflow-y: auto;
   background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
@@ -98,7 +98,7 @@
     transform: translateX(-50%);
     width: calc(100% - 40px);
     max-width: 560px;
-    z-index: 1001;
+    z-index: 4001; 
 }
 
 .action-button.fab-modal-save {
