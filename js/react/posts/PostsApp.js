@@ -22,7 +22,7 @@ import PostDetailSheet from './PostDetailSheet.js';
 
 const quickFiltersHost = document.getElementById('posts-quick-filters');
 
-function App({ mountInto }) {
+function App({ mountInto, overlayHost }) {
   const [cfg, setCfg] = useState(null);
   const [posts, setPosts] = useState([]);
   // filtered вычисляется через useMemo
@@ -85,24 +85,30 @@ function App({ mountInto }) {
 
   // --- ВНЕШНИЕ СОБЫТИЯ ---
   useEffect(() => {
-    const handleSetMode = (event) => {
-        if (!event.detail) return;
-        if (typeof event.detail.showMyPostsOnly === 'boolean') {
-            const newMode = event.detail.showMyPostsOnly;
-            if (newMode !== showMyPostsOnly) {
-                setPosts([]); setShowMyPostsOnly(newMode);
-            }
-        }
-        if (Array.isArray(event.detail.skills)) {
-             setSelectedSkills(event.detail.skills);
-        }
-        if (event.detail.status !== undefined) {
-            setStatusFilter(event.detail.status);
-        }
-    };
-    document.addEventListener('set-posts-feed-mode', handleSetMode);
-    return () => document.removeEventListener('set-posts-feed-mode', handleSetMode);
-  }, [showMyPostsOnly]);
+      const handleSetMode = (event) => {
+          if (!event.detail) return;
+          
+          // Логика переключения "Мои посты" / "Все"
+          if (typeof event.detail.showMyPostsOnly === 'boolean') {
+              const newMode = event.detail.showMyPostsOnly;
+              if (newMode !== showMyPostsOnly) {
+                  setPosts([]); 
+                  setShowMyPostsOnly(newMode);
+              }
+          }
+          
+          if (Array.isArray(event.detail.skills)) {
+              setSelectedSkills(event.detail.skills);
+          }
+          
+          if (event.detail.status !== undefined) {
+              setStatusFilter(event.detail.status);
+          }
+      };
+      
+      document.addEventListener('set-posts-feed-mode', handleSetMode);
+      return () => document.removeEventListener('set-posts-feed-mode', handleSetMode);
+    }, [showMyPostsOnly]);
 
   useEffect(() => {
     const titleEl = document.querySelector('#posts-feed-container h1[data-i18n-key="feed_posts_title"]');
@@ -142,6 +148,36 @@ function App({ mountInto }) {
         return true;
     });
   }, [posts, debouncedSearchQuery, selectedSkills, statusFilter]);
+
+  useEffect(() => {
+    if (!overlayHost) return;
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                if (overlayHost.style.display === 'none') {
+                    // Экран скрылся — чистим всё, пока никто не видит
+                    setSearchQuery('');
+                    // setStatusFilter(null); // Если хочешь сбрасывать и фильтр типа
+                }
+            }
+        });
+    });
+    observer.observe(overlayHost, { attributes: true });
+    return () => observer.disconnect();
+  }, [overlayHost]);
+
+  const handleResetFilters = () => {
+        setSearchQuery(''); // Очищаем поиск
+        setSelectedSkills([]); // Очищаем навыки
+        setStatusFilter(null); // Сбрасываем фильтр типа (Ищу/Предлагаю)
+        
+        // Чистим нативные инпуты
+        const searchInput = document.getElementById('posts-search-input');
+        if (searchInput) searchInput.value = '';
+        
+        const statusInput = document.getElementById('posts-status-filter-input');
+        if (statusInput) statusInput.value = '';
+    };
 
   // --- UI СВЯЗКИ ---
   useEffect(() => {
@@ -249,7 +285,11 @@ function App({ mountInto }) {
               })
       ),
       
-    h(EmptyState, { text: t('feed_empty'), visible: !isLoading && filtered.length === 0 }),
+      h(EmptyState, { 
+        text: t('feed_empty'), 
+        visible: !isLoading && filtered.length === 0,
+        onReset: handleResetFilters // <-- Добавляем обработчик
+    }),
     
     h(Suspense, { fallback: h(ProfileFallback) },
         h(AnimatePresence, { mode: "sync" }, 
@@ -267,7 +307,10 @@ function App({ mountInto }) {
 window.REACT_FEED_POSTS = true;
 function mountReactPostsFeed() {
   if (!window.REACT_FEED_POSTS) return;
+  
   const hostList = document.getElementById('posts-list'); 
+  const overlayHost = document.getElementById('posts-feed-container'); 
+
   if (!hostList) return;
   if (window.__REACT_POSTS_ROOT__) { try { window.__REACT_POSTS_ROOT__.unmount(); } catch (e) { console.warn(e); } window.__REACT_POSTS_ROOT__ = null; }
   const zombies = document.querySelectorAll('.post-context-menu-backdrop, .post-context-menu-container, .react-sheet-content, .react-sheet-backdrop');
@@ -276,7 +319,7 @@ function mountReactPostsFeed() {
   try {
       const root = createRoot(hostList);
       window.__REACT_POSTS_ROOT__ = root;
-      root.render(h(PhoneShell, null, h(App, { mountInto: hostList })));
+      root.render(h(PhoneShell, null, h(App, { mountInto: hostList, overlayHost })));
   } catch (e) { console.error("REACT Posts: Failed to mount:", e); }
 }
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', mountReactPostsFeed); } else { mountReactPostsFeed(); }

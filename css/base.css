@@ -334,9 +334,6 @@ body.theme-custom .toast-item.error {
         transform: translateY(10px) scale(0.95);
     }
 }
-/* --- КОНЕЦ НОВОГО БЛОКА --- */
-
-/* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
 
 /* 1. Фон-градиент */
 .glass-background {

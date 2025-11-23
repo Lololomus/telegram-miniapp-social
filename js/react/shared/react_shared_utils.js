@@ -361,25 +361,79 @@ export function buildFeedItemTransition(index = 0) {
   };
 }
 
-export function EmptyState({ text, visible }) {
+export function EmptyState({ text, visible, onReset }) {
+  // Если не видно, рендерим null, чтобы не перекрывать клики
+  if (!visible) return null;
+
   return h(
     'div',
     {
       style: {
-        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         padding: '48px 24px',
-        color: 'rgba(255, 255, 255, 0.9)',
-        fontSize: '18px',
-        fontWeight: 500,
-        letterSpacing: '0.01em',
-        textShadow: '0 0 18px rgba(0, 0, 0, 0.35)',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(6px)',
-        transition: 'opacity 180ms ease-out, transform 180ms ease-out',
-        pointerEvents: 'none',
-        userSelect: 'none',
+        
+        // Анимация появления
+        opacity: 1, // Так как мы возвращаем null при !visible, здесь можно держать 1
+        animation: 'fadeIn 0.2s ease-out',
+        
+        // Чтобы текст не мешал, но кнопка работала
+        pointerEvents: 'none', 
+        width: '100%'
       },
     },
-    text || 'Ничего не найдено',
+    h('div', {
+        style: {
+            color: 'var(--main-hint-color, #999)', // Используем переменную темы
+            fontSize: '17px',
+            fontWeight: 500,
+            textAlign: 'center',
+            marginBottom: '16px',
+            textShadow: '0 1px 2px rgba(0,0,0,0.1)' // Легкая тень для читаемости
+        }
+    }, text || 'Ничего не найдено'),
+
+    // Рендерим кнопку только если передана функция onReset
+    onReset && h('button', {
+        onClick: (e) => {
+            e.stopPropagation(); // Предотвращаем всплытие
+            onReset();
+        },
+        style: {
+            pointerEvents: 'auto', // ВАЖНО: Возвращаем кликабельность кнопке
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'var(--main-button-color, #007aff)', // Синий цвет из темы
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '10px', // Скругление как у инпутов
+            padding: '10px 20px',
+            fontSize: '15px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0, 122, 255, 0.3)', // Синяя тень
+            transition: 'transform 0.2s, opacity 0.2s'
+        }
+    },
+        // SVG Иконка перезагрузки
+        h('svg', {
+            viewBox: '0 0 24 24',
+            width: '18',
+            height: '18',
+            fill: 'none',
+            stroke: 'currentColor',
+            strokeWidth: '2.5',
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round'
+        }, 
+            h('path', { d: 'M23 4v6h-6' }),
+            h('path', { d: 'M1 20v-6h6' }),
+            h('path', { d: 'M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15' })
+        ),
+        'Сбросить фильтры'
+    )
   );
 }

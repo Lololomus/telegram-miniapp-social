@@ -89,16 +89,21 @@ body.theme-light.theme-glass-overlay {
 
 /* 2. Рецепт для ТЕМНОЙ темы */
 body.theme-dark.theme-glass-overlay {
-    --glass-bg: rgba(44, 44, 46, 0.4); /* 2c2c2e + alpha */
+    --glass-bg: rgba(44, 44, 46, 0.4);
     --glass-bg-secondary: rgba(44, 44, 46, 0.3);
     --glass-bg-input: rgba(44, 44, 46, 0.2);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.15); /* Чуть ярче рамка */
     --glass-shadow: 0 6px 20px rgba(0,0,0,0.2);
     --glass-radius-main: 20px;
     --glass-radius-nested: 16px;
 
-    /* ✅ ИСПРАВЛЕНИЕ (Glass): Фоллбэки для iOS (без размытия) */
+    --main-text-color: #ffffff !important;
+    --main-hint-color: rgba(255, 255, 255, 0.9) !important; /* Почти белый */
+    --main-hint-opacity: 1 !important;
+    
+    --main-link-color: #ffffff !important;
+
+    /* Фоллбэки для iOS */
     --glass-bg-ios-fallback: rgba(44, 44, 46, 0.85);
     --glass-bg-ios-fallback-secondary: rgba(44, 44, 46, 0.7);
 }
-/* --- КОНЕЦ НОВОГО БЛОКА --- */

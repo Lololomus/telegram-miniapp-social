@@ -238,15 +238,11 @@ function App({ mountInto, overlayHost }) {
     const handleSetMode = (event) => {
       const detail = event.detail;
       if (detail && Array.isArray(detail.skills)) {
-        console.log('REACT (Feed): set-feed-mode', detail.skills);
         setSelectedSkills(detail.skills);
       }
     };
-
     document.addEventListener('set-feed-mode', handleSetMode);
-    return () => {
-      document.removeEventListener('set-feed-mode', handleSetMode);
-    };
+    return () => document.removeEventListener('set-feed-mode', handleSetMode);
   }, []);
 
   // --- 8. Обработчик клика по тегу навыка ---
@@ -294,6 +290,36 @@ function App({ mountInto, overlayHost }) {
     setSelected(null);
   };
 
+  useEffect(() => {
+    if (!overlayHost) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          // Если экран скрылся (display: none) -> сбрасываем поиск
+          if (overlayHost.style.display === 'none') {
+             setSearchQuery('');
+             // Можно и навыки сбросить, если нужно:
+             // setSelectedSkills([]); 
+          }
+        }
+      });
+    });
+
+    observer.observe(overlayHost, { attributes: true });
+
+    return () => observer.disconnect();
+  }, [overlayHost]);
+
+  // Функция сброса для Людей
+    const handleResetFilters = () => {
+        setSearchQuery(''); // Очищаем текст
+        setSelectedSkills([]); // Очищаем навыки
+        // Если есть нативный инпут, чистим и его визуально
+        const input = document.getElementById('feed-search-input');
+        if (input) input.value = '';
+    };
+
   // --- 10. Рендер ---
   return h(
     'div',
@@ -313,6 +339,7 @@ function App({ mountInto, overlayHost }) {
       h(EmptyState, {
         text: t('feed_empty'),
         visible: filtered.length === 0,
+        onReset: handleResetFilters
       }),
 
     h(
