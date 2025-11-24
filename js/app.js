@@ -1062,19 +1062,77 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("⏳ Загрузка профиля...");
         await loadProfileData();
         
-        if (state.targetUserIdFromLink && state.isRegistered) { 
-            await loadTargetUserProfile(state.targetUserIdFromLink); 
-            state.targetUserIdFromLink = null; 
+        // === ЛОГИКА DEEP LINKS (ROUTING) ===
+        const startParam = tg.initDataUnsafe?.start_param;
+        
+        if (startParam && state.isRegistered) {
+            console.log("🔗 Deep Link detected:", startParam);
+            
+            // СЦЕНАРИЙ 1: Ссылка на ПОСТ (p_123)
+            if (startParam.startsWith('p_')) {
+                // trim() убирает лишние пробелы
+                const postId = startParam.replace('p_', '').trim();
+                
+                // 1. Грузим Ленту Постов (фон)
+                await loadPostsFeedData();
+                
+                try {
+                    // 2. Грузим данные поста
+                    const postResult = await api.getPostById(tg.initData, postId);
+                   if (postResult.ok && postResult.post) {
+                        console.log("✅ Post loaded:", postResult.post.post_id);
+                        
+                        // 1. Сохраняем пост в глобальную переменную (Надежный способ)
+                        // React проверит её при загрузке
+                        window.__DEEP_LINK_POST = postResult.post;
+
+                        // 2. На всякий случай кидаем событие (если React уже был загружен)
+                        setTimeout(() => {
+                            document.dispatchEvent(new CustomEvent('open-deep-link-post', { 
+                                detail: { post: postResult.post } 
+                            }));
+                        }, 500);
+                    } else {
+                        UI.showToast('Пост не найден или удален', true);
+                    }
+                } catch (e) {
+                    console.error("Deep link post error:", e);
+                    UI.showToast('Не удалось загрузить пост по ссылке', true);
+                }
+            } 
+            // СЦЕНАРИЙ 2: Ссылка на ПРОФИЛЬ (просто ID)
+            else {
+                const targetUserId = startParam;
+                
+                // 1. Грузим Ленту Людей (фон) - ВМЕСТО отдельного экрана
+                await loadFeedData();
+                
+                try {
+                    // 2. Грузим данные пользователя
+                    const userResult = await api.loadTargetUserProfile(tg.initData, targetUserId);
+                    if (userResult.ok && userResult.profile) {
+                        // 3. Ждем React и открываем Шторку
+                        setTimeout(() => {
+                            document.dispatchEvent(new CustomEvent('open-deep-link-profile', { 
+                                detail: { user: userResult.profile } 
+                            }));
+                        }, 500);
+                    } else {
+                        UI.showToast(t('error_profile_not_found'), true);
+                    }
+                } catch (e) {
+                    console.error("Deep link profile error:", e);
+                    UI.showToast(t('error_load_profile_generic'), true);
+                }
+            }
+            
+            // Сбрасываем, чтобы при релоаде не открывалось снова
+            state.targetUserIdFromLink = null;
         }
-        else if (state.targetUserIdFromLink && !state.isRegistered) { 
+        // Обработка незарегистрированных (оставляем как было)
+        else if (startParam && !state.isRegistered) { 
             UI.showToast(t('error_must_create_profile'), true);
             UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData); 
-            elements.form.nameField.value = tg.initDataUnsafe?.user?.first_name || ''; 
-            elements.form.bioField.value = ''; 
-            elements.form.skillsField.value = ''; 
-            if (linksManager?.renderItems) linksManager.renderItems([]); 
-            if (experienceManager?.renderItems) experienceManager.renderItems([]); 
-            if (educationManager?.renderItems) educationManager.renderItems([]); 
             state.targetUserIdFromLink = null; 
         }
         function isMobileDevice() {

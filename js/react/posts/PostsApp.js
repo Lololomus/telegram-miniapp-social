@@ -117,6 +117,27 @@ function App({ mountInto, overlayHost }) {
     else titleEl.textContent = t('feed_posts_title');
   }, [showMyPostsOnly]); 
 
+  // --- СЛУШАТЕЛЬ DEEP LINK (POST) ---
+  useEffect(() => {
+      // 1. Проверяем, не ждет ли нас пост в "почтовом ящике" (при холодном старте)
+      if (window.__DEEP_LINK_POST) {
+          console.log("📬 React found pending deep link post");
+          setPostToShow(window.__DEEP_LINK_POST);
+          window.__DEEP_LINK_POST = null; // Забираем почту (очищаем)
+      }
+
+      // 2. Настраиваем слушатель для будущих событий (если перешли по ссылке внутри аппа)
+      const handleDeepLink = (e) => {
+          const post = e.detail?.post;
+          if (post) {
+              setPostToShow(post); // Открываем шторку с этим постом
+          }
+      };
+      
+      document.addEventListener('open-deep-link-post', handleDeepLink);
+      return () => document.removeEventListener('open-deep-link-post', handleDeepLink);
+  }, []);
+
   // --- ФИЛЬТРАЦИЯ (SYNC via useMemo) ---
   const filtered = useMemo(() => {
     const qLower = (debouncedSearchQuery || '').toLowerCase().trim();
@@ -232,7 +253,43 @@ function App({ mountInto, overlayHost }) {
   const handleMenuLayout = useCallback((layout) => { setMenuLayout(layout); }, []);
   useEffect(() => { const handleScroll = () => { if (contextMenuState.post) handleCloseContextMenu(); }; window.addEventListener('scroll', handleScroll, { passive: true }); return () => window.removeEventListener('scroll', handleScroll); }, [contextMenuState.post, handleCloseContextMenu]);
   const handleRespond = useCallback((post) => { setContextMenuState({ post: null, targetElement: null }); tg.showAlert(t('action_respond_toast')); }, []);
-  const handleRepost = useCallback((post) => { setContextMenuState({ post: null, targetElement: null }); tg.showAlert(t('action_repost_toast')); }, []);
+
+  const handleRepost = useCallback((post) => { 
+        // 1. Закрываем все меню
+        setContextMenuState({ post: null, targetElement: null }); 
+        setPostToShow(null); 
+
+        const bot = window.__CONFIG?.botUsername;
+        const app = window.__CONFIG?.appSlug;
+
+        if (!bot || !app) {
+            if (tg) tg.showAlert('Ошибка: Не настроен botUsername в конфиге');
+            return;
+        }
+
+        // 2. Генерируем ссылку (p_ID)
+        const startParam = `p_${post.post_id}`;
+        const appLink = `https://t.me/${bot}/${app}?startapp=${startParam}`;
+        
+        // 3. Формируем красивый текст для предпросмотра
+        const rawContent = post.content || '';
+        const preview = rawContent.slice(0, 150) + (rawContent.length > 150 ? '...' : '');
+        
+        // ✅ ТЕПЕРЬ ПЕРЕВОДИТСЯ:
+        const text = `${t('repost_request_title')}\n${preview}\n\n${t('repost_request_cta')}`;
+        
+        // 4. Открываем нативное окно выбора чата в Telegram
+        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appLink)}&text=${encodeURIComponent(text)}`;
+        
+        if (tg && tg.openTelegramLink) {
+            tg.openTelegramLink(shareUrl);
+        } else {
+            navigator.clipboard.writeText(appLink);
+            alert(t('link_copied'));
+        }
+        
+    }, []);
+
   const handleCreatePost = useCallback(() => { document.dispatchEvent(new CustomEvent('openCreatePostModal')); }, []);
   const handleMyPosts = useCallback(() => { document.dispatchEvent(new CustomEvent('show-my-posts')); }, []);
   const handleSaved = useCallback(() => { tg.showAlert('Сохраненное - в разработке'); }, []);

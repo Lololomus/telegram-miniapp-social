@@ -320,6 +320,21 @@ function App({ mountInto, overlayHost }) {
         if (input) input.value = '';
     };
 
+  // --- СЛУШАТЕЛЬ DEEP LINK (ПРОФИЛЬ) ---
+  useEffect(() => {
+      const handleDeepLinkProfile = (e) => {
+          const user = e.detail?.user;
+          if (user) {
+              // Открываем шторку с этим пользователем
+              // (onOpen сам позаботится о подгрузке деталей)
+              onOpen(user);
+          }
+      };
+      
+      document.addEventListener('open-deep-link-profile', handleDeepLinkProfile);
+      return () => document.removeEventListener('open-deep-link-profile', handleDeepLinkProfile);
+  }, []);
+
   // --- 10. Рендер ---
   return h(
     'div',

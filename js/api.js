@@ -264,3 +264,15 @@ export async function updatePost(initData, post_id, postData) {
     });
     return await handleResponse(response);
 }
+
+/**
+ * Загружает один пост по ID (для Deep Links)
+ */
+export async function getPostById(initData, post_id) {
+    const response = await fetch(`${CONFIG.backendUrl}/api/get-post-by-id`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: initData, post_id: post_id })
+    });
+    return await handleResponse(response);
+}

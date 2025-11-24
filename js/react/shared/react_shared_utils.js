@@ -107,18 +107,17 @@ export function useSheetLogic(onClose) {
             initial: { y: '100%' },
             animate: { y: 0 },
             exit: { y: '100%' },
-            transition: { type: 'tween', ease: 'circOut', duration: 0.3 },
+            transition: { type: 'spring', damping: 25, stiffness: 300 },
             
-            // Включаем драг только в режиме свайпов
             drag: controlMode === 'swipes' ? "y" : false,
             dragControls: dragControls,
-            dragListener: false, // Слушаем драг ТОЛЬКО на ручке (Handle)
+            
+            dragListener: false, 
             
             dragConstraints: { top: 0, bottom: 0 },
-            dragElastic: { top: 0, bottom: 0.2 },
+            dragElastic: 0.2,
             
             onDragEnd: (e, { offset, velocity }) => {
-                // Если утащили вниз больше чем на 100px или быстро свайпнули
                 if (offset.y > 100 || velocity.y > 100) {
                     onClose();
                 }
@@ -433,7 +432,7 @@ export function EmptyState({ text, visible, onReset }) {
             h('path', { d: 'M1 20v-6h6' }),
             h('path', { d: 'M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15' })
         ),
-        'Сбросить фильтры'
+        t('action_reset_filters')
     )
   );
 }

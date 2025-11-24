@@ -25,14 +25,32 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
     const timeAgo = formatPostTime(created_at);
     
     return h(motion.div, { 
-        style:{ position:'fixed', inset:0, zIndex:1001, display: 'flex', alignItems: 'flex-end', pointerEvents: 'auto' }, 
-        initial:{opacity:0}, animate:{opacity:1}, exit:{opacity:0}, transition: { duration: 0.2 }
+        style:{ position:'fixed', inset:0, zIndex:1001, display: 'flex', alignItems: 'flex-end' }, 
+        initial:{opacity:0}, 
+        animate:{opacity:1}, 
+        // ✅ ФИКС: Мгновенная разблокировка кликов при начале закрытия
+        exit:{opacity:0, pointerEvents: 'none', transition: { duration: 0.2 }} 
     },
-        h(motion.div, { onClick:onClose, style:{ position:'absolute', inset:0, background:'rgba(0,0,0,.5)', cursor: 'pointer' }, initial:{opacity:0}, animate:{opacity:1}, exit:{opacity:0} }),
+        // Фон (Backdrop)
+        h(motion.div, { 
+            onClick:onClose, 
+            style:{ position:'absolute', inset:0, background:'rgba(0,0,0,.5)' }, 
+            initial:{opacity:0}, 
+            animate:{opacity:1, pointerEvents: 'auto'}, 
+            // ✅ ФИКС: Быстрое исчезновение фона
+            exit:{opacity:0, pointerEvents: 'none', transition: { duration: 0.2 }} 
+        }),
         
         h(motion.div, {
-            style: { position: 'relative', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' },
-            ...sheetProps
+            style: { position: 'relative', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' },
+            ...sheetProps,
+            
+            // ✅ ФИКС: Вход - пружина (красиво), Выход - таймер (быстро и без лагов)
+            transition: { type: 'spring', damping: 30, stiffness: 300 },
+            exit: { 
+                y: '100%', 
+                transition: { type: 'tween', ease: 'easeInOut', duration: 0.2 } 
+            }
         },
             h(SheetControls, { controlMode, dragControls, onClose }),
             
@@ -54,7 +72,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                     // --- ХЕДЕР КАРТОЧКИ ---
                     h('div', { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 20 } },
                         
-                        // Левая часть: Аватар + Имя + Время (Кликабельно -> Профиль)
+                        // Левая часть: Аватар + Имя + Время
                         h('button', { onClick: (e) => { e.stopPropagation(); onOpenProfile(author); }, style: { display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', flex: 1, minWidth: 0, textAlign: 'left' } },
                             h('div', { style: { height: 48, width: 48, borderRadius: '50%', background: 'var(--main-bg-color)', overflow: 'hidden', flexShrink: 0 } }, h('img', { src: avatar, alt: '', loading: 'lazy', style: { width: '100%', height: '100%', objectFit: 'cover' } })),
                             
@@ -74,7 +92,7 @@ function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDel
                             )
                         ),
                         
-                        // Правая часть: Тег типа (Без иконки, только текст)
+                        // Правая часть: Тег типа
                         h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: type_info.color, color: '#FFFFFF', fontSize: 15, fontWeight: 600, flexShrink: 0 } }, type_info.text)
                     ),
                     

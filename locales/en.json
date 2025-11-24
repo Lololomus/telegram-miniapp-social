@@ -73,6 +73,7 @@
   "feed_empty": "Nothing found",
   "feed_empty_search": "No one was found for your request.",
   "search_placeholder": "🔍 Filter by skills (e.g., Python)",
+  "action_reset_filters": "Reset filters",
   
   "feed_posts_title": "Requests Feed",
   "my_posts_title": "My Requests",
@@ -117,6 +118,17 @@
   "following": "Following",
   "follow_button": "Follow",
   "unfollow_button": "Unfollow",
+
+  "action_menu_title": "Choose action",
+  "action_share_profile": "Share profile",
+  "action_report": "Report",
+  "report_sent": "Report sent (demo)",
+  "link_copied": "Link copied to clipboard",
+
+  "repost_request_title": "📝 **Request:**",
+  "repost_request_cta": "👀 View details 👇",
+  "share_profile_text": "Check out profile: {name}",
+  "share_text": "Check out my profile: {name}",
 
   "settings_title": "Settings",
   "settings_button": "...",

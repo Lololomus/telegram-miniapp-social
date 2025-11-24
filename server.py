@@ -227,11 +227,6 @@ def check_is_followed(conn, viewer_id, target_user_id):
     )
     return cursor.fetchone() is not None
 
-# --- Обновленные API эндпоинты (без изменений) ---
-# ЗАМЕЧАНИЕ: /get-profile и /get-user-by-id УЖЕ используют "SELECT *",
-# поэтому они АВТОМАТИЧЕСКИ подхватят новое поле 'is_glass_enabled'.
-# Никаких изменений здесь не требуется.
-
 @app.route("/get-profile", methods=["POST"])
 def get_profile():
     # ... (код без изменений) ...
@@ -264,7 +259,6 @@ def get_profile():
 
 @app.route("/get-user-by-id", methods=["POST"])
 def get_user_by_id():
-    # ... (код без изменений) ...
     data = request.json
     viewer_id = validate_init_data(data.get("initData"), BOT_TOKEN)
     if not viewer_id: return jsonify({"ok": False, "error": "Invalid viewer data"}), 403
@@ -293,6 +287,58 @@ def get_user_by_id():
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": "Server error"}), 500
 
+@app.route("/api/get-post-by-id", methods=["POST"])
+def get_post_by_id():
+    data = request.json
+    viewer_id = validate_init_data(data.get("initData"), BOT_TOKEN)
+    if not viewer_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
+    
+    post_id = data.get("post_id")
+    if not post_id: return jsonify({"ok": False, "error": "Missing post_id"}), 400
+
+    # ✅ ИСПРАВЛЕНИЕ: Принудительно конвертируем в int для корректного поиска в SQLite
+    try:
+        post_id_int = int(post_id)
+    except ValueError:
+        return jsonify({"ok": False, "error": "Invalid post_id format"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT 
+                p.post_id, p.user_id, p.post_type, p.content, p.full_description, p.skill_tags,
+                SUBSTR(STRFTIME('%Y-%m-%dT%H:%M:%f', p.created_at), 1, 23) || 'Z' as created_at,
+                pr.first_name as author_first_name,
+                pr.photo_path as author_photo_path
+            FROM posts p
+            JOIN profiles pr ON p.user_id = pr.user_id
+            WHERE p.post_id = ?
+        ''', (post_id_int,)) # Используем числовой ID
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row:
+            return jsonify({"ok": False, "error": "Post not found"}), 404
+            
+        post = dict(row)
+        try:
+            post['skill_tags'] = json.loads(post['skill_tags'])
+        except:
+            post['skill_tags'] = []
+            
+        post['author'] = {
+            'user_id': post['user_id'],
+            'first_name': post.pop('author_first_name'),
+            'photo_path': post.pop('author_photo_path')
+        }
+        
+        return jsonify({"ok": True, "post": post})
+    except Exception as e:
+        print(f"❌ ОШИБКА /api/get-post-by-id: {e}")
+        if 'conn' in locals() and conn: conn.close()
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 # --- ОБНОВЛЕНО: /save-profile ---
 @app.route("/save-profile", methods=["POST"])
