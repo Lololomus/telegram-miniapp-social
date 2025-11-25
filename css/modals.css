@@ -177,20 +177,22 @@ body.theme-glass-overlay .modal-content {
     border-radius: var(--glass-radius-main);
 }
 
+#skills-modal,
 #create-post-modal {
-  display: none;
+  display: none; /* flex при открытии */
   flex-direction: column;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 100dvh;
-  height: 100vh;
-  z-index: 1001;
-  padding: calc(var(--safe-area-inset-top) + var(--header-offset)) 0 0 0;
+  top: 0; left: 0; right: 0; bottom: 0;
+  height: 100dvh; /* Для мобильных браузеров */
+  height: 100vh;  /* Фоллбэк */
+  z-index: 4000; 
   
-  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+  /* ✅ FIX: Отступ сверху под "челку" и нативные кнопки */
+  padding-top: calc(env(safe-area-inset-top, 20px) + 10px);
+  
+  /* ✅ FIX: Фон сплошной темный (чтобы не просвечивало) */
+  background-color: #09090b !important; 
+  
   transition: background-color 0.3s;
 }
 
@@ -244,29 +246,24 @@ body.theme-glass-overlay .action-button.fab-modal-save {
 
 /* --- REACT МОДАЛКИ --- */
 .react-sheet-content {
-    background-color: var(--secondary-bg-color, #efefef);
-    transition: background-color 0.3s;
-    will-change: transform; 
-    transform: translateZ(0);
-    backface-visibility: hidden;
+    /* ✅ FIX: Фон сплошной */
+    background-color: #18181b !important; /* Zinc-900 */
     
-    /* Разрешаем нативный скролл */
-    touch-action: pan-y; 
-    -webkit-overflow-scrolling: touch;
+    transition: background-color 0.3s;
+    will-change: transform; transform: translateZ(0); backface-visibility: hidden;
+    touch-action: pan-y; -webkit-overflow-scrolling: touch;
 }
 
 body.theme-dark .react-sheet-content {
     background-color: var(--secondary-bg-color, #2c2c2e);
 }
 
+/* Если активно "Стекло", делаем чуть прозрачнее, но с сильным блюром */
 body.theme-glass-overlay .react-sheet-content {
-    background-color: var(--glass-bg);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    background-color: rgba(24, 24, 27, 0.98) !important; /* Почти сплошной */
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     border-top: var(--glass-border);
-    border-left: var(--glass-border);
-    border-right: var(--glass-border);
-    box-shadow: var(--glass-shadow);
 }
 
 body.theme-glass-overlay .react-sheet-content.is-ios {

@@ -93,6 +93,7 @@
   "post_full_description_label": "Full Description:",
   "post_full_description_placeholder": "Describe your task, terms, or offer in detail...",
   "post_skills_label": "Tags (skills):",
+  "post_skills_placeholder": "Java, Python (type or select)...",
   "post_created_success": "Your request has been published!",
 
   "post_view_short": "Short Description",
@@ -130,6 +131,7 @@
   "share_profile_text": "Check out profile: {name}",
   "share_text": "Check out my profile: {name}",
 
+  "filter_all": "All",
   "settings_title": "Settings",
   "settings_button": "...",
   "language_label": "Language",

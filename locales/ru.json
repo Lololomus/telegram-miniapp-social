@@ -93,6 +93,7 @@
   "post_full_description_label": "Подробно:",
   "post_full_description_placeholder": "Подробно опишите вашу задачу, условия или предложение...",
   "post_skills_label": "Теги (навыки):",
+  "post_skills_placeholder": "Java, Python (введите или выберите)...", 
   "post_created_success": "Ваш запрос опубликован!",
 
   "post_view_short": "Краткое описание",
@@ -130,6 +131,7 @@
   "share_profile_text": "Посмотри профиль: {name}",
   "share_text": "Посмотри мой профиль: {name}",
 
+  "filter_all": "Все",
   "settings_title": "Настройки",
   "settings_button": "...",
   "language_label": "Язык",

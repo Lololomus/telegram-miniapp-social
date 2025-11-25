@@ -1,5 +1,5 @@
 // react/posts/PostCard.js
-import React, { memo, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
+import React, { memo } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 import {
   t,
@@ -8,10 +8,10 @@ import {
   isIOS,
   cardVariants,
   FEED_ITEM_SPRING,
+  useCardGestures,
 } from './posts_utils.js';
 
 const h = React.createElement;
-const tg = window.Telegram?.WebApp;
 
 const PostCard = memo(function PostCard({
   post,
@@ -28,73 +28,62 @@ const PostCard = memo(function PostCard({
   const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
   const { content = 'Нет описания', post_type = 'default', skill_tags = [], created_at } = post;
   const avatar = author.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
+  
   const type_map = { looking: { text: t('post_type_looking'), color: '#0A84FF' }, offering: { text: t('post_type_offering'), color: '#34C759' }, showcase: { text: t('post_type_showcase'), color: '#FF9500' } };
   const type_info = type_map[post_type] || { text: t('post_type_default'), color: '#8E8E93' };
+  
   const timeAgo = formatPostTime(created_at);
   const postKey = post.post_id || `temp-post-${Math.random()}`;
-  
-  const gestureTimerRef = useRef(null);
-  const pointerStartRef = useRef(null);
-  const cardRef = useRef(null);
-  const POINTER_SLOP = 5;
 
-  const handlePointerDown = (e) => {
-    if (disableClick || isContextMenuOpen) return;
-    pointerStartRef.current = { y: e.pageY };
-    if (tg?.disableVerticalSwipes) tg.disableVerticalSwipes();
-    if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
-    gestureTimerRef.current = setTimeout(() => {
-      if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
-      onOpenContextMenu(post, cardRef.current);
-      pointerStartRef.current = null; 
-      if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
-    }, 300);
-  };
-  const handlePointerMove = (e) => {
-    if (disableClick || !pointerStartRef.current) return;
-    const deltaY = Math.abs(e.pageY - pointerStartRef.current.y);
-    if (deltaY > POINTER_SLOP) { clearTimeout(gestureTimerRef.current); pointerStartRef.current = null; if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes(); }
-  };
-  const handlePointerUp = (e) => {
-    if (disableClick || isContextMenuOpen) return;
-    if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
-    clearTimeout(gestureTimerRef.current);
-    if (pointerStartRef.current) {
-      const target = e.target;
-      if (target.closest('[data-action="open-profile"]')) { e.stopPropagation(); onOpenProfile(author); } else { onOpenPostSheet(post); }
-      pointerStartRef.current = null;
-    }
-  };
+  // --- ✅ ПРИМЕНЯЕМ DRY ХУК ---
+  const { targetRef, gestureProps } = useCardGestures({
+      // Главный клик (по телу): Открыть шторку поста
+      onOpenPrimary: () => onOpenPostSheet(post),
+      
+      // Вторичный клик (по аватару): Открыть профиль
+      onOpenSecondary: () => onOpenProfile(author),
+      
+      // Лонг-тап: Открыть меню (передаем элемент для привязки координат)
+      onOpenContextMenu: (el) => onOpenContextMenu(post, el),
+      
+      disableClick: disableClick || isContextMenuOpen
+  });
 
+  // --- Стили и Анимации (без изменений логики) ---
   const layoutMode = (disableClick || isHighlight) ? undefined : (isMobile ? false : 'position');
   
+  // Стили для клона (когда isHighlight = true)
   const cloneStyles = isHighlight ? {
-      boxShadow: '0 12px 40px rgba(0,0,0,0.4)', 
+      // Яркая тень для эффекта "полета"
+      boxShadow: '0 20px 50px rgba(0,0,0,0.5)', 
+      
+      // Убираем стандартные транзишны, так как анимацией управляет PostContextMenu
       transition: 'none',
+      
+      // Убеждаемся, что клон перекрывает всё
       zIndex: 10,
-      backgroundColor: 'var(--secondary-bg-color)',
+      
+      // Фон должен быть непрозрачным (берем цвет из темы)
+      backgroundColor: 'var(--secondary-bg-color)', 
+      
+      // Выключаем блюр внутри самой карточки (если он был), чтобы не размывать контент дважды
       backdropFilter: 'none',
       WebkitBackdropFilter: 'none',
+      
+      // Граница ярче
+      borderColor: 'rgba(255,255,255,0.2)'
   } : {
+      // Обычное состояние
       transition: 'transform 0.2s ease, background-color 0.3s, border-color 0.3s',
   };
 
-  // Анимации:
-  // На мобильных отключаем (пустой объект), чтобы не было мерцания всей карточки.
-  // На ПК оставляем волну.
-  const variants = isMobile 
-    ? {} 
-    : (isIOS 
-        ? cardVariants 
-        : {
-            hidden: { opacity: 0, x: -20 }, 
-            visible: { opacity: 1, x: 0 },
-            exit: { opacity: 0, x: -10 }
-        }
-    );
+  const variants = isMobile ? {} : (isIOS ? cardVariants : {
+      hidden: { opacity: 0, x: -20 }, 
+      visible: { opacity: 1, x: 0 },
+      exit: { opacity: 0, x: -10 }
+  });
 
   const isFirstBatch = index < 10; 
-  // На мобильных delay=0 (мгновенно). На ПК сохраняем волну.
   const delayStep = 0.05; 
   const delay = (!isMobile && isFirstBatch) ? index * delayStep : 0;
 
@@ -112,18 +101,16 @@ const PostCard = memo(function PostCard({
   return h(
     motion.div,
     {
-      ref: cardRef,
+      ref: targetRef, // ✅ Привязываем реф хука
+      ...gestureProps, // ✅ Пробрасываем события хука
+      
       layout: layoutMode,
       variants: variants,
-      // На мобильных сразу visible
       initial: isMobile ? "visible" : (isHighlight ? "visible" : "hidden"),
-      
       animate: shouldForceAnimate ? visibleState : undefined,
       whileInView: shouldForceAnimate ? undefined : visibleState,
       viewport: shouldForceAnimate ? undefined : { once: true, amount: 0, margin: "200px" },
-
       exit: "exit",
-      
       transition: isMobile ? { duration: 0 } : (isHighlight ? { duration: 0 } : fixedTransition),
       
       key: postKey,
@@ -135,10 +122,6 @@ const PostCard = memo(function PostCard({
         pointerEvents: disableClick ? 'none' : 'auto',
         ...styleOverride,
       },
-      onPointerDown: handlePointerDown,
-      onPointerMove: handlePointerMove,
-      onPointerUp: handlePointerUp,
-      onContextMenu: (e) => { if (!disableClick) e.preventDefault(); },
     },
     h(
       motion.div,
@@ -155,19 +138,17 @@ const PostCard = memo(function PostCard({
       h(
         'div',
         { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 } },
+        
+        // --- КНОПКА АВАТАРА ---
         h(
           'button',
           {
-            'data-action': 'open-profile',
+            'data-action': 'secondary', // ✅ ВАЖНО: Метка для хука
             style: { padding: 0, border: 'none', background: 'none', cursor: 'pointer', flexShrink: 0 },
           },
           h(
             'div',
             { style: { height: 44, width: 44, borderRadius: '50%', background: 'var(--secondary-bg-color)', overflow: 'hidden' } },
-            // 🔥 ИСПРАВЛЕНИЕ МЕРЦАНИЯ АВАТАРА
-            // 1. Убрали loading="lazy" (теперь грузится сразу).
-            // 2. Добавили decoding="async" (не блокирует поток).
-            // 3. Добавили draggable="false" (чтобы не таскалось случайно).
             h('img', { 
                 src: avatar, 
                 alt: '', 
@@ -177,13 +158,15 @@ const PostCard = memo(function PostCard({
             })
           ),
         ),
+        
+        // --- КНОПКА ИМЕНИ ---
         h(
           'div',
           { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, marginRight: '5px' } },
           h(
             'button',
             {
-              'data-action': 'open-profile',
+              'data-action': 'secondary', // ✅ ВАЖНО: Метка для хука
               style: { padding: 0, border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit' },
             },
             h(
@@ -194,6 +177,8 @@ const PostCard = memo(function PostCard({
           ),
           timeAgo && h('div', { style: { fontSize: 14, color: 'var(--main-hint-color, #999)' } }, timeAgo),
         ),
+        
+        // Бейдж типа
         h(
           'div',
           { style: { display: 'inline-flex', alignItems: 'center', padding: '6px 10px', borderRadius: 8, background: type_info.color, color: '#FFFFFF', fontSize: 13, fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' } },

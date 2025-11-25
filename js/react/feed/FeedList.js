@@ -1,31 +1,34 @@
 // react/feed/FeedList.js
-
-// Компонент, отвечающий за рендеринг списка профилей людей.
-
-import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
-import { motion, AnimatePresence } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-
-// Локальные импорты
-// ИЗМЕНЕНИЕ: Убираем listVariants, он больше не нужен
-import { isIOS } from './feed_utils.js';
+import React, { useState, useEffect, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
+import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 import FeedCard from './FeedCard.js';
 
 const h = React.createElement;
+const BATCH_SIZE = 10;
 
-/**
- * Компонент FeedList
- * (Вынесен из react-feed.js)
- */
-function FeedList({profiles, onOpen, containerRef}) {
-  // ИЗМЕНЕНИЕ: Мы убираем 'variants', 'initial', 'animate'
-  // И, ГЛАВНОЕ, 'layout: true' из родителя.
-  // Это устраняет Конфликт №3.
+function FeedList({ profiles, onOpen, containerRef }) {
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
+  const sentinelRef = useRef(null);
+
+  // Observer для подгрузки
+  useEffect(() => {
+    if (visibleCount >= profiles.length) return;
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            setVisibleCount(prev => prev + BATCH_SIZE);
+        }
+    }, { root: null, rootMargin: '400px', threshold: 0.1 }); // Грузим заранее (400px)
+
+    const sentinel = sentinelRef.current;
+    if (sentinel) observer.observe(sentinel);
+    return () => { if (sentinel) observer.unobserve(sentinel); };
+  }, [visibleCount, profiles.length]);
+
+  const visibleProfiles = profiles.slice(0, visibleCount);
+
   return h(motion.div, {
     ref: containerRef,
-    // variants: listVariants, // <-- УДАЛЕНО
-    // initial: "hidden", // <-- УДАЛЕНО
-    // animate: "visible", // <-- УДАЛЕНО
-    // layout: true, // <-- УДАЛЕНО (ЭТО БЫЛА ГЛАВНАЯ ОШИБКА)
+    layout: false, // Отключаем тяжелый layout
     style: {
       position: 'relative',
       display: 'flex',
@@ -33,17 +36,23 @@ function FeedList({profiles, onOpen, containerRef}) {
       gap: '12px'
     }
   },
-    h(AnimatePresence, {
-      mode: isIOS ? "sync" : "popLayout",
-      initial: false
-    },
-      profiles.map((p, index) => h(FeedCard, {
-        key: p.user_id,
-        u: p,
-        index: index, // Передаем index для ручной задержки (Система Б)
-        onOpen: onOpen
-      }))
-    )
+    visibleProfiles.map((p, index) => {
+        // Используем остаток от деления, чтобы анимация волны работала для каждой порции
+        const animationIndex = index % BATCH_SIZE;
+        
+        return h(FeedCard, {
+            key: p.user_id,
+            u: p,
+            index: animationIndex, 
+            onOpen: onOpen
+        });
+    }),
+
+    // Невидимый элемент-триггер внизу
+    visibleCount < profiles.length && h('div', {
+        ref: sentinelRef,
+        style: { height: '20px', width: '100%', opacity: 0, pointerEvents: 'none' }
+    })
   );
 }
 

@@ -191,36 +191,6 @@ body.theme-custom .header-icon-button {
     color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
 }
 
-/* --- СТИЛИ КНОПОК НАСТРОЕК, QR И ИКОНОК В ПРОФИЛЕ --- */
-.icon-button {
-    background: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    width: 40px; height: 40px; border-radius: 50%;
-    /* Стили для текста удалены (кроме qr-icon) */
-    display: inline-flex; align-items: center; justify-content: center;
-    text-align: center; padding: 0; cursor: pointer; position: absolute;
-    top: 50px; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-.icon-button svg { width: 18px; height: 18px; }
-
-/* Позиционирование старых и новых иконок */
-.qr-icon {
-    left: 15px;
-    font-size: 14px;
-    font-weight: bold;
-    line-height: 1;
-}
-.settings-icon { right: 15px; }
-.icon-button.settings-icon svg { width: 20px; height: 20px; }
-.share-icon { left: 65px; }
-.edit-icon { right: 65px; }
-.share-icon svg, .edit-icon svg { width: 18px; height: 18px; stroke: currentColor; }
-
-/* (УДАЛЕНО) --- СТИЛИ СТАТУСА ОНЛАЙН (ОБЩИЕ) --- */
-/* .status-indicator { ... } */
-/* .status-indicator.online { ... } */
-
 .sr-only { /* Для доступности */
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; white-space: nowrap;

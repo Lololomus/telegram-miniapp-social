@@ -26,6 +26,7 @@ export {
     useBodyScrollLock,
     useSheetLogic,
     SheetControls,
+    useCardGestures,
 } from '../shared/react_shared_utils.js';
 
 // --- HYBRID CORE: Детектор мобильных устройств ---

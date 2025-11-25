@@ -266,15 +266,26 @@ export function useTwoLineSkillsOverflow(containerRef, itemsLength) {
 }
 
 export function QuickFilterTags({ skills, selected, onToggle }) {
-    if (!skills || skills.length === 0) return null;
-    return skills.map(skill => h('button', {
-        key: skill,
-        className: `skill-tag skill-tag--filter ${selected.some(s => s.toLowerCase() === skill.toLowerCase()) ? 'is-selected' : ''}`,
-        'data-skill': skill,
-        onClick: () => onToggle(skill),
-    }, skill));
-}
+    // Если массив selected пуст, значит активен фильтр "Все"
+    const isAllActive = !selected || selected.length === 0;
 
+    return h('div', { className: 'quick-filters' }, // Обертка (если её нет в родителе, но обычно она снаружи)
+        // 1. Кнопка "Все" (Всегда первая)
+        h('button', {
+            key: 'filter-all',
+            // Добавляем класс 'is-all' для особого стиля
+            className: `skill-tag skill-tag--filter is-all ${isAllActive ? 'is-selected' : ''}`,
+            onClick: () => onToggle(null), // null означает сброс
+        }, t('filter_all')),
+
+        // 2. Остальные теги
+        (skills || []).map(skill => h('button', {
+            key: skill,
+            className: `skill-tag skill-tag--filter ${selected.some(s => s.toLowerCase() === skill.toLowerCase()) ? 'is-selected' : ''}`,
+            onClick: () => onToggle(skill),
+        }, skill))
+    );
+}
 export function PhoneShell({ children }) {
     return h('div', {
         style: {
@@ -435,4 +446,95 @@ export function EmptyState({ text, visible, onReset }) {
         t('action_reset_filters')
     )
   );
+}
+
+// --- НОВЫЙ ХУК: Единая логика жестов (v2) ---
+export function useCardGestures({ 
+    onOpenContextMenu, 
+    onOpenPrimary,   // Основное действие (клик по карточке)
+    onOpenSecondary, // Второстепенное (клик по аватарке/кнопке)
+    disableClick = false 
+}) {
+    const gestureTimerRef = useRef(null);
+    const pointerStartRef = useRef(null);
+    const targetRef = useRef(null); 
+    const POINTER_SLOP = 5;
+
+    const handlePointerDown = (e) => {
+        if (disableClick) return;
+        // Запоминаем координаты
+        pointerStartRef.current = { y: e.pageY, x: e.pageX };
+        
+        // Блокируем нативные жесты Telegram (чтобы не закрыть webapp свайпом)
+        if (tg?.disableVerticalSwipes) tg.disableVerticalSwipes();
+        
+        if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
+
+        // --- ЛОГИКА LONG-PRESS (Контекстное меню) ---
+        if (onOpenContextMenu) {
+            gestureTimerRef.current = setTimeout(() => {
+                if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy');
+                
+                // Вызываем меню, передавая DOM-элемент карточки для позиционирования
+                onOpenContextMenu(targetRef.current);
+                
+                // Сбрасываем pointer, чтобы pointerUp не считал это кликом
+                pointerStartRef.current = null; 
+                
+                if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
+            }, 300); // 300мс задержка
+        }
+    };
+
+    const handlePointerMove = (e) => {
+        if (disableClick || !pointerStartRef.current) return;
+        const deltaY = Math.abs(e.pageY - pointerStartRef.current.y);
+        const deltaX = Math.abs(e.pageX - pointerStartRef.current.x);
+        
+        // Если палец сдвинулся > 5px, считаем это скроллом, а не кликом
+        if (deltaY > POINTER_SLOP || deltaX > POINTER_SLOP) {
+            if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
+            pointerStartRef.current = null;
+            if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
+        }
+    };
+
+    const handlePointerUp = (e) => {
+        if (disableClick) return;
+        
+        // Возвращаем свайпы Telegram
+        if (tg?.enableVerticalSwipes) tg.enableVerticalSwipes();
+        
+        // Отменяем таймер лонг-тапа
+        if (gestureTimerRef.current) clearTimeout(gestureTimerRef.current);
+
+        // Если pointerStartRef жив — значит это был КЛИК
+        if (pointerStartRef.current) {
+            const target = e.target;
+            
+            // 1. Проверяем, кликнули ли по "Secondary" элементу (Аватар/Имя)
+            // Элемент должен иметь атрибут data-action="secondary"
+            if (onOpenSecondary && target.closest('[data-action="secondary"]')) {
+                e.stopPropagation();
+                onOpenSecondary();
+            } 
+            // 2. Иначе вызываем основное действие (Открыть пост)
+            else if (onOpenPrimary) {
+                onOpenPrimary();
+            }
+            
+            pointerStartRef.current = null;
+        }
+    };
+
+    return {
+        targetRef,
+        gestureProps: {
+            onPointerDown: handlePointerDown,
+            onPointerMove: handlePointerMove,
+            onPointerUp: handlePointerUp,
+            onPointerCancel: handlePointerUp, // Важно: отмена при скролле браузера
+            onContextMenu: (e) => { if(!disableClick) e.preventDefault(); } // Блокируем системное меню
+        }
+    };
 }

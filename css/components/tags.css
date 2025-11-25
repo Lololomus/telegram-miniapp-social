@@ -18,7 +18,7 @@
 
   padding: 0 var(--tag-padding-x);
   height: var(--tag-height);
-  border-radius: calc(var(--tag-height) / 2);
+  border-radius: 8px;
 
   font-size: var(--tag-font-size);
   font-weight: 500;
@@ -52,16 +52,18 @@
 .skill-tag--filter {
   cursor: pointer;
   flex-shrink: 0;
-  margin-right: 6px;
+  /* ✅ ИЗМЕНЕНИЕ: Убираем margin-right, так как используем gap в контейнере */
+  margin-right: 0; 
   opacity: 0.9;
 
-  /* У фильтров своя высота */
-  --tag-filter-height: calc(30px * var(--ui-scale, 1));
+  --tag-filter-height: calc(32px * var(--ui-scale, 1));
   height: var(--tag-filter-height);
-  border-radius: calc(var(--tag-filter-height) / 2);
+  
+  /* ✅ ИЗМЕНЕНИЕ: Квадратная форма */
+  border-radius: 8px; /* БЫЛО: calc(var(--tag-filter-height) / 2) */
+  
   padding: 0 var(--tag-padding-x);
 
-  /* Стиль: Прозрачный фон, цветная рамка */
   background-color: transparent;
   border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
   color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
@@ -217,4 +219,27 @@ body.theme-glass-overlay .skill-tag--selectable.selected {
     color: var(--main-button-text-color);
     border-color: var(--main-button-color);
     opacity: 1;
+}
+
+/* --- СТИЛЬ ДЛЯ КНОПКИ "ВСЕ" --- */
+
+/* Когда "Все" активно: Белый фон, Черный текст (High Contrast) */
+.skill-tag--filter.is-all.is-selected {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); /* Свечение */
+}
+
+/* В светлой теме инвертируем (Черный фон, белый текст) */
+body.theme-light .skill-tag--filter.is-all.is-selected {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: #000000 !important;
+}
+
+/* Немного отделим кнопку "Все" от остальных отступом справа */
+.skill-tag--filter.is-all {
+    margin-right: 4px;
 }

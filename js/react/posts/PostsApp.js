@@ -15,7 +15,6 @@ import {
 
 import { SkeletonList } from './Skeleton.js';
 import PostsList from './PostsList.js';
-import FABMenu from './FABMenu.js';
 import PostContextMenu from './PostContextMenu.js';
 import EditPostModal from './EditPostModal.js';
 import PostDetailSheet from './PostDetailSheet.js';
@@ -231,14 +230,21 @@ function App({ mountInto, overlayHost }) {
   }, [selectedSkills]);
 
   const onToggleSkill = useCallback((skill) => {
+    // Если нажали "Все"
+    if (skill === null) {
+        setSelectedSkills([]);
+        return;
+    }
+
     const lowerSkill = skill.toLowerCase();
     let newSelectedSkills;
     const isSelected = selectedSkills.some((s) => s.toLowerCase() === lowerSkill);
+    
     if (isSelected) {
         newSelectedSkills = selectedSkills.filter((s) => s.toLowerCase() !== lowerSkill);
     } else {
-      const canonicalSkill = allSkills.find((s) => s.toLowerCase() === lowerSkill) || skill;
-      newSelectedSkills = [...selectedSkills, canonicalSkill].sort((a, b) => a.localeCompare(b));
+        const canonicalSkill = allSkills.find((s) => s.toLowerCase() === lowerSkill) || skill;
+        newSelectedSkills = [...selectedSkills, canonicalSkill].sort((a, b) => a.localeCompare(b));
     }
     setSelectedSkills(newSelectedSkills);
   }, [selectedSkills, allSkills]);
@@ -249,9 +255,23 @@ function App({ mountInto, overlayHost }) {
   const handleOpenPostSheet = useCallback((post) => { if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('medium'); setPostToShow(post); }, []);
   const handleClosePostSheet = useCallback(() => { setPostToShow(null); }, []);
   const handleOpenContextMenu = useCallback((post, element) => { if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy'); setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); setContextMenuState({ post: post, targetElement: element }); }, []);
-  const handleCloseContextMenu = useCallback(() => { setContextMenuState({ post: null, targetElement: null }); setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); }, []);
+  const handleCloseContextMenu = useCallback(() => { 
+      setContextMenuState({ post: null, targetElement: null }); 
+      setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); 
+  }, []);
   const handleMenuLayout = useCallback((layout) => { setMenuLayout(layout); }, []);
-  useEffect(() => { const handleScroll = () => { if (contextMenuState.post) handleCloseContextMenu(); }; window.addEventListener('scroll', handleScroll, { passive: true }); return () => window.removeEventListener('scroll', handleScroll); }, [contextMenuState.post, handleCloseContextMenu]);
+  // СЛУШАТЕЛЬ СКРОЛЛА: Закрывает меню при начале прокрутки
+  useEffect(() => { 
+      const handleScroll = () => { 
+          // Если меню открыто (есть post), закрываем его
+          if (contextMenuState.post) {
+              handleCloseContextMenu();
+          }
+      }; 
+      
+      window.addEventListener('scroll', handleScroll, { passive: true }); 
+      return () => window.removeEventListener('scroll', handleScroll); 
+  }, [contextMenuState.post, handleCloseContextMenu]);
   const handleRespond = useCallback((post) => { setContextMenuState({ post: null, targetElement: null }); tg.showAlert(t('action_respond_toast')); }, []);
 
   const handleRepost = useCallback((post) => { 
@@ -315,7 +335,6 @@ function App({ mountInto, overlayHost }) {
           minHeight: '200px'
       } 
   },
-      // 🔥 mode="wait": Сначала старый список пропадает, потом появляется новый.
       h(AnimatePresence, { mode: 'wait' }, 
           (isLoading) 
               ? h(motion.div, {
@@ -345,7 +364,7 @@ function App({ mountInto, overlayHost }) {
       h(EmptyState, { 
         text: t('feed_empty'), 
         visible: !isLoading && filtered.length === 0,
-        onReset: handleResetFilters // <-- Добавляем обработчик
+        onReset: handleResetFilters 
     }),
     
     h(Suspense, { fallback: h(ProfileFallback) },
@@ -356,7 +375,7 @@ function App({ mountInto, overlayHost }) {
           editingPost && h(EditPostModal, { key: `edit-${editingPost.post_id}`, post: editingPost, onClose: () => setEditingPost(null), onSave: handleSaveEdit })
         )
     ),
-    h('div', { onContextMenu: preventSystemMenu }, h(FABMenu, { onCreatePost: handleCreatePost, onMyPosts: handleMyPosts, onSaved: handleSaved, onSubscriptions: handleSubscriptions })),
+    
     quickFiltersHost && createPortal(h(QuickFilterTags, { skills: allSkills, selected: selectedSkills, onToggle: onToggleSkill }), quickFiltersHost)
   );
 }

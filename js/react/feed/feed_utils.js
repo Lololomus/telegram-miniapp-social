@@ -10,6 +10,8 @@ const h = React.createElement;
 // --- ИМПОРТ ОБЩИХ УТИЛИТ ---
 // Мы импортируем их, чтобы затем ре-экспортировать 
 // для удобства других компонентов в этой папке.
+
+// --- 1. ИМПОРТ И РЕ-ЭКСПОРТ ОБЩИХ УТИЛИТ ---
 export {
     tg,
     isIOS,
@@ -24,10 +26,17 @@ export {
     FEED_ITEM_SPRING,
     FEED_ITEM_DELAY_STEP,
     buildFeedItemTransition,
-    EmptyState, 
+    EmptyState,
     useTwoLineSkillsOverflow,
     useControlMode,
+    // ✅ ДОБАВЛЕНО: Пробрасываем новый хук жестов
+    useCardGestures 
 } from '../shared/react_shared_utils.js';
+
+// --- 2. ЛОКАЛЬНЫЕ УТИЛИТЫ ---
+
+// ✅ ДОБАВЛЕНО: Определение мобильного устройства (которого не хватало)
+export const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 
 /**

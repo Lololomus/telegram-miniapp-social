@@ -1,19 +1,19 @@
 // js/app.js
 
 import { loadTranslations, t, supportedLangs } from './i18n.js';
-import { getLuminance, shadeColor } from './vanilla_utils.js'; 
-import { applyTheme, updateThemeButtons, applyGlass } from './theme.js';
+import { applyTheme, applyGlass } from './theme.js';
 import * as api from './api.js';
-import * as ui  from './ui-helpers.js?v=1.4';
-const UI = ui;
+
+import * as uiRaw from './ui-helpers.js?v=1.6';
+const UI = { ...uiRaw }; 
 
 import { state, SKILL_CATEGORIES } from './app-state.js';
 import { setupDynamicList } from './app-form-helpers.js';
 
 window.t = t;
-
 window.REACT_FEED = true;
 
+// Масштабирование UI
 function initUiScale(tg) {
   try {
     const setScale = () => {
@@ -31,9 +31,7 @@ function initUiScale(tg) {
     if (tg && typeof tg.onEvent === 'function') {
       tg.onEvent('viewportChanged', setScale);
     }
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', setScale);
-    }
+    window.addEventListener('resize', setScale);
   } catch (e) {
     console.warn('initUiScale error', e);
   }
@@ -44,6 +42,9 @@ tg.expand();
 initUiScale(tg);
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    // Глобальные переменные
+    let linksManager, experienceManager, educationManager;
 
     const elements = {
         welcomeContainer: document.getElementById('welcome-container'),
@@ -80,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             skillsField: document.getElementById('skills-field'),
             photoInput: document.getElementById('photo-input'),
             avatarPreview: document.getElementById('avatar-preview'),
+            // Кнопка в форме редактирования профиля
             openSkillsModalButton: document.getElementById('open-skills-modal-button'),
             linksContainer: document.getElementById('links-container'),
             addLinkButton: document.getElementById('add-link-button'),
@@ -102,12 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
             experienceContainer: document.getElementById('profile-experience'),
             educationContainer: document.getElementById('profile-education'),
             linksContainer: document.getElementById('profile-links'),
-            followersCount: document.getElementById('profile-followers').querySelector('.stat-value'),
-            followingCount: document.getElementById('profile-following').querySelector('.stat-value'),
+            followersCount: document.getElementById('profile-followers')?.querySelector('.stat-value'),
+            followingCount: document.getElementById('profile-following')?.querySelector('.stat-value'),
             logoutButton: document.getElementById('logout-button'),
             shareButton: document.getElementById('share-button'),
-            viewFeedButton: document.getElementById('view-feed-button'),
-            viewPostsFeedButton: document.getElementById('view-posts-feed-button'),
             settingsButton: document.getElementById('settings-button'),
             showQrButton: document.getElementById('show-qr-button')
         },
@@ -130,8 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
             linksContainer: document.getElementById('detail-links'),
             skillsContainer: document.getElementById('detail-skills'),
             skillsToggleBtn: document.getElementById('detail-skills-toggle'),
-            followersCount: document.getElementById('detail-followers').querySelector('.stat-value'),
-            followingCount: document.getElementById('detail-following').querySelector('.stat-value'),
+            followersCount: document.getElementById('detail-followers')?.querySelector('.stat-value'),
+            followingCount: document.getElementById('detail-following')?.querySelector('.stat-value'),
             fabContainer: document.getElementById('detail-fab-container'),
             fabContactButton: document.getElementById('fab-contact-button'),
             fabFollowButton: document.getElementById('fab-follow-button')
@@ -185,6 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
          skeletonTemplate: document.getElementById('skeleton-card-template')
     };
 
+    // --- FIX: ВЫТАСКИВАЕМ МОДАЛКИ В КОРЕНЬ (ЧТОБЫ НЕ ПЕРЕКРЫВАЛИСЬ) ---
+    // Это решает проблему, когда QR код или другие окна не открывались
+    if (elements.qr.modal && elements.qr.modal.parentNode !== document.body) {
+        document.body.appendChild(elements.qr.modal);
+    }
+    if (elements.postModal.modal && elements.postModal.modal.parentNode !== document.body) {
+        document.body.appendChild(elements.postModal.modal);
+    }
+
     async function setLanguage(lang, isInitialLoad = false) {
         lang = supportedLangs.includes(lang) ? lang : 'ru';
         state.currentLang = lang;
@@ -218,17 +227,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateUIText() {
         document.documentElement.lang = state.currentLang;
+        
         document.querySelectorAll('[data-i18n-key]').forEach(element => {
             const key = element.dataset.i18nKey;
-            if (element.closest('template') || element.id === 'profile-skills-toggle' || element.id === 'detail-skills-toggle' || element.id === 'show-qr-button') {
+            if (element.closest('template') || 
+                element.id === 'profile-skills-toggle' || 
+                element.id === 'detail-skills-toggle' || 
+                element.id === 'show-qr-button') {
                 return;
             }
             element.textContent = t(key);
         });
+        
         document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
-            if (element.closest('template')) {
-                return;
-            }
+            if (element.closest('template')) return;
             element.placeholder = t(element.dataset.i18nPlaceholder);
         });
 
@@ -270,17 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSectionTitle('detail-experience', 'experience_section_title');
         updateSectionTitle('detail-education', 'education_section_title');
         
-        if (elements.skills.modal.style.display !== 'none') {
-            UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, (skill) => {
-                if (state.selectedSkills.includes(skill)) {
-                    state.selectedSkills = state.selectedSkills.filter(s => s !== skill);
-                } else {
-                    state.selectedSkills.push(skill);
-                }
-                UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, arguments.callee);
-            });
-        }
-        
+        // Шаблоны
         [elements.form.linkTemplate, elements.form.experienceTemplate, elements.form.educationTemplate].forEach(template => {
             if (template) {
                 template.content.querySelectorAll('[data-i18n-key]').forEach(el => el.textContent = t(el.dataset.i18nKey));
@@ -295,8 +297,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    let linksManager, experienceManager, educationManager;
 
     async function loadProfileData() {
         UI.showSpinner(elements.spinner, elements.allViews);
@@ -355,6 +355,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 UI.showProfileView(state.currentUserProfile, elements.profile, state.CONFIG, t, (container, skills, btn) => UI.renderSkillTags(container, skills, btn, t));
                 
+                const headerImg = document.getElementById('header-avatar-img');
+                if (headerImg && state.currentUserProfile?.photo_path) {
+                    headerImg.src = `${state.CONFIG.backendUrl}/${state.currentUserProfile.photo_path}`;
+                }
+
                 UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t, undefined);
                 
             } else {
@@ -617,223 +622,464 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function setupEventListeners() {
-            document.addEventListener('show-my-posts', () => loadMyPostsFeedData());
-            document.addEventListener('show-all-posts', () => {
-                loadPostsFeedData(); 
-                document.dispatchEvent(new CustomEvent('set-posts-feed-mode', { detail: { showMyPostsOnly: false } }));
-            });
-            document.addEventListener('openCreatePostModal', () => showCreatePostModal());
+    // 1. Функция управления видимостью Хедера и Таббара
+    const appHeader = document.getElementById('app-header');
+    const appTabbar = document.getElementById('app-tabbar');
+    const mainScroll = document.getElementById('main-scroll-container');
 
-        if (elements.postModal.contentField && elements.postModal.contentCounter) {
-            elements.postModal.contentField.addEventListener('input', () => {
-                const limit = state.VALIDATION_LIMITS?.post_content || 500;
-                elements.postModal.contentCounter.textContent = `${elements.postModal.contentField.value.length} / ${limit}`;
+    const updateLayoutVisibility = (activeViewId) => {
+        // 1. Хедер (Поиск) показываем ТОЛЬКО в лентах (People, Hub)
+        const showHeader = (
+            activeViewId === 'feed-container' || 
+            activeViewId === 'posts-feed-container'
+        );
+
+        // 2. Таббар показываем в лентах И в профиле
+        const showTabbar = (
+            activeViewId === 'feed-container' || 
+            activeViewId === 'posts-feed-container' || 
+            activeViewId === 'profile-view-container'
+        );
+
+        // Применяем видимость
+    if (appHeader) appHeader.style.display = showHeader ? 'flex' : 'none';
+    if (appTabbar) appTabbar.style.display = showTabbar ? 'flex' : 'none';
+
+    // 3. ИСПРАВЛЕННЫЙ РАСЧЕТ ОТСТУПА
+    if (mainScroll) {
+        if (showHeader && appHeader) {
+            const headerHeight = appHeader.offsetHeight;
+            mainScroll.style.paddingTop = (headerHeight + 10) + 'px';
+        } else {
+            mainScroll.style.paddingTop = 'calc(env(safe-area-inset-top, 20px) + 20px)';
+        }
+    }
+    };
+
+    // Перехватываем стандартный showView
+    const originalShowView = UI.showView;
+    UI.showView = function(target, allViews, spinner, tg, t, backAction) {
+        originalShowView(target, allViews, spinner, tg, t, backAction);
+        if (target) updateLayoutVisibility(target.id);
+    };
+
+
+    function setupEventListeners() {
+        // --- 1. ОБНОВЛЕННАЯ ЛОГИКА ТАБОВ ---
+        const tabPeople = document.getElementById('tab-people');
+        const tabHub = document.getElementById('tab-hub');
+        const tabProfile = document.getElementById('tab-profile');
+        const mainScroll = document.getElementById('main-scroll-container');
+
+        const resetTabs = () => {
+            [tabPeople, tabHub, tabProfile].forEach(t => t?.classList.remove('active'));
+        };
+
+        const headerTitle = document.getElementById('header-title');
+
+        if (tabPeople) {
+            tabPeople.addEventListener('click', () => {
+                resetTabs();
+                tabPeople.classList.add('active');
+                loadFeedData();
+                if (headerTitle) headerTitle.textContent = 'People';
+                if (mainScroll) mainScroll.scrollTop = 0;
             });
         }
-        if (elements.postModal.fullDescriptionField && elements.postModal.fullDescriptionCounter) {
+
+        if (tabHub) {
+            tabHub.addEventListener('click', () => {
+                resetTabs();
+                tabHub.classList.add('active');
+                loadPostsFeedData();
+                if (headerTitle) headerTitle.textContent = 'Hub';
+                if (mainScroll) mainScroll.scrollTop = 0;
+            });
+        }
+
+        if (tabProfile) {
+            tabProfile.addEventListener('click', () => {
+                resetTabs();
+                tabProfile.classList.add('active');
+                UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t, null);
+                if (headerTitle) headerTitle.textContent = t('profile_title');
+            });
+        }
+
+        // --- 2. FAB MENU LOGIC ---
+        const fabMain = document.getElementById('fab-main-trigger');
+        const fabMenu = document.getElementById('fab-menu-container');
+        const fabOverlay = document.getElementById('fab-menu-overlay');
+        let isFabOpen = false;
+
+        const toggleFabMenu = () => {
+            isFabOpen = !isFabOpen;
+            if (isFabOpen) {
+                fabMenu.classList.add('open');
+                fabOverlay.style.display = 'block';
+                fabMain.classList.add('fab-rotate-active');
+                fabMain.classList.remove('fab-rotate-reset');
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            } else {
+                fabMenu.classList.remove('open');
+                fabOverlay.style.display = 'none';
+                fabMain.classList.remove('fab-rotate-active');
+                fabMain.classList.add('fab-rotate-reset');
+            }
+        };
+
+        if (fabMain) {
+            fabMain.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFabMenu();
+            });
+        }
+
+        if (fabOverlay) {
+            fabOverlay.addEventListener('click', () => {
+                if (isFabOpen) toggleFabMenu();
+            });
+        }
+
+        // ДЕЙСТВИЯ FAB МЕНЮ
+        const actionCreate = document.getElementById('fab-action-create');
+        if (actionCreate) {
+            actionCreate.addEventListener('click', () => {
+                toggleFabMenu();
+                showCreatePostModal();
+            });
+        }
+
+        const actionMyPosts = document.getElementById('fab-action-my-posts');
+        if (actionMyPosts) {
+            actionMyPosts.addEventListener('click', () => {
+                toggleFabMenu();
+                if (tabHub) tabHub.click(); 
+                loadMyPostsFeedData();
+            });
+        }
+
+        const actionSaved = document.getElementById('fab-action-saved');
+        if (actionSaved) {
+            actionSaved.addEventListener('click', () => {
+                toggleFabMenu();
+                UI.showToast('Раздел "Сохраненное" в разработке', false);
+            });
+        }
+
+        const actionSubs = document.getElementById('fab-action-subs');
+        if (actionSubs) {
+            actionSubs.addEventListener('click', () => {
+                toggleFabMenu();
+                UI.showToast('Раздел "Подписки" в разработке', false);
+            });
+        }
+
+
+        // --- 3. QR И ШЕРИНГ ---
+        if (elements.profile.showQrButton) {
+            elements.profile.showQrButton.addEventListener('click', () => {
+                if (!state.currentUserProfile) return;
+                // QR модал теперь тоже в корне, будет виден
+                UI.showQrCodeModal(elements.qr, state.CONFIG, state.currentUserProfile, t);
+            });
+        }
+        if (elements.qr.closeButton) {
+            elements.qr.closeButton.addEventListener('click', () => {
+                elements.qr.modal.classList.remove('modal-overlay-animate');
+                setTimeout(() => { elements.qr.modal.style.display = 'none'; }, 200);
+            });
+        }
+
+        if (elements.profile.shareButton) {
+            elements.profile.shareButton.addEventListener('click', () => {
+                if (!state.currentUserProfile) return;
+                const bot = state.CONFIG.botUsername;
+                const app = state.CONFIG.appSlug;
+                if (bot && app) {
+                    const link = `https://t.me/${bot}/${app}?startapp=${state.currentUserProfile.user_id}`;
+                    const text = t('share_profile_text', { name: state.currentUserProfile.first_name });
+                    const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+                    tg.openTelegramLink(url);
+                } else {
+                    UI.showToast(t('error_share_generic'), true);
+                }
+            });
+        }
+
+        // --- 4. ОСТАЛЬНЫЕ ХЕНДЛЕРЫ ---
+        const globalSearchInput = document.getElementById('global-search-input');
+        if (globalSearchInput) {
+            globalSearchInput.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (tabHub && tabHub.classList.contains('active')) {
+                    if (elements.posts.searchInput) {
+                        elements.posts.searchInput.value = val;
+                        elements.posts.searchInput.dispatchEvent(new Event('input'));
+                    }
+                } else {
+                    if (elements.feed.searchInput) {
+                        elements.feed.searchInput.value = val;
+                        elements.feed.searchInput.dispatchEvent(new Event('input'));
+                    }
+                }
+            });
+        }
+
+        const globalFilterBtn = document.getElementById('global-filter-btn');
+        if (globalFilterBtn) {
+            globalFilterBtn.addEventListener('click', () => {
+                const isHub = tabHub && tabHub.classList.contains('active');
+                const currentSearch = globalSearchInput ? globalSearchInput.value : '';
+                const skills = currentSearch ? currentSearch.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+                if (isHub) {
+                    document.dispatchEvent(new CustomEvent('openSkillsModal', { 
+                        detail: { source: 'postsFeed', skills: skills } 
+                    }));
+                } else {
+                    document.dispatchEvent(new CustomEvent('openSkillsModal', { 
+                        detail: { source: 'feed', skills: skills } 
+                    }));
+                }
+            });
+        }
+
+        // --- 5. КНОПКИ ОТКРЫТИЯ СКИЛЛОВ (ДОБАВЛЕНО ИСПРАВЛЕНИЕ ДЛЯ ПРОФИЛЯ) ---
+
+        // Для модалки создания поста
+        if (elements.postModal.openSkillsModalButton) {
+            elements.postModal.openSkillsModalButton.addEventListener('click', () => {
+                const currentVal = elements.postModal.skillsField.value || '';
+                const currentSkills = currentVal ? currentVal.split(',').map(s => s.trim()).filter(Boolean) : [];
+                document.dispatchEvent(new CustomEvent('openSkillsModal', { detail: { source: 'postModal', skills: currentSkills } }));
+            });
+        }
+
+        // ✅ ИСПРАВЛЕНО: Для формы редактирования профиля (этого не было)
+        if (elements.form.openSkillsModalButton) {
+            elements.form.openSkillsModalButton.addEventListener('click', () => {
+                const currentVal = elements.form.skillsField.value || '';
+                const currentSkills = currentVal ? currentVal.split(',').map(s => s.trim()).filter(Boolean) : [];
+                document.dispatchEvent(new CustomEvent('openSkillsModal', { detail: { source: 'form', skills: currentSkills } }));
+            });
+        }
+
+        if (elements.postModal.contentField) {
+            elements.postModal.contentField.addEventListener('input', () => {
+                const limit = state.VALIDATION_LIMITS?.post_content || 500;
+                if(elements.postModal.contentCounter) elements.postModal.contentCounter.textContent = `${elements.postModal.contentField.value.length} / ${limit}`;
+            });
+        }
+        if (elements.postModal.fullDescriptionField) {
             elements.postModal.fullDescriptionField.addEventListener('input', () => {
                 const limit = state.VALIDATION_LIMITS?.post_full_description || 2000;
-                elements.postModal.fullDescriptionCounter.textContent = `${elements.postModal.fullDescriptionField.value.length} / ${limit}`;
+                if(elements.postModal.fullDescriptionCounter) elements.postModal.fullDescriptionCounter.textContent = `${elements.postModal.fullDescriptionField.value.length} / ${limit}`;
             });
         }
 
         tg.MainButton.onClick(() => {
             if (elements.formContainer.style.display === 'block') {
                 saveProfileData();
-            } else if (elements.postModal.modal.style.display === 'block') {
+            } else if (elements.postModal.modal.style.display === 'block' || elements.postModal.modal.style.display === 'flex') {
                 savePostData();
             }
         });
 
-        let modalSelectedStatus = null; 
-
+        // --- 6. МОДАЛКА СКИЛЛОВ (BRUTE FORCE REMOVE & CREATE) ---
+        // Это гарантирует, что окно всегда будет поверх остальных (Z-index win)
         document.addEventListener('openSkillsModal', (event) => {
-            const { source, skills } = event.detail;
-            state.skillsModalSource = source; 
-            state.selectedSkills = [...skills];
-            modalSelectedStatus = null;
-            const statusContainer = elements.skills.statusFilterContainer;
-            
-            if (state.skillsModalSource === 'postsFeed' || state.skillsModalSource === 'editPostModal') {
-                let currentStatusKey = null;
-                if (state.skillsModalSource === 'postsFeed') {
-                    // ✅ БЕРЕМ АКТУАЛЬНЫЙ СТАТУС ИЗ ИНПУТА
-                    currentStatusKey = elements.posts.postsStatusFilterInput ? elements.posts.postsStatusFilterInput.value : null;
-                    statusContainer.style.display = 'block';
-                } else {
-                    statusContainer.style.display = 'none';
+            console.log('🔵 openSkillsModal EVENT CAUGHT!', event.detail);
+
+            try {
+                const { source, skills } = event.detail;
+                state.skillsModalSource = source;
+                state.selectedSkills = Array.isArray(skills) ? [...skills] : [];
+
+                // 1. УБИВАЕМ ЗОМБИ: Находим ВСЕ элементы с таким ID и удаляем их
+                const zombies = document.querySelectorAll('#skills-modal');
+                zombies.forEach(el => el.remove());
+
+                console.log('💀 Zombies removed. Creating fresh modal...');
+
+                // 2. Создаем чистую модалку
+                const skillsModal = document.createElement('div');
+                skillsModal.id = 'skills-modal';
+                skillsModal.className = 'screen'; 
+                skillsModal.style.display = 'none'; 
+                
+                skillsModal.innerHTML = `
+                    <div class="form-header">
+                        <h1 data-i18n-key="skills_modal_title">Навыки</h1>
+                    </div>
+                    <div id="status-filter-container" class="status-filter-group" style="display: none"></div>
+                    <div id="skills-modal-list-container"></div>
+                    <div class="fab-modal-save-container">
+                        <button id="save-skills-modal-button" class="action-button fab-modal-save" data-i18n-key="select">Готово</button>
+                    </div>
+                `;
+                
+                // Вставляем В КОНЕЦ body, чтобы перекрыть все
+                document.body.appendChild(skillsModal);
+
+                // 3. ОБНОВЛЯЕМ ССЫЛКИ
+                elements.skills.modal = skillsModal;
+                elements.skills.listContainer = skillsModal.querySelector('#skills-modal-list-container');
+                elements.skills.statusFilterContainer = skillsModal.querySelector('#status-filter-container');
+                elements.skills.saveButton = skillsModal.querySelector('#save-skills-modal-button');
+
+                if (elements.allViews) {
+                    elements.allViews = elements.allViews.filter(v => v && v.id !== 'skills-modal');
+                    elements.allViews.push(skillsModal);
                 }
 
-                const statuses = [
-                    { key: 'looking', text: t('post_type_looking') },
-                    { key: 'offering', text: t('post_type_offering') },
-                    { key: 'showcase', text: t('post_type_showcase') }
-                ];
-                if (currentStatusKey) {
-                    modalSelectedStatus = statuses.find(s => s.key === currentStatusKey) || null;
-                }
-                const statusToggleCallback = (status) => {
-                    if (modalSelectedStatus && modalSelectedStatus.key === status.key) {
-                        modalSelectedStatus = null;
+                // 4. ЛОГИКА ОТОБРАЖЕНИЯ ФИЛЬТРОВ
+                const statusContainer = elements.skills.statusFilterContainer;
+                if (statusContainer) {
+                    if (source === 'postsFeed') {
+                        statusContainer.style.display = 'block'; 
+                        const currentStatus = elements.posts.postsStatusFilterInput 
+                            ? elements.posts.postsStatusFilterInput.value 
+                            : null;
+                        
+                        UI.renderStatusFilters(statusContainer, t, (statusObj) => {
+                            const btns = statusContainer.querySelectorAll('.status-tag');
+                            btns.forEach(b => {
+                                if (b.dataset.status === statusObj.key) {
+                                    b.classList.toggle('active');
+                                } else {
+                                    b.classList.remove('active');
+                                }
+                            });
+                        }, currentStatus);
                     } else {
-                        modalSelectedStatus = status;
+                        statusContainer.style.display = 'none';
                     }
-                    UI.renderStatusFilters(statusContainer, t, statusToggleCallback, modalSelectedStatus ? modalSelectedStatus.key : null);
-                };
-                UI.renderStatusFilters(statusContainer, t, statusToggleCallback, modalSelectedStatus ? modalSelectedStatus.key : null);
-            } else {
-                statusContainer.style.display = 'none';
-            }
-            
-            function onToggleSkillInModal(skill) {
-                if (state.selectedSkills.includes(skill)) {
-                    state.selectedSkills = state.selectedSkills.filter(s => s !== skill);
-                } else {
-                    state.selectedSkills.push(skill);
                 }
-                UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, onToggleSkillInModal);
+
+                // 5. ОПРЕДЕЛЯЕМ КНОПКУ "НАЗАД"
+                let backAction = () => loadFeedData();
+                if (source === 'postsFeed') backAction = () => loadPostsFeedData();
+                else if (source === 'form') backAction = () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
+                else if (source === 'postModal') backAction = () => UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
+                else if (source === 'editPostModal') backAction = () => document.dispatchEvent(new CustomEvent('skills-modal-canceled'));
+
+                // 6. ПОКАЗЫВАЕМ
+                requestAnimationFrame(() => {
+                    UI.showView(skillsModal, elements.allViews, elements.spinner, tg, t, backAction);
+                    skillsModal.style.display = 'flex';
+                    skillsModal.classList.add('screen-fade-in');
+                });
+
+                // 7. РЕНДЕРИМ СПИСОК
+                setTimeout(() => {
+                    const container = elements.skills.listContainer;
+                    if (!container || !SKILL_CATEGORIES) return;
+
+                    const renderList = () => {
+                        UI.renderSkillSelectionForm(
+                            container,
+                            state.selectedSkills,
+                            SKILL_CATEGORIES,
+                            t,
+                            (skill) => {
+                                if (state.selectedSkills.includes(skill)) {
+                                    state.selectedSkills = state.selectedSkills.filter(s => s !== skill);
+                                } else {
+                                    state.selectedSkills.push(skill);
+                                }
+                                renderList();
+                            }
+                        );
+                    };
+                    renderList();
+                }, 10);
+
+            } catch (error) {
+                console.error('❌ Error inside openSkillsModal:', error);
+                UI.showToast('Ошибка интерфейса', true);
             }
-            UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, onToggleSkillInModal);
-            
-            elements.skills.modal.classList.remove('screen-fade-in');
-            
-            let onBackAction;
-            if (state.skillsModalSource === 'form') {
-                onBackAction = () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
-            } else if (state.skillsModalSource === 'postModal') {
-                onBackAction = () => UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
-            } else if (state.skillsModalSource === 'feed') {
-                onBackAction = loadFeedData;
-            } else if (state.skillsModalSource === 'postsFeed') {
-                onBackAction = () => {
-                     UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                };
-            } else if (state.skillsModalSource === 'editPostModal') {
-                onBackAction = () => {
-                    document.dispatchEvent(new CustomEvent('skills-modal-canceled'));
-                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                }; 
-            } else {
-                onBackAction = loadProfileData;
-            }
-            UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t, onBackAction);
         });
 
+        // 7. СОХРАНЕНИЕ НАВЫКОВ (ДЕЛЕГИРОВАНИЕ)
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'save-skills-modal-button') {
+                e.preventDefault();
+                e.stopPropagation();
+
+                console.log('💾 Нажата кнопка Сохранить навыки. Источник:', state.skillsModalSource);
+
+                if (state.skillsModalSource === 'postsFeed') {
+                    const globalSearchInput = document.getElementById('global-search-input');
+                    if (globalSearchInput) globalSearchInput.value = state.selectedSkills.join(', ');
+                    
+                    const postsSearchInput = document.getElementById('posts-search-input');
+                    if (postsSearchInput) {
+                        postsSearchInput.value = state.selectedSkills.join(', ');
+                        postsSearchInput.dispatchEvent(new Event('input'));
+                    }
+                    
+                    const statusContainer = document.getElementById('status-filter-container');
+                    const activeStatusBtn = statusContainer ? statusContainer.querySelector('.status-tag.active') : null;
+                    const status = activeStatusBtn ? activeStatusBtn.dataset.status : null;
+                    
+                    const postsStatusInput = document.getElementById('posts-status-filter-input');
+                    if (postsStatusInput) {
+                        postsStatusInput.value = status || '';
+                    }
+
+                    document.dispatchEvent(new CustomEvent('set-posts-feed-mode', { detail: { skills: state.selectedSkills, status: status } }));
+                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
+                } 
+                else if (state.skillsModalSource === 'feed') {
+                    const globalSearchInput = document.getElementById('global-search-input');
+                    if (globalSearchInput) globalSearchInput.value = state.selectedSkills.join(', ');
+                    
+                    const feedSearchInput = document.getElementById('feed-search-input');
+                    if (feedSearchInput) {
+                        feedSearchInput.value = state.selectedSkills.join(', ');
+                        feedSearchInput.dispatchEvent(new Event('input'));
+                    }
+                    document.dispatchEvent(new CustomEvent('set-feed-mode', { detail: { skills: state.selectedSkills } }));
+                    UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
+                }
+                else if (state.skillsModalSource === 'form') {
+                    elements.form.skillsField.value = state.selectedSkills.join(', ');
+                    tg.MainButton.show();
+                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
+                }
+                else if (state.skillsModalSource === 'postModal') {
+                     elements.postModal.skillsField.value = state.selectedSkills.join(', ');
+                    UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
+                }
+                else if (state.skillsModalSource === 'editPostModal') {
+                    document.dispatchEvent(new CustomEvent('skills-updated-for-post', { detail: { skills: state.selectedSkills } }));
+                    document.dispatchEvent(new CustomEvent('skills-modal-canceled'));
+                }
+            }
+        });
+        
         linksManager = setupDynamicList(tg, t, elements.form.addLinkButton, elements.form.linksContainer, elements.form.linkTemplate, 5);
         experienceManager = setupDynamicList(tg, t, elements.form.addExperienceButton, elements.form.experienceContainer, elements.form.experienceTemplate, 10);
         educationManager = setupDynamicList(tg, t, elements.form.addEducationButton, elements.form.educationContainer, elements.form.educationTemplate, 5);
 
-        elements.welcomeContainer.querySelector('#create-profile-button').addEventListener('click', () => {
-            elements.form.nameField.value = tg.initDataUnsafe?.user?.first_name || t('default_user_name');
-            elements.form.bioField.value = '';
-            elements.form.skillsField.value = '';
-            const previewImg = elements.form.avatarPreview;
-            previewImg.src = 'https://t.me/i/userpic/320/null.jpg';
-            UI.initAvatarFader(previewImg);
-            state.selectedFile = null;
-            if (linksManager?.renderItems) linksManager.renderItems([]);
-            if (experienceManager?.renderItems) experienceManager.renderItems([]);
-            if (educationManager?.renderItems) educationManager.renderItems([]);
-            UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
-        });
-
-        if (elements.profile.viewFeedButton) elements.profile.viewFeedButton.addEventListener('click', loadFeedData);
-        if (elements.profile.viewPostsFeedButton) elements.profile.viewPostsFeedButton.addEventListener('click', loadPostsFeedData);
-        if (elements.profile.logoutButton) elements.profile.logoutButton.addEventListener('click', () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData));
-        if (elements.detail.headerActionsButton) elements.detail.headerActionsButton.addEventListener('click', () => UI.showToast(t('actions_menu_placeholder', {defaultValue: "Меню действий (Пожаловаться и т.д.) в разработке."})));
-        
-        if (elements.detail.fabContactButton) {
-            elements.detail.fabContactButton.addEventListener('click', async () => {
-                if (!state.currentViewedUserId) return;
-                try {
-                    const userInfo = await api.getTelegramUserInfo(tg.initData, state.currentViewedUserId);
-                    if (userInfo.ok && userInfo.username) {
-                        tg.openTelegramLink(`https://t.me/${userInfo.username}`);
-                    } else {
-                        UI.showToast(t('error_open_chat_no_username'), true);
-                    }
-                } catch (error) {
-                    console.error('Error opening chat:', error);
-                    UI.showToast(t('error_open_chat_failed'), true);
-                }
-            });
-        }
-
-        if (elements.detail.fabFollowButton) {
-            elements.detail.fabFollowButton.addEventListener('click', async () => {
-                if (!state.currentViewedUserId) return;
-                const button = elements.detail.fabFollowButton;
-                const isCurrentlyFollowing = button.classList.contains('is-unfollow'); 
-                const iconFollow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="17" y1="11" x2="23" y2="11"></line></svg>`;
-                const iconUnfollow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>`;
-                button.classList.toggle('is-unfollow');
-                button.innerHTML = isCurrentlyFollowing ? iconFollow : iconUnfollow;
-                button.title = t(isCurrentlyFollowing ? 'follow_button' : 'unfollow_button');
-                try {
-                    let result;
-                    if (isCurrentlyFollowing) {
-                        result = await api.unfollowUser(tg.initData, state.currentViewedUserId);
-                    } else {
-                        result = await api.followUser(tg.initData, state.currentViewedUserId);
-                    }
-                    if (!result.ok) throw new Error(result.error || 'Follow/unfollow failed');
-                    if (tg.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light');
-                } catch (error) {
-                    console.error('Follow/Unfollow error:', error);
-                    UI.showToast(t('error_follow_generic'), true);
-                    button.classList.toggle('is-unfollow');
-                    button.innerHTML = isCurrentlyFollowing ? iconUnfollow : iconFollow;
-                    button.title = t(isCurrentlyFollowing ? 'unfollow_button' : 'follow_button');
-                }
+        const welcomeCreateBtn = elements.welcomeContainer.querySelector('#create-profile-button');
+        if(welcomeCreateBtn) {
+            welcomeCreateBtn.addEventListener('click', () => {
+                UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
             });
         }
         
         if (elements.profile.settingsButton) elements.profile.settingsButton.addEventListener('click', () => UI.showView(elements.settingsContainer, elements.allViews, elements.spinner, tg, t, loadProfileData));
-        if (elements.settings.langBtnRu) elements.settings.langBtnRu.addEventListener('click', () => setLanguage('ru'));
-        if (elements.settings.langBtnEn) elements.settings.langBtnEn.addEventListener('click', () => setLanguage('en'));
+        if (elements.profile.logoutButton) elements.profile.logoutButton.addEventListener('click', () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData));
         
         if (elements.settings.glassToggle) {
             elements.settings.glassToggle.addEventListener('change', async (e) => {
                 const isEnabled = e.target.checked;
-                const currentTheme = state.currentUserProfile.theme || 'auto';
-                if (isEnabled && (currentTheme === 'auto' || currentTheme === 'custom')) {
-                    e.target.checked = false;
-                    if (elements.settings.glassToggleWrapper) {
-                        elements.settings.glassToggleWrapper.classList.add('input-shake');
-                        setTimeout(() => elements.settings.glassToggleWrapper.classList.remove('input-shake'), 600);
-                    }
-                    UI.showToast(t('glass_mode_error'), true);
-                    return;
-                }
                 state.currentUserProfile.is_glass_enabled = isEnabled;
                 applyGlass(isEnabled);
                 try { await api.saveGlassPreference(tg.initData, isEnabled); } catch (error) { console.error("Error saving glass preference:", error); }
             });
-        }
-
-        if (elements.settings.controlBtnTaps && elements.settings.controlBtnSwipes) {
-            const currentMode = localStorage.getItem('control_mode') || 'taps';
-            elements.settings.controlBtnTaps.classList.toggle('active', currentMode === 'taps');
-            elements.settings.controlBtnSwipes.classList.toggle('active', currentMode === 'swipes');
-
-            const updateControlMode = (newMode) => {
-                if (newMode === localStorage.getItem('control_mode')) return;
-                
-                localStorage.setItem('control_mode', newMode);
-                
-                elements.settings.controlBtnTaps.classList.toggle('active', newMode === 'taps');
-                elements.settings.controlBtnSwipes.classList.toggle('active', newMode === 'swipes');
-                
-                window.dispatchEvent(new Event('control-mode-changed'));
-                
-                if (window.Telegram?.WebApp?.HapticFeedback) {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-                }
-            };
-
-            elements.settings.controlBtnTaps.addEventListener('click', () => updateControlMode('taps'));
-            elements.settings.controlBtnSwipes.addEventListener('click', () => updateControlMode('swipes'));
         }
         
         elements.settings.themeButtons.forEach(button => {
@@ -843,323 +1089,182 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!selectedTheme) return;
                     applyTheme(tg, t, elements.settings, state.currentUserProfile, selectedTheme, state.currentUserProfile.custom_theme);
                     state.currentUserProfile.theme = selectedTheme;
-                    if (selectedTheme === 'auto' || selectedTheme === 'custom') {
-                        if (elements.settings.glassToggle.checked) {
-                            elements.settings.glassToggle.checked = false;
-                            state.currentUserProfile.is_glass_enabled = false;
-                            applyGlass(false);
-                            try { await api.saveGlassPreference(tg.initData, false); } catch (error) { console.warn("Failed to auto-save glass preference:", error); }
-                        }
-                    }
-                    if (selectedTheme !== 'custom') {
-                        try { await api.saveThemeSelection(tg.initData, selectedTheme, state.currentLang); } catch (error) { UI.showToast(t('error_theme_save'), true); }
-                    } else {
-                        try { await api.activateCustomTheme(tg.initData, state.currentLang); } catch (error) { UI.showToast(t('error_theme_save'), true); }
-                    }
+                    try { await api.saveThemeSelection(tg.initData, selectedTheme, state.currentLang); } catch (error) {}
                 });
             }
         });
-
-        if (elements.settings.saveCustomThemeButton) {
-            elements.settings.saveCustomThemeButton.addEventListener('click', async () => {
-                const customColors = { bg: elements.settings.colorInputBg.value, button: elements.settings.colorInputButton.value, text: elements.settings.colorInputText.value };
-                applyTheme(tg, t, elements.settings, state.currentUserProfile, 'custom', JSON.stringify(customColors));
+        
+        if (elements.detail.fabContactButton) {
+            elements.detail.fabContactButton.addEventListener('click', async () => {
+                if (!state.currentViewedUserId) return;
                 try {
-                    const result = await api.saveCustomTheme(tg.initData, customColors, state.currentLang);
+                    const userInfo = await api.getTelegramUserInfo(tg.initData, state.currentViewedUserId);
+                    if (userInfo.ok && userInfo.username) tg.openTelegramLink(`https://t.me/${userInfo.username}`);
+                    else UI.showToast(t('error_open_chat_no_username'), true);
+                } catch (error) { UI.showToast(t('error_open_chat_failed'), true); }
+            });
+        }
+
+        const allInputs = document.querySelectorAll('input, textarea');
+        const tabbar = document.getElementById('app-tabbar');
+        
+        const handleFocus = () => {
+            if (tabbar) tabbar.classList.add('hide-on-keyboard');
+        };
+        const handleBlur = () => {
+            if (tabbar) tabbar.classList.remove('hide-on-keyboard');
+        };
+
+        allInputs.forEach(input => {
+            input.addEventListener('focus', handleFocus);
+            input.addEventListener('blur', handleBlur);
+        });
+
+        document.body.addEventListener('focusin', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                handleFocus();
+            }
+        });
+        document.body.addEventListener('focusout', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                handleBlur();
+            }
+        });
+        if (elements.detail.fabFollowButton) {
+            elements.detail.fabFollowButton.addEventListener('click', async () => {
+                if (!state.currentViewedUserId) return;
+                const button = elements.detail.fabFollowButton;
+                const isCurrentlyFollowing = button.classList.contains('is-unfollow'); 
+                try {
+                    const result = isCurrentlyFollowing ? await api.unfollowUser(tg.initData, state.currentViewedUserId) : await api.followUser(tg.initData, state.currentViewedUserId);
                     if (result.ok) {
-                        state.currentUserProfile.custom_theme = JSON.stringify(customColors);
-                        state.currentUserProfile.theme = 'custom';
-                        UI.showToast(t('theme_custom_saved_success'), false);
-                    } else { throw new Error(result.error || 'Unknown error'); }
-                } catch (error) { UI.showToast(t('error_theme_save'), true); applyTheme(tg, t, elements.settings, state.currentUserProfile, state.currentUserProfile.theme || 'auto', state.currentUserProfile.custom_theme); }
-            });
-        }
-        if (elements.profile.shareButton) {
-            elements.profile.shareButton.addEventListener('click', () => {
-                if (!state.CONFIG.botUsername || !state.CONFIG.appSlug || !state.currentUserProfile.user_id) { UI.showToast(t('error_share_generic'), true); return; }
-                const shareUrl = `https://t.me/${state.CONFIG.botUsername}/${state.CONFIG.appSlug}?startapp=${state.currentUserProfile.user_id}`;
-                const text = t('share_text', { name: state.currentUserProfile.first_name || 'User' }); 
-                tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`);
-            });
-        }
-        if (elements.profile.showQrButton) elements.profile.showQrButton.addEventListener('click', () => { state.qrCodeInstance = UI.showQrCodeModal(elements.qr, state.CONFIG, state.currentUserProfile, t); });
-        if (elements.qr.closeButton) elements.qr.closeButton.addEventListener('click', () => { elements.qr.modal.style.display = 'none'; });
-        if (elements.qr.modal) elements.qr.modal.addEventListener('click', (event) => { if (event.target === elements.qr.modal) { elements.qr.modal.style.display = 'none'; }});
-        [elements.form.nameField, elements.form.bioField, elements.form.skillsField].forEach(el => { if (el) el.addEventListener('input', () => tg.MainButton.show()); });
-        if (elements.form.photoInput) {
-        elements.form.photoInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                if (!['image/jpeg', 'image/png'].includes(file.type)) { UI.showToast(t('error_photo_type'), true); return; }
-                if (file.size > 5 * 1024 * 1024) { UI.showToast(t('error_photo_size'), true); return; }
-                state.selectedFile = file;
-                const reader = new FileReader();
-                reader.onload = (e) => { elements.form.avatarPreview.src = e.target.result; UI.initAvatarFader(elements.form.avatarPreview); }
-                reader.readAsDataURL(file);
-                tg.MainButton.show();
-            }
-        });
-    }
-        if (elements.feed.searchInput) elements.feed.searchInput.addEventListener('input', () => { });
-        if (elements.posts.searchInput) elements.posts.searchInput.addEventListener('input', () => { });
-        if (elements.form.openSkillsModalButton) {
-            elements.form.openSkillsModalButton.addEventListener('click', () => {
-                state.skillsModalSource = 'form';
-                
-                if (elements.skills.statusFilterContainer) {
-                    elements.skills.statusFilterContainer.style.display = 'none';
-                }
-
-                const currentSkills = elements.form.skillsField.value.split(',').map(s => s.trim()).filter(s => s);
-                state.selectedSkills = [...currentSkills];
-                function onToggleSkillInFormModal(skill) {
-                    if (state.selectedSkills.includes(skill)) { state.selectedSkills = state.selectedSkills.filter(s => s !== skill); } else { state.selectedSkills.push(skill); }
-                    UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, onToggleSkillInFormModal);
-                }
-                UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, onToggleSkillInFormModal);
-                elements.skills.modal.classList.remove('screen-fade-in');
-                UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t, () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData));
-            });
-        }
-
-        if (elements.postModal.openSkillsModalButton && elements.skills.modal && elements.skills.listContainer) {
-        elements.postModal.openSkillsModalButton.addEventListener('click', () => {
-            state.skillsModalSource = 'postModal';
-            const currentSkills = elements.postModal.skillsField.value.split(',').map((s) => s.trim()).filter((s) => s);
-            state.selectedSkills = [...currentSkills];
-            function onToggleSkillInPostModal(skill) {
-            if (state.selectedSkills.includes(skill)) { state.selectedSkills = state.selectedSkills.filter((s) => s !== skill); } else { state.selectedSkills.push(skill); }
-            UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, onToggleSkillInPostModal);
-            }
-            UI.renderSkillSelectionForm(elements.skills.listContainer, state.selectedSkills, SKILL_CATEGORIES, t, onToggleSkillInPostModal);
-            elements.skills.modal.classList.remove('screen-fade-in');
-            const onBackAction = () => { UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData); };
-            UI.showView(elements.skillsModal, elements.allViews, elements.spinner, tg, t, onBackAction);
-        });
-        }
-
-        // ✅ ДОБАВЛЕНО: Слушатель для кнопки фильтров в ЛЕНТЕ ЗАПРОСОВ
-        if (elements.posts.openSkillsModalButton) {
-            elements.posts.openSkillsModalButton.addEventListener('click', () => {
-                // Пытаемся получить текущие навыки из поисковой строки (как запасной вариант)
-                const currentSearchVal = elements.posts.searchInput ? elements.posts.searchInput.value : '';
-                const skillsFromInput = currentSearchVal.split(',').map(s => s.trim()).filter(Boolean);
-                
-                document.dispatchEvent(new CustomEvent('openSkillsModal', { 
-                    detail: { 
-                        source: 'postsFeed', 
-                        skills: skillsFromInput 
-                    } 
-                }));
-            });
-        }
-
-        if (elements.feed.openSkillsModalButtonFeed) {
-            elements.feed.openSkillsModalButtonFeed.addEventListener('click', () => {
-                const skills = Array.isArray(state.selectedSkills) ? state.selectedSkills : [];
-                document.dispatchEvent(new CustomEvent('openSkillsModal', { detail: { source: 'feed', skills } }));
-            });
-        }
-        
-        if (elements.postModal.saveButton) elements.postModal.saveButton.addEventListener('click', () => savePostData());
-        
-        if (elements.skills.saveButton) {
-            elements.skills.saveButton.addEventListener('click', () => {
-                if (state.skillsModalSource === 'form') {
-                    elements.form.skillsField.value = state.selectedSkills.join(', ');
-                    tg.MainButton.show();
-                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                } else if (state.skillsModalSource === 'postModal') {
-                     elements.postModal.skillsField.value = state.selectedSkills.join(', ');
-                    UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
-                } else if (state.skillsModalSource === 'feed') {
-                   document.dispatchEvent(new CustomEvent('set-feed-mode', { detail: { skills: state.selectedSkills } }));
-                   UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                } else if (state.skillsModalSource === 'postsFeed') {
-                    const status = modalSelectedStatus ? modalSelectedStatus.key : null;
-                    
-                    // ✅ ИСПРАВЛЕНО: Обновляем скрытый инпут статуса, чтобы модалка "запомнила" его
-                    if (elements.posts.postsStatusFilterInput) {
-                        elements.posts.postsStatusFilterInput.value = status || '';
+                        button.classList.toggle('is-unfollow');
+                        if (tg.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light');
                     }
-                    
-                    // ✅ ИСПРАВЛЕНО: Обновляем поисковую строку, чтобы пользователь видел выбранные навыки
-                    if (elements.posts.searchInput) {
-                        elements.posts.searchInput.value = state.selectedSkills.join(', ');
-                    }
-
-                    document.dispatchEvent(new CustomEvent('set-posts-feed-mode', { detail: { skills: state.selectedSkills, status: status } }));
-                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                } else if (state.skillsModalSource === 'editPostModal') {
-                    document.dispatchEvent(new CustomEvent('skills-updated-for-post', { detail: { skills: state.selectedSkills } }));
-                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                } else {
-                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
                 }
+                 catch (e) {}
             });
         }
     }
 
     // --- ОБРАБОТКА ОФЛАЙНА ---
     function handleOffline() {
-        UI.showToast('📡 Нет соединения с интернетом', true); // true = красный/ошибка
-        // Опционально: заблокировать MainButton
+        UI.showToast('📡 Нет соединения с интернетом', true);
         if (tg.MainButton.isVisible) tg.MainButton.disable();
     }
 
     function handleOnline() {
-        UI.showToast('🟢 Соединение восстановлено', false); // false = обычный/успех
+        UI.showToast('🟢 Соединение восстановлено', false);
         if (tg.MainButton.isVisible) tg.MainButton.enable();
-        
-        // Если мы были в ленте, можно попробовать перезагрузить данные
-        // if (state.activeTab === 'feed') loadFeedData(); 
     }
 
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
     
-    // Проверка при запуске
-    if (!navigator.onLine) {
-        handleOffline();
-    }
+    if (!navigator.onLine) handleOffline();
 
+    // --- ЗАПУСК ---
     async function main() {
-    UI.showSpinner(elements.spinner, elements.allViews);
-    try {
-        const initialLang = getInitialLanguage();
-        await setLanguage(initialLang, true);
-        console.log("⏳ Загрузка конфига..."); 
-        const configData = await api.loadConfig(); 
-        state.CONFIG = configData; 
-        state.CONFIG.backendUrl = state.CONFIG.backendUrl || window.location.origin; 
-        api.setApiConfig(state.CONFIG);
-        state.VALIDATION_LIMITS = configData.validationLimits || {};
-        window.__CONFIG = state.CONFIG;
-        window.__CONFIG.VALIDATION_LIMITS = state.VALIDATION_LIMITS; 
-        console.log("⏳ Загрузка React-островков...");
-        await loadReactIslands(); 
-
-        const MAX_CONTENT = state.VALIDATION_LIMITS.post_content || 500;
-        const MAX_FULL_DESC = state.VALIDATION_LIMITS.post_full_description || 2000;
-
-        if (elements.postModal.contentField) {
-            elements.postModal.contentField.maxLength = MAX_CONTENT;
-            const contentCounter = document.createElement('div');
-            contentCounter.className = 'char-counter';
-            elements.postModal.contentField.insertAdjacentElement('afterend', contentCounter);
-            elements.postModal.contentCounter = contentCounter; 
-        }
-
-        if (elements.postModal.fullDescriptionField) {
-            elements.postModal.fullDescriptionField.maxLength = MAX_FULL_DESC;
-            const fullDescCounter = document.createElement('div');
-            fullDescCounter.className = 'char-counter';
-            elements.postModal.fullDescriptionField.insertAdjacentElement('afterend', fullDescCounter);
-            elements.postModal.fullDescriptionCounter = fullDescCounter; 
-        }
-        setupEventListeners();
-        state.targetUserIdFromLink = tg.initDataUnsafe?.start_param;
-        console.log("⏳ Загрузка профиля...");
-        await loadProfileData();
-        
-        // === ЛОГИКА DEEP LINKS (ROUTING) ===
-        const startParam = tg.initDataUnsafe?.start_param;
-        
-        if (startParam && state.isRegistered) {
-            console.log("🔗 Deep Link detected:", startParam);
+        UI.showSpinner(elements.spinner, elements.allViews);
+        try {
+            const initialLang = getInitialLanguage();
+            await setLanguage(initialLang, true);
             
-            // СЦЕНАРИЙ 1: Ссылка на ПОСТ (p_123)
-            if (startParam.startsWith('p_')) {
-                // trim() убирает лишние пробелы
-                const postId = startParam.replace('p_', '').trim();
-                
-                // 1. Грузим Ленту Постов (фон)
-                await loadPostsFeedData();
-                
-                try {
-                    // 2. Грузим данные поста
-                    const postResult = await api.getPostById(tg.initData, postId);
-                   if (postResult.ok && postResult.post) {
-                        console.log("✅ Post loaded:", postResult.post.post_id);
-                        
-                        // 1. Сохраняем пост в глобальную переменную (Надежный способ)
-                        // React проверит её при загрузке
-                        window.__DEEP_LINK_POST = postResult.post;
+            const configData = await api.loadConfig(); 
+            state.CONFIG = configData; 
+            state.CONFIG.backendUrl = state.CONFIG.backendUrl || window.location.origin; 
+            api.setApiConfig(state.CONFIG);
+            state.VALIDATION_LIMITS = configData.validationLimits || {};
+            window.__CONFIG = state.CONFIG;
+            window.__CONFIG.VALIDATION_LIMITS = state.VALIDATION_LIMITS; 
 
-                        // 2. На всякий случай кидаем событие (если React уже был загружен)
-                        setTimeout(() => {
-                            document.dispatchEvent(new CustomEvent('open-deep-link-post', { 
-                                detail: { post: postResult.post } 
-                            }));
-                        }, 500);
-                    } else {
-                        UI.showToast('Пост не найден или удален', true);
-                    }
-                } catch (e) {
-                    console.error("Deep link post error:", e);
-                    UI.showToast('Не удалось загрузить пост по ссылке', true);
-                }
-            } 
-            // СЦЕНАРИЙ 2: Ссылка на ПРОФИЛЬ (просто ID)
-            else {
-                const targetUserId = startParam;
-                
-                // 1. Грузим Ленту Людей (фон) - ВМЕСТО отдельного экрана
-                await loadFeedData();
-                
-                try {
-                    // 2. Грузим данные пользователя
-                    const userResult = await api.loadTargetUserProfile(tg.initData, targetUserId);
-                    if (userResult.ok && userResult.profile) {
-                        // 3. Ждем React и открываем Шторку
-                        setTimeout(() => {
-                            document.dispatchEvent(new CustomEvent('open-deep-link-profile', { 
-                                detail: { user: userResult.profile } 
-                            }));
-                        }, 500);
-                    } else {
-                        UI.showToast(t('error_profile_not_found'), true);
-                    }
-                } catch (e) {
-                    console.error("Deep link profile error:", e);
-                    UI.showToast(t('error_load_profile_generic'), true);
-                }
+            await loadReactIslands(); 
+
+            // Настройка лимитов UI
+            const MAX_CONTENT = state.VALIDATION_LIMITS.post_content || 500;
+            const MAX_FULL_DESC = state.VALIDATION_LIMITS.post_full_description || 2000;
+
+            if (elements.postModal.contentField) {
+                elements.postModal.contentField.maxLength = MAX_CONTENT;
+                const oldC = elements.postModal.contentField.parentNode.querySelector('.char-counter');
+                if(oldC) oldC.remove();
+                const contentCounter = document.createElement('div');
+                contentCounter.className = 'char-counter';
+                elements.postModal.contentField.insertAdjacentElement('afterend', contentCounter);
+                elements.postModal.contentCounter = contentCounter; 
+            }
+
+            if (elements.postModal.fullDescriptionField) {
+                elements.postModal.fullDescriptionField.maxLength = MAX_FULL_DESC;
+                const oldC = elements.postModal.fullDescriptionField.parentNode.querySelector('.char-counter');
+                if(oldC) oldC.remove();
+                const fullDescCounter = document.createElement('div');
+                fullDescCounter.className = 'char-counter';
+                elements.postModal.fullDescriptionField.insertAdjacentElement('afterend', fullDescCounter);
+                elements.postModal.fullDescriptionCounter = fullDescCounter; 
             }
             
-            // Сбрасываем, чтобы при релоаде не открывалось снова
-            state.targetUserIdFromLink = null;
-        }
-        // Обработка незарегистрированных (оставляем как было)
-        else if (startParam && !state.isRegistered) { 
-            UI.showToast(t('error_must_create_profile'), true);
-            UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData); 
-            state.targetUserIdFromLink = null; 
-        }
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-        if (isMobileDevice() && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0')) {
-            try {
-                if (typeof tg.requestFullscreen === 'function') {
-                    await tg.requestFullscreen();
-                        setTimeout(() => {
-                        const screens = document.querySelectorAll('.screen');
-                        screens.forEach(screen => {
-                            screen.style.paddingTop = '60px';
-                        });
-                    }, 300);
+            setupEventListeners();
+            state.targetUserIdFromLink = tg.initDataUnsafe?.start_param;
+            
+            await loadProfileData();
+            
+            const startParam = tg.initDataUnsafe?.start_param;
+            
+            if (startParam && state.isRegistered) {
+                if (startParam.startsWith('p_')) {
+                    const postId = startParam.replace('p_', '').trim();
+                    const tabHub = document.getElementById('tab-hub');
+                    if(tabHub) tabHub.click();
+                    
+                    try {
+                        const postResult = await api.getPostById(tg.initData, postId);
+                        if (postResult.ok && postResult.post) {
+                            window.__DEEP_LINK_POST = postResult.post;
+                            setTimeout(() => {
+                                document.dispatchEvent(new CustomEvent('open-deep-link-post', { detail: { post: postResult.post } }));
+                            }, 500);
+                        } else {
+                            UI.showToast('Пост не найден', true);
+                        }
+                    } catch (e) { UI.showToast('Ошибка загрузки поста', true); }
+                } else {
+                    const targetUserId = startParam;
+                    await loadFeedData();
+                    try {
+                        const userResult = await api.loadTargetUserProfile(tg.initData, targetUserId);
+                        if (userResult.ok && userResult.profile) {
+                            setTimeout(() => {
+                                document.dispatchEvent(new CustomEvent('open-deep-link-profile', { detail: { user: userResult.profile } }));
+                            }, 500);
+                        }
+                    } catch (e) { UI.showToast(t('error_profile_not_found'), true); }
                 }
-            } catch (e) {
-                console.warn('⚠️ Fullscreen недоступен:', e);
+                state.targetUserIdFromLink = null;
+            } else if (startParam && !state.isRegistered) {
+                UI.showToast(t('error_must_create_profile'), true);
+                UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
+            } else if (!state.isRegistered) {
+                UI.showView(elements.welcomeContainer, elements.allViews, elements.spinner, tg, t, undefined);
+            } else {
+                loadFeedData();
             }
-        }
-    } catch (error) {
-        console.error('💥 КРИТИЧЕСКАЯ ОШИБКА в main:', error); 
-        const fallbackError = "Не удалось загрузить приложение."; 
-        try { UI.showToast(t('error_critical', {error: error.message || fallbackError}), true); } catch { alert(`Критическая ошибка: ${error.message || fallbackError}`); }
-        UI.hideSpinner(elements.spinner); 
+
+            function isMobileDevice() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            }
+            if (isMobileDevice() && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0')) {
+                try { if (typeof tg.requestFullscreen === 'function') tg.requestFullscreen(); } catch (e) {}
+            }
+
+        } catch (error) {
+            console.error('💥 CRITICAL ERROR:', error); 
+            const fallbackError = "Ошибка загрузки."; 
+            try { UI.showToast(t('error_critical', {error: error.message || fallbackError}), true); } catch {}
+            UI.hideSpinner(elements.spinner); 
             UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t, undefined);
+        }
     }
-}
+
     main();
 });

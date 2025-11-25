@@ -11,13 +11,18 @@
 
 /* --- КАРТОЧКА ПРОФИЛЯ (СВОЕГО И ЧУЖОГО) --- */
 .profile-card {
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    border-radius: 14px;
-    /* УДАЛЕНЫ БОКОВЫЕ ОТСТУПЫ, оставляем только вертикальный */
-    padding: 25px; 
-    text-align: center; width: 100%;
-    position: relative; padding-top: 60px;
-    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+    background: rgba(30, 30, 35, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    padding: 20px;
+    
+    /* ✅ FIX: Увеличили отступ, чтобы не наезжать на кнопки */
+    padding-top: 80px; 
+    
+    text-align: center; width: 100%; position: relative; color: #fff; margin-bottom: 20px;
 }
 .detail-card-content {
     /* Уменьшаем отступ сверху */
@@ -566,4 +571,63 @@ body.theme-glass-overlay .fab-main-button:last-child {
     -webkit-user-drag: none !important;
     user-drag: none !important;
     -webkit-tap-highlight-color: transparent !important;
+}
+
+/* --- КНОПКИ ДЕЙСТВИЙ ПРОФИЛЯ (QR, Share, Settings) --- */
+.icon-button {
+    /* Базовые стили */
+    background: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+    
+    /* Размеры и форма */
+    width: 40px; 
+    height: 40px; 
+    border-radius: 50%;
+    
+    /* Центрирование иконки */
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center;
+    padding: 0; 
+    cursor: pointer; 
+    
+    /* Позиционирование */
+    position: absolute;
+    /* ✅ Динамический отступ от верха (Safe Area) */
+    top: calc(env(safe-area-inset-top, 20px) + 20px);
+    z-index: 100; 
+    
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, background-color 0.2s;
+}
+
+.icon-button:active {
+    transform: scale(0.95);
+}
+
+.icon-button svg { 
+    width: 18px; 
+    height: 18px; 
+    stroke: currentColor;
+}
+
+/* Позиционирование по горизонтали */
+.qr-icon { left: 15px; }
+.share-icon { left: 65px; }
+
+.settings-icon { right: 15px; }
+.edit-icon { right: 65px; }
+
+/* Специфика для иконки настроек (чуть крупнее) */
+.icon-button.settings-icon svg { width: 20px; height: 20px; }
+
+
+/* --- СТИЛИ ДЛЯ РЕЖИМА "СТЕКЛО" --- */
+body.theme-glass-overlay .icon-button {
+    background: var(--glass-bg-secondary);
+    border: var(--glass-border);
+    backdrop-filter: blur(10px);
+    color: var(--main-text-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }

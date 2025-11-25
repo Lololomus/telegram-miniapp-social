@@ -1,13 +1,14 @@
 // react/feed/FeedCard.js
-
 import React, { memo, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-import { t, isIOS, cardVariants, tg, buildFeedItemTransition, useTwoLineSkillsOverflow, useControlMode } from './feed_utils.js';
+import { 
+    t, isIOS, isMobile, cardVariants, FEED_ITEM_SPRING,
+    useTwoLineSkillsOverflow, useCardGestures 
+} from './feed_utils.js';
 
 const h = React.createElement;
 
-const FeedCard = memo(function FeedCard({u, index, onOpen}) {
-    const controlMode = useControlMode();
+const FeedCard = memo(function FeedCard({ u, index, onOpen }) {
     
     const job = u.job_title && u.company ? `${u.job_title} в ${u.company}` :
         u.job_title || u.company || t('job_not_specified');
@@ -21,142 +22,127 @@ const FeedCard = memo(function FeedCard({u, index, onOpen}) {
     const skillsOverflow = useTwoLineSkillsOverflow(skillsContainerRef, skills.length);
     const avatar = u.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${u.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
 
-    // --- Логика клика ---
-    const gestureTimerRef = useRef(null);
-    const pointerStartRef = useRef(null);
-    const cardRef = useRef(null);
-    const POINTER_SLOP = 5;
+    // --- ЖЕСТЫ ---
+    const { targetRef, gestureProps } = useCardGestures({
+        onOpenPrimary: () => onOpen(u),
+        disableClick: false
+    });
+
+    // --- АНИМАЦИЯ (ТОЧНАЯ КОПИЯ ЛОГИКИ ПОСТОВ) ---
+    const isFirstBatch = index < 10;
+    const shouldForceAnimate = isMobile || isFirstBatch;
     
-    const handlePointerDown = (e) => {
-        pointerStartRef.current = { y: e.pageY };
-        if (tg?.disableVerticalSwipes) {
-            tg.disableVerticalSwipes();
-        }
-        if (gestureTimerRef.current) {
-            clearTimeout(gestureTimerRef.current);
-        }
+    // Варианты (ПК - сдвиг, Мобайл - нет)
+    const variants = isMobile 
+      ? {} 
+      : (isIOS 
+          ? cardVariants 
+          : {
+              hidden: { opacity: 0, x: -20 }, 
+              visible: { opacity: 1, x: 0 },
+              exit: { opacity: 0, x: -10 }
+          }
+      );
+
+    // Задержка для волны
+    const delayStep = 0.05; 
+    const delay = (!isMobile && isFirstBatch) ? index * delayStep : 0;
+
+    // Конфиг перехода
+    const fixedTransition = {
+        ...FEED_ITEM_SPRING, 
+        delay: delay,        
+        x: { ...FEED_ITEM_SPRING, delay: delay },
+        opacity: { duration: 0.2, delay: delay },
+        scale: { ...FEED_ITEM_SPRING, delay: delay }
     };
-    
-    const handlePointerMove = (e) => {
-        if (!pointerStartRef.current) return;
-        const deltaY = Math.abs(e.pageY - pointerStartRef.current.y);
-        if (deltaY > POINTER_SLOP) {
-            clearTimeout(gestureTimerRef.current);
-            pointerStartRef.current = null;
-            if (tg?.enableVerticalSwipes) {
-                tg.enableVerticalSwipes();
-            }
-        }
-    };
-    
-    const handlePointerUp = (e) => {
-        // ✅ Клик работает всегда (если не было скролла)
-        if (tg?.enableVerticalSwipes) {
-            tg.enableVerticalSwipes();
-        }
-        clearTimeout(gestureTimerRef.current);
-        
-        if (pointerStartRef.current) {
-            onOpen(u);
-        }
-        pointerStartRef.current = null;
-    };
-    
-    const transitionConfig = buildFeedItemTransition(index);
-    
+
+    const visibleState = { opacity: 1, x: 0, scale: 1 };
+
+    // --- РЕНДЕР: СТРУКТУРА WRAPPER -> CONTENT ---
     return h(motion.div, {
-        ref: cardRef,
-        layout: isIOS ? false : "position",
-        variants: cardVariants,
-        initial: "hidden",
+        ref: targetRef,
+        ...gestureProps, // Жесты вешаем на обертку
+        
+        // 1. ВНЕШНИЙ СЛОЙ: Отвечает за появление и layout
+        layout: isMobile ? false : "position",
+        variants: variants,
+        
+        initial: isMobile ? "visible" : "hidden",
+        animate: shouldForceAnimate ? visibleState : undefined,
+        whileInView: shouldForceAnimate ? undefined : visibleState,
+        viewport: shouldForceAnimate ? undefined : { once: true, margin: "200px" },
         exit: "exit",
-        animate: {
-            opacity: 1,
-            x: 0,
-            scale: 1,
-            y: 0
-        },
-        transition: transitionConfig,
-        onPointerDown: handlePointerDown,
-        onPointerMove: handlePointerMove,
-        onPointerUp: handlePointerUp,
-        onPointerCancel: handlePointerUp,
-        onContextMenu: (e) => e.preventDefault(),
-        className: 'react-feed-card',
+        
+        transition: isMobile ? { duration: 0 } : fixedTransition,
+        
+        // КЛАСС ОБЕРТКИ (Важно: он должен быть прозрачным и без transition: transform)
+        className: 'react-feed-card-wrapper', 
         style: {
             width: '100%',
-            textAlign: 'left',
-            borderRadius: 12,
-            padding: 12,
+            position: 'relative',
             cursor: 'pointer',
-            position: 'relative'
+            // Убираем стили фона отсюда
         }
     },
-        // ❌ УБРАНО: Блок с controlMode === 'taps' && SVG стрелочкой удален отсюда
-        
-        h('div', {
+        // 2. ВНУТРЕННИЙ СЛОЙ: Отвечает за визуал (Glass) и CSS-анимацию нажатия
+        h(motion.div, {
+            className: 'react-feed-card', // Сюда применяются стили из feed.css
             style: {
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                pointerEvents: 'none'
+                width: '100%',
+                textAlign: 'left',
+                borderRadius: 24,
+                padding: 15,
+                // position: 'relative' и overflow: 'hidden' уже есть в CSS класса
             }
         },
-            h('div', {
-                style: {
-                    height: 44,
-                    width: 44,
-                    borderRadius: '50%',
-                    background: 'var(--secondary-bg-color)',
-                    overflow: 'hidden',
-                    flexShrink: 0
-                }
-            }, h('img', {
-                src: avatar,
-                alt: '',
-                loading: 'lazy',
-                style: { width: '100%', height: '100%', objectFit: 'cover' }
-            })),
-            
-            h('div', { style: { minWidth: 0 } },
+            // Хедер: Аватар + Имя
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, pointerEvents: 'none' } },
                 h('div', {
                     style: {
-                        fontWeight: 600,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        color: 'var(--main-text-color, var(--tg-theme-text-color, #000000))'
+                        height: 44, width: 44, borderRadius: 14,
+                        background: 'rgba(255,255,255,0.1)',
+                        overflow: 'hidden', flexShrink: 0
                     }
-                }, u.first_name || 'User'),
+                }, h('img', {
+                    src: avatar, alt: '', 
+                    decoding: 'async', // Важно для производительности
+                    draggable: 'false',
+                    style: { width: '100%', height: '100%', objectFit: 'cover' }
+                })),
                 
-                h('div', {
-                    style: {
-                        opacity: 0.8,
-                        fontSize: 14,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        color: 'var(--main-text-color, var(--tg-theme-text-color, #000000))'
-                    }
-                }, job)
-            )
-        ),
-        
-        skills.length > 0 && h('div', {
-            layout: false,
-            ref: skillsContainerRef,
-            className: 'feed-card-skills-container',
-            style: { pointerEvents: 'none' }
-        },
-            ...skills.slice(0, skillsOverflow.visibleCount).map((skill, index) =>
-                h('span', {
-                    key: skill + index,
-                    className: 'skill-tag skill-tag--display'
-                }, skill)
+                h('div', { style: { minWidth: 0 } },
+                    h('div', {
+                        style: {
+                            fontWeight: 700, fontSize: 16, color: '#ffffff',
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                        }
+                    }, u.first_name || 'User'),
+                    
+                    h('div', {
+                        style: {
+                            opacity: 0.7, fontSize: 13, color: '#9ca3af',
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                        }
+                    }, job)
+                )
             ),
-            skillsOverflow.hiddenCount > 0 && h('span', {
-                className: 'feed-card-skills-more'
-            }, `+${skillsOverflow.hiddenCount}`)
+            
+            // Навыки
+            skills.length > 0 && h('div', {
+                layout: false,
+                ref: skillsContainerRef,
+                className: 'feed-card-skills-container',
+                style: { pointerEvents: 'none', marginTop: 12 }
+            },
+                ...skills.slice(0, skillsOverflow.visibleCount).map((skill, i) =>
+                    h('span', { key: skill + i, className: 'skill-tag skill-tag--display' }, skill)
+                ),
+                skillsOverflow.hiddenCount > 0 && h('span', {
+                    className: 'feed-card-skills-more',
+                    style: { fontSize: 12, color: '#9ca3af', alignSelf: 'center', marginLeft: 4 }
+                }, `+${skillsOverflow.hiddenCount}`)
+            )
         )
     );
 });

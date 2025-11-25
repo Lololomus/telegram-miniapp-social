@@ -1,109 +1,374 @@
 /* css/style.css */
 
-/* Импортируем базовые стили (должны быть первыми) */
 @import url('base.css');
-/* (ИЗМЕНЕНИЕ) Импорт tags.css переименован для ясности */
-@import url('components/tags.css'); 
-/* Импортируем стили компонентов/экранов */
+@import url('components/tags.css');
 @import url('form.css');
 @import url('profile.css');
 @import url('feed.css');
 @import url('settings.css');
 @import url('modals.css');
 @import url('animations.css');
-/* ------------------------ */
 
-/* --- СТИЛИ СПИННЕРА (остаются) --- */
-.spinner {
-    border: 4px solid var(--secondary-bg-color, #f3f3f3);
-    border-top-color: var(--main-button-color, #3390ec);
-    border-radius: 50%; width: 30px; height: 30px; position: fixed;
-    top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1001;
-    margin: 0; animation: spin 1s linear infinite; display: none;
-}
-@keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-
-
-/* --- ПЕРЕОПРЕДЕЛЕНИЕ ТЕМ (остаются) --- */
-body.theme-light {
-    --main-bg-color: #ffffff;
-    --secondary-bg-color: #efefef;
-    --main-text-color: #000000;
-    --main-hint-color: #999999;
-    --main-link-color: #007aff;
-    --main-button-color: #007aff;
-    --main-button-text-color: #ffffff;
+:root {
+    /* --- ЦВЕТА (Deep Dark) --- */
+    --main-bg-color: #050505; 
+    --secondary-bg-color: #121212;
+    --main-text-color: #f3f4f6;
+    --main-hint-color: #9ca3af;
     --main-hint-opacity: 1;
-}
-/* (ИЗМЕНЕНИЕ) Добавляем .theme-glass-overlay сюда, 
-   чтобы "Стекло" наследовало цвета темной темы */
-body.theme-dark {
-    --main-bg-color: #1c1c1d;
-    --secondary-bg-color: #2c2c2e;
-    --main-text-color: #ffffff;
-    --main-hint-color: #98989e;
-    --main-link-color: #0a84ff;
-    --main-button-color: #0a84ff;
+    --main-button-color: #2563eb;
     --main-button-text-color: #ffffff;
-    --main-hint-opacity: 1;
-}
-body.theme-dark .action-button.secondary { background-color: #2c2c2e; color: #0a84ff; }
-body.theme-dark .theme-option-button.active { background-color: #0a84ff; color: #ffffff; }
-body.theme-dark .icon-button { border: 1.5px solid #2c2c2e; }
-body.theme-dark .header-button { background-color: #2c2c2e; color: #0a84ff; }
-body.theme-dark .theme-option-button { border-color: #2c2c2e; }
-body.theme-custom {
-    --main-bg-color: var(--custom-bg-color);
-    --secondary-bg-color: var(--custom-secondary-bg-color);
-    --main-button-color: var(--custom-button-color);
-    --main-button-text-color: var(--custom-button-text-color);
-    --main-text-color: var(--custom-text-color);
-    --main-link-color: var(--custom-text-color);
-    --main-hint-color: var(--custom-text-color);
-    --main-hint-opacity: 0.7;
-}
-body.theme-dark .spinner, body.theme-custom .spinner {
-    border-color: var(--secondary-bg-color);
-    border-top-color: var(--main-button-color);
-}
-body.theme-custom .theme-option-button { border-color: var(--secondary-bg-color); }
-body.theme-custom .icon-button { border-color: var(--secondary-bg-color); }
-body.theme-custom .header-button { background-color: var(--secondary-bg-color); color: var(--main-button-color); }
 
-/* --- (НОВЫЙ БЛОК) "Рецепты" для "Стекла" --- */
-
-/* 1. Рецепт для СВЕТЛОЙ темы */
-body.theme-light.theme-glass-overlay {
-    --glass-bg: rgba(255, 255, 255, 0.45);
-    --glass-bg-secondary: rgba(255, 255, 255, 0.3);
-    --glass-bg-input: rgba(255, 255, 255, 0.25);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.6);
-    --glass-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    --glass-radius-main: 20px;
-    --glass-radius-nested: 16px;
+    --glass-bg: rgba(18, 18, 20, 0.98); /* Почти непрозрачный, чтобы скрыть контент под ним */
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     
-    /* ✅ ИСПРАВЛЕНИЕ (Glass): Фоллбэки для iOS (без размытия) */
-    --glass-bg-ios-fallback: rgba(255, 255, 255, 0.85);
-    --glass-bg-ios-fallback-secondary: rgba(255, 255, 255, 0.65);
+    /* --- РАЗМЕРЫ (С ЗАПАСОМ) --- */
+    /* Базовая высота хедера (без учета safe-area) */
+    --header-base-height: 60px; 
+    /* Высота таббара */
+    --tabbar-height: 80px; 
 }
 
-/* 2. Рецепт для ТЕМНОЙ темы */
-body.theme-dark.theme-glass-overlay {
-    --glass-bg: rgba(44, 44, 46, 0.4);
-    --glass-bg-secondary: rgba(44, 44, 46, 0.3);
-    --glass-bg-input: rgba(44, 44, 46, 0.2);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.15); /* Чуть ярче рамка */
-    --glass-shadow: 0 6px 20px rgba(0,0,0,0.2);
-    --glass-radius-main: 20px;
-    --glass-radius-nested: 16px;
+body {
+    background-color: #000000;
+    background-image: 
+        radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 85% 30%, rgba(124, 58, 237, 0.15) 0%, transparent 50%);
+    background-attachment: fixed;
+    color: var(--main-text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden; 
+}
 
-    --main-text-color: #ffffff !important;
-    --main-hint-color: rgba(255, 255, 255, 0.9) !important; /* Почти белый */
-    --main-hint-opacity: 1 !important;
+/* --- 1. ХЕДЕР (ПОИСК) --- */
+.app-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
     
-    --main-link-color: #ffffff !important;
+    /* 1. Увеличиваем минимальную высоту, добавляя запас под навигацию */
+    height: auto;
+    /* Было: + 0px, стало: + 44px (стандартная высота навбара) */
+    min-height: calc(var(--header-base-height) + env(safe-area-inset-top, 40px) + 44px);
+    
+    /* 2. Увеличиваем отступ сверху, чтобы сдвинуть поиск вниз */
+    padding-top: calc(env(safe-area-inset-top, 40px) + 44px); 
+    
+    padding-bottom: 12px;
+    padding-left: 16px;
+    padding-right: 16px;
+    
+    display: flex;
+    align-items: flex-end; 
+    gap: 12px;
+    
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: var(--glass-border);
+    box-sizing: border-box;
+}
 
-    /* Фоллбэки для iOS */
-    --glass-bg-ios-fallback: rgba(44, 44, 46, 0.85);
-    --glass-bg-ios-fallback-secondary: rgba(44, 44, 46, 0.7);
+/* Контейнер поиска */
+.header-search-wrapper {
+    flex: 1;
+    position: relative;
+    /* ✅ Жесткая высота 36px (стандарт iOS) */
+    height: 36px !important; 
+    min-height: 36px !important;
+    max-height: 36px !important;
+    
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+    
+    /* Гарантирует, что паддинги не увеличат высоту */
+    box-sizing: border-box; 
+}
+
+/* Иконка */
+.header-search-icon {
+    position: absolute;
+    left: 8px; /* Чуть ближе к краю */
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(235, 235, 245, 0.6); /* Светло-серый для темной темы */
+    pointer-events: none;
+    z-index: 5; /* Поверх инпута */
+    width: 18px; 
+    height: 18px;
+}
+
+/* Поле ввода */
+.header-search-input {
+    width: 100%;
+    height: 100%;
+    
+    /* ✅ Правильный фон для темной темы (темно-серый, не прозрачный) */
+    background-color: rgba(118, 118, 128, 0.24) !important;
+    border: none;
+    border-radius: 10px;
+    
+    /* ✅ ВАЖНО: Паддинги */
+    /* 32px слева (под иконку), 0 справа (или чуть-чуть), 0 вертикально */
+    padding: 0 8px 0 32px !important;
+    margin: 0;
+    
+    /* Текст */
+    color: #ffffff !important;
+    font-size: 17px;
+    line-height: normal; /* Важно для iOS */
+    
+    /* Убираем стили браузера */
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+}
+
+/* Цвет плейсхолдера ("Поиск...") */
+.header-search-input::placeholder {
+    color: rgba(235, 235, 245, 0.6);
+    opacity: 1;
+}
+
+/* Фикс для светлой темы (если включится) */
+body.theme-light .header-search-input {
+    background-color: rgba(118, 118, 128, 0.12) !important;
+    color: #000000 !important;
+}
+body.theme-light .header-search-icon {
+    color: rgba(60, 60, 67, 0.6);
+}
+
+/* Стили для темной темы */
+body.theme-dark .header-search-input {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+/* Кнопка фильтра */
+.header-filter-btn {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.07);
+    border: var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--main-hint-color);
+    cursor: pointer;
+}
+.header-profile-btn { display: none !important; }
+
+/* Стили для заголовка в шапке */
+.header-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* Центрируем вертикально. Высота навбара 44px. */
+    /* safe-area + половина высоты (22px) - половина шрифта (~10px) = +12px */
+    top: calc(env(safe-area-inset-top, 20px) + 12px);
+    
+    margin: 0;
+    padding: 0;
+    
+    /* ✅ КАК НА СКРИНШОТЕ SELECT SKILLS: */
+    font-size: 17px; 
+    font-weight: 700; /* Жирный (Bold), а не SemiBold */
+    line-height: 22px;
+    letter-spacing: -0.4px; /* Чуть плотнее */
+    
+    color: var(--main-text-color);
+    pointer-events: none;
+    z-index: 55;
+    
+    white-space: nowrap;
+}
+
+body.theme-dark .header-title {
+    color: #ffffff;
+}
+
+/* --- 2. КОНТЕНТ (ЛЕНТА) --- */
+.main-content-scrollbox {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    
+    /* ✅ FIX: ЖЕСТКИЙ ОТСТУП СВЕРХУ */
+    /* Хедер (60) + Челка (40) + Зазор (20) = 120px */
+    padding-top: calc(var(--header-base-height) + env(safe-area-inset-top, 40px) + 20px);
+    
+    /* Отступ снизу */
+    padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 20px) + 20px);
+    
+    padding-left: 16px;
+    padding-right: 16px;
+}
+.main-content-scrollbox::-webkit-scrollbar { width: 0; height: 0; }
+
+
+/* --- 3. НИЖНИЙ ТАББАР --- */
+.bottom-tabbar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 50;
+    
+    /* Авто-высота */
+    height: auto;
+    
+    padding-top: 12px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 5px);
+    
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: var(--glass-border);
+    box-sizing: border-box;
+    
+    /* Плавное скрытие при открытии клавиатуры */
+    transition: transform 0.3s ease;
+}
+
+/* Класс для скрытия бара (будет добавляться JS-ом) */
+.bottom-tabbar.hide-on-keyboard {
+    transform: translateY(100%);
+}
+
+.tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 60px;
+    background: none;
+    border: none;
+    color: var(--main-hint-color);
+    cursor: pointer;
+}
+.tab-item.active { color: #60a5fa; }
+.tab-label { font-size: 10px; font-weight: 600; }
+
+/* FAB КНОПКА */
+.tab-fab-wrapper {
+    position: relative;
+    top: -28px; 
+    display: flex;
+    justify-content: center;
+    width: 60px;
+    z-index: 60;
+    height: 0;
+    transition: opacity 0.3s ease;
+}
+/* Скрываем FAB вместе с таббаром */
+.bottom-tabbar.hide-on-keyboard .tab-fab-wrapper {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tab-fab-button {
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    background: var(--main-button-color);
+    border: none;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+}
+
+/* --- ПРОЧЕЕ --- */
+.screen { background: transparent !important; min-height: auto; padding: 0; }
+.spinner { border-color: rgba(255,255,255, 0.1); border-top-color: var(--main-button-color); }
+
+/* Меню FAB */
+.fab-menu-popout {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    display: flex; flex-direction: column; gap: 8px; z-index: 96; width: 220px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+}
+.fab-menu-popout.open { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.fab-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 95; }
+.fab-menu-item {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(30, 30, 35, 0.95); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 16px; border-radius: 16px;
+    color: white; font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.fab-icon-bg { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.fab-icon-bg.blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.fab-icon-bg.green { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.fab-icon-bg.orange { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.fab-icon-bg.red { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
+.fab-rotate-active svg { transform: rotate(45deg); transition: transform 0.3s; }
+.fab-rotate-reset svg { transform: rotate(0deg); transition: transform 0.3s; }
+
+/* --- СТИЛИ ДЛЯ ПОЛЯ ТЕГОВ И КНОПКИ (РОВНЫЕ) --- */
+
+.skills-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    position: relative;
+}
+
+/* Настраиваем ИНПУТ: разрешаем ввод, фиксируем высоту */
+.skills-input-group input {
+    flex: 1; /* Занимает всё место */
+    min-width: 0;
+    height: 44px !important; /* Высота под палец */
+    padding: 0 12px;
+    border-radius: 12px;
+    box-sizing: border-box; 
+}
+
+/* Настраиваем КНОПКУ: квадратная, стеклянная */
+.skills-input-button {
+    width: 44px !important; /* КВАДРАТ 44x44 */
+    height: 44px !important;
+    border-radius: 12px !important;
+    
+    /* Стеклянный стиль (как в шапке) */
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: var(--glass-border) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    margin: 0 !important;
+    
+    color: var(--main-hint-color);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+
+/* Эффект нажатия */
+.skills-input-button:active {
+    background: rgba(255, 255, 255, 0.15) !important;
+    transform: scale(0.96);
+}
+
+.skills-input-button svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
 }

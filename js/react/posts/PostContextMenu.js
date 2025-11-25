@@ -10,14 +10,15 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
   const isMyPost = post.author?.user_id && String(post.author.user_id) === String(window.__CURRENT_USER_ID);
   
   const [layout, setLayout] = useState(null);
-  const menuRef = useRef(null);
 
   useLayoutEffect(() => {
     if (!targetElement) return;
     
     const rect = targetElement.getBoundingClientRect();
     const MENU_WIDTH = 250;
+    const MENU_HEIGHT_ESTIMATE = 200;
     const SCREEN_MARGIN = 16;
+    const BOTTOM_SAFE_AREA = 40;
     
     let menuLeft = rect.left + (rect.width / 2) - (MENU_WIDTH / 2);
     if (menuLeft < SCREEN_MARGIN) menuLeft = SCREEN_MARGIN;
@@ -26,19 +27,12 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
     }
 
     const spaceBelow = window.innerHeight - rect.bottom;
-    const MENU_HEIGHT_ESTIMATE = 180;
-    
-    let menuTop;
+    let menuTop = rect.bottom + 12;
     let verticalAdjust = 0;
     
-    if (spaceBelow >= MENU_HEIGHT_ESTIMATE) {
-        menuTop = rect.bottom + 12;
-    } else {
-        const overflow = (rect.bottom + 12 + MENU_HEIGHT_ESTIMATE) - window.innerHeight;
-        if (overflow > 0) {
-            verticalAdjust = -overflow - 20; 
-        }
-        menuTop = rect.bottom + 12;
+    if (spaceBelow < MENU_HEIGHT_ESTIMATE + BOTTOM_SAFE_AREA) {
+        const overflow = (MENU_HEIGHT_ESTIMATE + BOTTOM_SAFE_AREA + 12) - spaceBelow;
+        verticalAdjust = -overflow;
     }
 
     setLayout({
@@ -51,65 +45,35 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
 
   if (!layout) return null;
 
-  const handleBackdropClick = (e) => {
-    e.stopPropagation();
-    onClose();
-  };
-  
-  const doAction = (actionFn) => (e) => {
+  const handleAction = (actionFn) => (e) => {
     e.stopPropagation();
     if (actionFn) actionFn(post);
     onClose();
   };
 
-  const containerVariants = {
-      hidden: {},
-      visible: {},
-      exit: {}
-  };
-
-  const backdropVariants = {
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: { duration: 0.2 } },
-      exit: { opacity: 0, transition: { duration: 0.2 } }
-  };
-
-  // ИЗМЕНЕНИЕ: Варианты для клона теперь включают и Y-сдвиг, и Scale.
-  // Это гарантирует их идеальную синхронизацию.
-  const cloneContainerVariants = {
-      hidden: { y: 0, scale: 1, opacity: 1 }, 
-      visible: { 
-          y: layout.verticalAdjust, 
-          scale: 1.02, // Scale переехал сюда из CSS PostCard
-          opacity: 1,
-          transition: { type: 'spring', stiffness: 300, damping: 30 }
-      },
-      exit: { opacity: 0, transition: { duration: 0.15 } }
-  };
-
   return h(motion.div, {
     key: `ctx-wrapper-${post.post_id}`,
+    style: { position: 'fixed', inset: 0, zIndex: 2000 },
     initial: "hidden",
     animate: "visible",
-    exit: "exit",
-    variants: containerVariants,
-    // ИЗМЕНЕНИЕ: Убран inset: 0 для анимационного слоя, чтобы избежать багов рендеринга.
-    // Слой теперь просто контейнер для позиционирования.
-    style: { position: 'fixed', inset: 0, zIndex: 2000 }
+    exit: "exit"
   },
+    // 1. BACKDROP (Темный фон)
     h(motion.div, {
         className: 'post-context-menu-backdrop',
-        variants: backdropVariants,
-        onClick: handleBackdropClick,
-        style: { position: 'absolute', inset: 0 } 
+        onClick: (e) => { e.stopPropagation(); onClose(); },
+        initial: { opacity: 0, backdropFilter: "blur(0px)" },
+        animate: { opacity: 1, backdropFilter: "blur(8px)" }, 
+        exit: { opacity: 0, backdropFilter: "blur(0px)", transition: { duration: 0.2 } },
+        style: { 
+            position: 'absolute', inset: 0, 
+            // ✅ FIX: Делаем фон почти черным (0.85), чтобы убрать "свечение"
+            background: 'rgba(0,0,0,0.85)' 
+        } 
     }),
 
-    // ИЗМЕНЕНИЕ: Убран общий враппер (который раньше анимировал 'y').
-    // Теперь мы рендерим Карточку и Меню как независимые слои, применяя к ним анимации напрямую.
-
-    // 1. Слой КЛОНА КАРТОЧКИ
+    // 2. КЛОН КАРТОЧКИ
     h(motion.div, {
-        variants: cloneContainerVariants,
         style: {
             position: 'absolute',
             top: layout.card.top,
@@ -117,7 +81,17 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
             width: layout.card.width,
             zIndex: 2002, 
             pointerEvents: 'none',
-            transformOrigin: 'center center' // Важно для красивого scale
+            transformOrigin: 'center center'
+        },
+        initial: { y: 0, scale: 1 },
+        animate: { 
+            y: layout.verticalAdjust, 
+            scale: 1.02, 
+            transition: { type: 'spring', stiffness: 300, damping: 25 }
+        },
+        exit: { 
+            y: 0, scale: 1, opacity: 0, 
+            transition: { duration: 0.2 } 
         }
     },
         h(PostCard, {
@@ -127,9 +101,8 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
         })
     ),
 
-    // 2. Слой МЕНЮ
+    // 3. МЕНЮ
     h(motion.div, {
-        ref: menuRef,
         className: `post-context-menu-container ${isIOS ? 'is-ios' : ''}`,
         style: {
             position: 'absolute',
@@ -140,28 +113,25 @@ function PostContextMenu({ post, targetElement, onClose, onOpenProfile, onRespon
             transformOrigin: 'top center',
             pointerEvents: 'auto'
         },
-        // Анимируем Y здесь отдельно, синхронно с карточкой
-        initial: { opacity: 0, scale: 0.9, y: -10 },
+        initial: { opacity: 0, scale: 0.9, y: 0 },
         animate: { 
-            opacity: 1, 
-            scale: 1, 
-            y: layout.verticalAdjust // Добавляем сдвиг
+            opacity: 1, scale: 1,
+            y: layout.verticalAdjust,
+            transition: { type: 'spring', stiffness: 400, damping: 25, delay: 0.05 }
         },
-        exit: { opacity: 0, scale: 0.95, transition: { duration: 0.1 } },
-        transition: { type: 'spring', damping: 25, stiffness: 400 },
-        onClick: (e) => e.stopPropagation()
+        exit: { opacity: 0, scale: 0.9, transition: { duration: 0.15 } }
     },
         h('div', { className: 'post-context-menu-group' },
             isMyPost
             ? [ 
-                h('button', { key: 'edit', className: 'post-context-menu-button', onClick: doAction(onEdit) }, `✏️ ${t('action_edit')}`),
-                h('button', { key: 'repost', className: 'post-context-menu-button', onClick: doAction(onRepost) }, `🔗 ${t('action_repost')}`),
-                h('button', { key: 'delete', className: 'post-context-menu-button destructive', onClick: doAction(onDelete) }, `🗑️ ${t('action_delete')}`)
+                h('button', { key: 'edit', className: 'post-context-menu-button', onClick: handleAction(onEdit) }, `✏️ ${t('action_edit')}`),
+                h('button', { key: 'repost', className: 'post-context-menu-button', onClick: handleAction(onRepost) }, `🔗 ${t('action_repost')}`),
+                h('button', { key: 'delete', className: 'post-context-menu-button destructive', onClick: handleAction(onDelete) }, `🗑️ ${t('action_delete')}`)
                 ]
             : [ 
-                h('button', { key: 'respond', className: 'post-context-menu-button', onClick: doAction(onRespond) }, `🚀 ${t('action_respond')}`),
-                h('button', { key: 'repost', className: 'post-context-menu-button', onClick: doAction(onRepost) }, `🔗 ${t('action_repost')}`),
-                h('button', { key: 'profile', className: 'post-context-menu-button', onClick: doAction(onOpenProfile) }, `👤 ${t('action_view_profile')}`)
+                h('button', { key: 'respond', className: 'post-context-menu-button', onClick: handleAction(onRespond) }, `🚀 ${t('action_respond')}`),
+                h('button', { key: 'repost', className: 'post-context-menu-button', onClick: handleAction(onRepost) }, `🔗 ${t('action_repost')}`),
+                h('button', { key: 'profile', className: 'post-context-menu-button', onClick: handleAction(onOpenProfile) }, `👤 ${t('action_view_profile')}`)
                 ]
         )
     )
