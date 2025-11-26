@@ -1,13 +1,5 @@
 /* css/profile.css */
-/* ОБНОВЛЕНО: Удалены дублирующиеся стили тегов */
-/* ОБНОВЛЕНО: Исправлена "тяжелая" max-height анимация */
-/* ОБНОВЛЕНО (Glass): Добавлены стили для "стеклянных" карточек */
-/* ✅ ИСПРАВЛЕНИЕ (Item 3): Изменены стили .fab-container и .fab-button */
-/* ✅ ИСПРАВЛЕНИЕ (Item 3, 2): .fab-container снова position: fixed */
-/* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container теперь position: absolute */
-/* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container снова position: fixed + z-index */
-/* УДАЛЕНО: Стили .flag-overlay, .profile-last-seen, .name-status-container */
-/* ✅ НОВОЕ (Task 1): Добавлены стили для .post-detail-actions-row */
+/* ОБНОВЛЕНО: Добавлены стили для заголовка "Ваш профиль" между кнопками */
 
 /* --- КАРТОЧКА ПРОФИЛЯ (СВОЕГО И ЧУЖОГО) --- */
 .profile-card {
@@ -19,11 +11,33 @@
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     padding: 20px;
     
-    /* ✅ FIX: Увеличили отступ, чтобы не наезжать на кнопки */
-    padding-top: 80px; 
+    /* ✅ FIX: Отступ сверху под кнопки и заголовок */
+    /* Safe Area + отступ кнопок (20px) + высота кнопок (40px) = ~60-80px */
+    padding-top: calc(env(safe-area-inset-top, 20px) + 60px) !important;
     
     text-align: center; width: 100%; position: relative; color: #fff; margin-bottom: 20px;
 }
+
+/* --- ЗАГОЛОВОК ВНУТРИ ПРОФИЛЯ ("Ваш профиль") --- */
+.profile-internal-title {
+    font-size: 17px !important; /* Размер как в хедере */
+    font-weight: 700 !important;
+    text-align: center;
+    color: #fff;
+    margin: 0 !important;
+    padding: 0 !important;
+    
+    /* ✅ АБСОЛЮТНОЕ ПОЗИЦИОНИРОВАНИЕ */
+    /* Ставим его ровно по центру между кнопками QR и Edit */
+    position: absolute;
+    /* Кнопки имеют top ~20px + safe. Ставим заголовок чуть ниже (28px), чтобы попасть в центр кнопок (высота 40px) */
+    top: calc(env(safe-area-inset-top, 20px) + 28px); 
+    left: 0;
+    right: 0;
+    z-index: 10;
+    pointer-events: none; /* Чтобы сквозь него можно было тыкать, если что */
+}
+
 .detail-card-content {
     /* Уменьшаем отступ сверху */
     padding-top: 25px; 
@@ -66,12 +80,16 @@
     margin-top: 0;
     margin-bottom: 0;
 }
+
 .profile-avatar-container,
 .detail-avatar-container {
     position: relative;
     width: 100px;
     height: 100px;
-    margin: 0 auto;
+    margin: 0 auto; /* Было 0 auto */
+    
+    /* ✅ FIX: Отступ сверху от воображаемой линии кнопок/заголовка */
+    margin-top: 20px !important;
     margin-bottom: 15px;
 }
 
@@ -185,16 +203,6 @@ body.theme-dark .profile-actions { border-top-color: var(--secondary-bg-color); 
 body.theme-custom .profile-actions { border-top-color: var(--main-bg-color); }
 .profile-actions .action-button:last-child { grid-column: 1 / -1; }
 .contact-button { margin-top: 20px; width: 100%; }
-
-
-/* (УДАЛЕНО) Оверлей флага */
-/* .flag-overlay { ... } */
-
-/* --- (УДАЛЕНО) Контейнер для h2 и статуса --- */
-/* .name-status-container { ... } */
-
-/* --- (УДАЛЕНО) СТАТУС ОНЛАЙН (КОМПАКТНЫЙ) --- */
-/* .profile-last-seen { ... } */
 
 
 /* --- СТАТИСТИКА ПРОФИЛЯ --- */
@@ -617,7 +625,7 @@ body.theme-glass-overlay .fab-main-button:last-child {
 .share-icon { left: 65px; }
 
 .settings-icon { right: 15px; }
-.edit-icon { right: 65px; }
+.edit-icon { right: 15px; } /* Изменено с 65px на 15px, так как settings убрали */
 
 /* Специфика для иконки настроек (чуть крупнее) */
 .icon-button.settings-icon svg { width: 20px; height: 20px; }

@@ -1,14 +1,9 @@
 // js/ui-helpers.js
 // Все UI-функции для работы с DOM
-// ОБНОВЛЕНО: Добавлена функция showToast и исправлены классы тегов
-// УДАЛЕНО: Логика "Last Seen" и "Flag Overlay"
-// УДАЛЕНО: Параметры getTomSelectInstance и updateCountryCallback из showView
-// ✅ ИСПРАВЛЕНИЕ (Задача 4): MainButton (FAB) больше не показывается для create-post-modal
-// ✅ ИЗМЕНЕНИЕ (Fullscreen Nav): showView теперь управляет нативной кнопкой "Назад" (tg.BackButton)
-// ✅ ИЗМЕНЕНИЕ (Fullscreen Nav 2): Добавлена смена текста "Back" / "Close"
+// ОБНОВЛЕНО: Очищена логика рендера навыков, исправлен showView для навигации
 
 /**
- * (НОВОЕ) Хранит текущий назначенный обработчик кнопки "Назад"
+ * Хранит текущий назначенный обработчик кнопки "Назад"
  */
 let currentBackAction = null;
 
@@ -32,52 +27,47 @@ export function hideSpinner(spinner) {
 
 /**
  * Показывает указанный экран, скрывая остальные
- * (ИЗМЕНЕНО) Добавлен onBackAction для управления tg.BackButton
+ * Управляет нативной кнопкой BackButton
  */
 export function showView(targetView, allViews, spinner, tg, t, onBackAction) {
-  // --- Логика кнопок навигации ---
-  
-  // Если onBackAction не передан (главный экран)
+  // --- Логика навигации (BackButton) ---
   if (!onBackAction) {
-    // Скрываем BackButton
+    // Главный экран: Скрываем "Назад", показываем "Настройки" (для закрытия аппа)
     if (currentBackAction) {
       tg.BackButton.offClick(currentBackAction);
       currentBackAction = null;
     }
     tg.BackButton.hide();
     
-    // Показываем SettingsButton для закрытия
-    tg.SettingsButton.show();
-    tg.SettingsButton.onClick(() => tg.close());
+    if (tg.SettingsButton) {
+        tg.SettingsButton.show();
+        tg.SettingsButton.onClick(() => tg.close());
+    }
   } else {
-    // Для остальных экранов - показываем BackButton
+    // Вложенный экран / Модалка: Показываем "Назад"
+    if (tg.SettingsButton) tg.SettingsButton.hide();
     
-    // Скрываем SettingsButton
-    tg.SettingsButton.hide();
-    
-    // Снимаем старый обработчик BackButton
     if (currentBackAction) {
       tg.BackButton.offClick(currentBackAction);
     }
     
-    // Назначаем новый
     tg.BackButton.onClick(onBackAction);
     currentBackAction = onBackAction;
-    
-    // Показываем кнопку
     tg.BackButton.show();
   }
   
-  // --- Конец логики навигации ---
-  
   hideSpinner(spinner);
   
+  // Скрываем все экраны
   allViews?.forEach(view => {
     if (view) view.style.display = 'none';
   });
   
+  // Показываем целевой
   if (targetView) {
-    if (targetView.id === 'skills-modal' || targetView.id === 'create-post-modal') {
+    // Для модалок используем flex, чтобы центрировать контент (если CSS это предполагает)
+    // Для обычных экранов - block
+    if (targetView.id === 'skills-modal' || targetView.id === 'create-post-modal' || targetView.id === 'qr-code-modal') {
       targetView.style.display = 'flex';
     } else {
       targetView.style.display = 'block';
@@ -85,6 +75,7 @@ export function showView(targetView, allViews, spinner, tg, t, onBackAction) {
     targetView.classList.add('screen-fade-in');
   }
   
+  // Управление главной кнопкой (MainButton)
   if (targetView?.id === 'form-container') {
     tg.MainButton.setText(t('save_button'));
     tg.MainButton.show();
@@ -93,16 +84,13 @@ export function showView(targetView, allViews, spinner, tg, t, onBackAction) {
   }
 }
 
-
 /**
- * Рендерит теги навыков
+ * Рендерит теги навыков (для просмотра в профиле/ленте)
  */
 export function renderSkillTags(container, skills, toggleBtn, t) {
     if (!container) return;
-    
     try {
         const skillsArray = typeof skills === 'string' ? JSON.parse(skills) : (Array.isArray(skills) ? skills : []);
-        
         container.innerHTML = '';
         
         if (skillsArray.length === 0) {
@@ -110,38 +98,26 @@ export function renderSkillTags(container, skills, toggleBtn, t) {
             if (toggleBtn) toggleBtn.style.display = 'none';
             return;
         }
-        
         container.classList.remove('is-empty');
         
         skillsArray.forEach((skill, index) => {
             const tag = document.createElement('span');
-            // ИСПОЛЬЗУЕМ НОВЫЙ ЕДИНЫЙ КЛАСС
             tag.className = 'skill-tag skill-tag--display skill-tag-fade-in';
             tag.textContent = skill;
-            
-            // Анимация появления
             tag.style.animationDelay = `${index * 0.05}s`;
-            
             container.appendChild(tag);
         });
         
-        // Показываем кнопку "Показать еще" если тегов больше 8
         if (toggleBtn) {
             toggleBtn.style.display = skillsArray.length > 8 ? 'block' : 'none';
-            
-            // Обработчик кнопки
             toggleBtn.onclick = () => {
                 const isExpanded = container.classList.contains('expanded');
                 container.classList.toggle('expanded');
                 toggleBtn.classList.toggle('less');
-                
                 const textSpan = toggleBtn.querySelector('span:not(.arrow)');
-                if (textSpan) {
-                    textSpan.textContent = t(isExpanded ? 'skills_show_more' : 'skills_show_less');
-                }
+                if (textSpan) textSpan.textContent = t(isExpanded ? 'skills_show_more' : 'skills_show_less');
             };
         }
-        
     } catch (e) {
         console.error('Error rendering skill tags:', e);
         container.classList.add('is-empty');
@@ -154,112 +130,64 @@ export function renderSkillTags(container, skills, toggleBtn, t) {
 export function showProfileView(profile, elements, CONFIG, t, renderSkillTagsFunc) {
     if (!elements || !profile) return;
     
-    console.log('📋 showProfileView:', profile);
+    if (elements.username) elements.username.textContent = profile.first_name || 'User';
     
-    // Имя
-    if (elements.username) {
-        elements.username.textContent = profile.first_name || 'User';
-    }
-    
-    // Био
     if (elements.bio) {
         elements.bio.textContent = profile.bio || '';
-        if (!profile.bio) {
-            elements.bio.style.display = 'none';
-        } else {
-            elements.bio.style.display = 'block';
-        }
+        elements.bio.style.display = profile.bio ? 'block' : 'none';
     }
     
-    // Аватар
     if (elements.avatar) {
         const avatarUrl = profile.photo_path 
             ? `${CONFIG.backendUrl}/${profile.photo_path}` 
             : 'https://t.me/i/userpic/320/null.jpg';
         elements.avatar.src = avatarUrl;
-        initAvatarFader(elements.avatar); // Используем хелпер
+        initAvatarFader(elements.avatar);
     }
     
-    // Навыки
     if (elements.skillsContainer && renderSkillTagsFunc) {
         renderSkillTagsFunc(elements.skillsContainer, profile.skills, elements.skillsToggleBtn, t);
     }
     
-    // Счетчики
-    if (elements.followersCount) {
-        elements.followersCount.textContent = profile.followers_count || 0;
-    }
-    if (elements.followingCount) {
-        elements.followingCount.textContent = profile.following_count || 0;
-    }
-    // УДАЛЕНО: elements.groupsCount
+    if (elements.followersCount) elements.followersCount.textContent = profile.followers_count || 0;
+    if (elements.followingCount) elements.followingCount.textContent = profile.following_count || 0;
     
-    // Опыт работы
     renderProfileSection(elements.experienceContainer, profile.experience, t, 'experience');
-    
-    // Образование
     renderProfileSection(elements.educationContainer, profile.education, t, 'education');
-    
-    // Ссылки
     renderProfileLinks(elements.linksContainer, profile);
 }
 
 /**
  * Показывает детальный профиль другого пользователя
  */
-export function showUserDetailView(profile, elements, CONFIG, t, /* formatLastSeenFunc, */ renderSkillTagsFunc, viewerId) {
+export function showUserDetailView(profile, elements, CONFIG, t, renderSkillTagsFunc, viewerId) {
     if (!elements || !profile) return;
     
-    console.log('👤 showUserDetailView:', profile);
+    if (elements.username) elements.username.textContent = profile.first_name || 'User';
     
-    // Имя
-    if (elements.username) {
-        elements.username.textContent = profile.first_name || 'User';
-    }
-    
-    // Био
     if (elements.bio) {
         elements.bio.textContent = profile.bio || '';
-        if (!profile.bio) {
-            elements.bio.style.display = 'none';
-        } else {
-            elements.bio.style.display = 'block';
-        }
+        elements.bio.style.display = profile.bio ? 'block' : 'none';
     }
     
-    // (УДАЛЕНО) Статус онлайн
-    // if (elements.lastSeen && formatLastSeenFunc) { ... }
-    
-    // Аватар
     if (elements.avatar) {
         const avatarUrl = profile.photo_path 
             ? `${CONFIG.backendUrl}/${profile.photo_path}` 
             : 'https://t.me/i/userpic/320/null.jpg';
         elements.avatar.src = avatarUrl;
-        initAvatarFader(elements.avatar); // Используем хелпер
+        initAvatarFader(elements.avatar);
     }
     
-    // (УДАЛЕНО) Флаг страны
-    // if (elements.avatarContainer && profile.nationality_code) { ... }
-    
-    // Навыки
     if (elements.skillsContainer && renderSkillTagsFunc) {
         renderSkillTagsFunc(elements.skillsContainer, profile.skills, elements.skillsToggleBtn, t);
     }
     
-    // Счетчики
-    if (elements.followersCount) {
-        elements.followersCount.textContent = profile.followers_count || 0;
-    }
-    if (elements.followingCount) {
-        elements.followingCount.textContent = profile.following_count || 0;
-    }
-    // УДАЛЕНО: elements.groupsCount
+    if (elements.followersCount) elements.followersCount.textContent = profile.followers_count || 0;
+    if (elements.followingCount) elements.followingCount.textContent = profile.following_count || 0;
     
-    // Кнопка подписки (если это не свой профиль)
+    // Кнопка подписки
     if (elements.fabFollowButton && viewerId !== profile.user_id) {
         const isFollowed = profile.is_followed_by_viewer;
-        
         const iconFollow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="17" y1="11" x2="23" y2="11"></line></svg>`;
         const iconUnfollow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>`;
         
@@ -274,19 +202,11 @@ export function showUserDetailView(profile, elements, CONFIG, t, /* formatLastSe
         }
     }
     
-    // Опыт работы
     renderProfileSection(elements.experienceContainer, profile.experience, t, 'experience');
-    
-    // Образование
     renderProfileSection(elements.educationContainer, profile.education, t, 'education');
-    
-    // Ссылки
     renderProfileLinks(elements.linksContainer, profile);
 }
 
-/**
- * Рендерит секцию опыта или образования
- */
 function renderProfileSection(container, items, t, type) {
     if (!container) return;
     
@@ -299,7 +219,6 @@ function renderProfileSection(container, items, t, type) {
     container.classList.remove('is-empty');
     container.style.display = 'block';
     
-    // Заголовок секции
     const titleKey = type === 'experience' ? 'experience_section_title' : 'education_section_title';
     let title = container.querySelector('.profile-section-title');
     if (!title) {
@@ -309,14 +228,13 @@ function renderProfileSection(container, items, t, type) {
     }
     title.textContent = t(titleKey);
     
-    // Очищаем старые элементы (кроме заголовка)
+    // Очистка старых элементов
     Array.from(container.children).forEach(child => {
         if (!child.classList.contains('profile-section-title')) {
             child.remove();
         }
     });
     
-    // Рендерим элементы
     items.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'profile-item';
@@ -328,7 +246,6 @@ function renderProfileSection(container, items, t, type) {
                 titleP.textContent = item.job_title;
                 itemDiv.appendChild(titleP);
             }
-            
             if (item.company) {
                 const subtitleP = document.createElement('p');
                 subtitleP.className = 'item-subtitle';
@@ -338,11 +255,8 @@ function renderProfileSection(container, items, t, type) {
             
             const period = [];
             if (item.start_date) period.push(item.start_date);
-            if (item.is_current == 1) {
-                period.push(t('present_time_label'));
-            } else if (item.end_date) {
-                period.push(item.end_date);
-            }
+            if (item.is_current == 1) period.push(t('present_time_label'));
+            else if (item.end_date) period.push(item.end_date);
             
             if (period.length > 0) {
                 const periodP = document.createElement('p');
@@ -350,7 +264,6 @@ function renderProfileSection(container, items, t, type) {
                 periodP.textContent = period.join(' — ');
                 itemDiv.appendChild(periodP);
             }
-            
             if (item.description) {
                 const descP = document.createElement('p');
                 descP.className = 'item-description';
@@ -358,7 +271,6 @@ function renderProfileSection(container, items, t, type) {
                 itemDiv.appendChild(descP);
             }
         } else {
-            // education
             if (item.institution) {
                 const titleP = document.createElement('p');
                 titleP.className = 'item-title';
@@ -387,7 +299,6 @@ function renderProfileSection(container, items, t, type) {
                 periodP.textContent = period.join(' — ');
                 itemDiv.appendChild(periodP);
             }
-            
             if (item.description) {
                 const descP = document.createElement('p');
                 descP.className = 'item-description';
@@ -395,24 +306,14 @@ function renderProfileSection(container, items, t, type) {
                 itemDiv.appendChild(descP);
             }
         }
-        
         container.appendChild(itemDiv);
     });
 }
 
-/**
- * Рендерит ссылки профиля
- */
 function renderProfileLinks(container, profile) {
     if (!container) return;
     
-    const links = [
-        profile.link1,
-        profile.link2,
-        profile.link3,
-        profile.link4,
-        profile.link5
-    ].filter(Boolean);
+    const links = [profile.link1, profile.link2, profile.link3, profile.link4, profile.link5].filter(Boolean);
     
     if (links.length === 0) {
         container.classList.add('is-empty');
@@ -424,12 +325,11 @@ function renderProfileLinks(container, profile) {
     container.style.display = 'flex';
     container.innerHTML = '';
     
-    links.forEach((link, index) => {
+    links.forEach((link) => {
         const a = document.createElement('a');
         a.href = link;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
-        // НОВОЕ: Добавляем класс для стилизации из CSS
         a.className = 'profile-link-button'; 
         
         const icon = document.createElement('span');
@@ -446,34 +346,20 @@ function renderProfileLinks(container, profile) {
     });
 }
 
-/**
- * Инициализирует плавное появление аватара
- */
 export function initAvatarFader(imgElement) {
     if (!imgElement) return;
     imgElement.dataset.avatar = 'loading';
-    imgElement.onload = () => {
-        imgElement.dataset.avatar = 'loaded';
-    };
+    imgElement.onload = () => { imgElement.dataset.avatar = 'loaded'; };
     imgElement.onerror = () => {
-        // Фоллбэк, если аватар не загрузился
         imgElement.src = 'https://t.me/i/userpic/320/null.jpg';
         imgElement.dataset.avatar = 'loaded';
     };
 }
 
-/**
- * Показывает модальное окно с QR-кодом
- */
 export function showQrCodeModal(qrElements, CONFIG, profile, t) {
     if (!qrElements?.modal || !CONFIG || !profile) return null;
-    
     const appUrl = `https://t.me/${CONFIG.botUsername}/${CONFIG.appSlug}?startapp=${profile.user_id}`;
-    
-    // Очищаем предыдущий QR
     qrElements.output.innerHTML = '';
-    
-    // Генерируем новый
     const qrCode = new QRCode(qrElements.output, {
         text: appUrl,
         width: 200,
@@ -482,33 +368,26 @@ export function showQrCodeModal(qrElements, CONFIG, profile, t) {
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H
     });
-    
-    if (qrElements.linkDisplay) {
-        qrElements.linkDisplay.textContent = appUrl;
-    }
-    
+    if (qrElements.linkDisplay) qrElements.linkDisplay.textContent = appUrl;
     const modalContent = qrElements.modal.querySelector('.modal-content');
-    
     qrElements.modal.style.display = 'flex';
     qrElements.modal.classList.remove('modal-overlay-animate');
     if (modalContent) modalContent.classList.remove('modal-content-animate');
-
     setTimeout(() => {
         qrElements.modal.classList.add('modal-overlay-animate');
         if (modalContent) modalContent.classList.add('modal-content-animate');
     }, 10);
-    
     return qrCode;
 }
 
-/**
- * Рендерит форму выбора навыков
- */
-export function renderSkillSelectionForm(container, selectedSkills, categories, t, onToggleCallback) {
+// --- ЛОГИКА РЕНДЕРА НОВОЙ МОДАЛКИ НАВЫКОВ (ОЧИЩЕННАЯ) ---
+
+export function renderSkillSelectionForm(container, selectedSkills, categories, t, onToggle) {
     if (!container) return;
-    
     container.innerHTML = '';
-    
+
+    if (!categories) return;
+
     Object.entries(categories).forEach(([catKey, skills]) => {
         const catDiv = document.createElement('div');
         catDiv.className = 'skill-category';
@@ -523,19 +402,14 @@ export function renderSkillSelectionForm(container, selectedSkills, categories, 
         
         skills.forEach(skill => {
             const tag = document.createElement('span');
-            // ИСПОЛЬЗУЕМ НОВЫЕ ЕДИНЫЕ КЛАССЫ
             tag.className = 'skill-tag skill-tag--selectable';
+            if (selectedSkills.includes(skill)) tag.classList.add('selected');
             tag.textContent = skill;
-            tag.dataset.skill = skill;
             
-            if (selectedSkills.includes(skill)) {
-                tag.classList.add('selected');
-            }
-            
-            tag.addEventListener('click', () => {
-                // tag.classList.toggle('selected'); // Логика .toggle() теперь в app.js
-                if (onToggleCallback) onToggleCallback(skill);
-            });
+            tag.onclick = () => {
+                tag.classList.toggle('selected');
+                onToggle(skill);
+            };
             
             skillList.appendChild(tag);
         });
@@ -545,86 +419,60 @@ export function renderSkillSelectionForm(container, selectedSkills, categories, 
     });
 }
 
-/**
- * Рендерит фильтры статуса для модального окна запросов
- */
-export function renderStatusFilters(container, t, onToggleCallback, selectedStatusKey = null) {
+export function renderStatusFilters(container, currentStatus, t, onToggle) {
     if (!container) return;
+    container.innerHTML = '';
     
-    container.innerHTML = ''; // Очищаем
-
     const title = document.createElement('h3');
     title.className = 'status-filter-group-title';
-    title.textContent = t('post_type_label'); // "Тип запроса"
+    title.textContent = t('post_type_label') || "Тип";
     container.appendChild(title);
 
     const list = document.createElement('div');
     list.className = 'status-filter-list';
     
     const statuses = [
-        { key: 'looking', text: t('post_type_looking') },   // '🤝 Ищет'
-        { key: 'offering', text: t('post_type_offering') }, // '💼 Предлагает'
-        { key: 'showcase', text: t('post_type_showcase') }  // '🚀 Демо'
+        { key: 'looking', text: t('post_type_looking') || "Ищу" },
+        { key: 'offering', text: t('post_type_offering') || "Предлагаю" },
+        { key: 'showcase', text: t('post_type_showcase') || "Демо" }
     ];
 
-    statuses.forEach(status => {
-        const tag = document.createElement('button');
-        tag.className = 'status-tag';
-        tag.textContent = status.text;
-        tag.dataset.status = status.key;
+    statuses.forEach(st => {
+        const btn = document.createElement('button');
+        btn.className = 'status-tag';
+        if (st.key === currentStatus) btn.classList.add('active');
+        btn.textContent = st.text;
         
-        if (status.key === selectedStatusKey) {
-            tag.classList.add('active');
-        }
-
-        tag.addEventListener('click', () => {
-            if (onToggleCallback) onToggleCallback(status);
-        });
-        
-        list.appendChild(tag);
+        btn.onclick = () => {
+            Array.from(container.querySelectorAll('.status-tag')).forEach(el => el.classList.remove('active'));
+            const newStatus = (currentStatus === st.key) ? null : st.key;
+            if (newStatus) btn.classList.add('active');
+            onToggle(newStatus);
+        };
+        list.appendChild(btn);
     });
-    
     container.appendChild(list);
 }
 
 /**
- * НОВАЯ ФУНКЦИЯ
  * Показывает "Тост"-уведомление
- * @param {string} message - Текст уведомления
- * @param {boolean} [isError=false] - Это ошибка (красный фон)?
- * @param {number} [duration=3000] - Длительность показа в мс
  */
 export function showToast(message, isError = false, duration = 3000) {
     const container = document.getElementById('toast-container');
     if (!container) {
-        console.error('Toast container not found!');
-        // Фоллбэк на alert, если контейнер не найден
+        // Фоллбэк
         alert(message);
         return;
     }
-
-    // 1. Создаем элемент
     const toast = document.createElement('div');
     toast.className = 'toast-item';
     toast.textContent = message;
-
-    if (isError) {
-        toast.classList.add('error');
-    }
-
-    // 2. Добавляем в DOM (анимация 'toast-in' сработает)
+    if (isError) toast.classList.add('error');
     container.appendChild(toast);
-
-    // 3. Устанавливаем таймер на скрытие
     setTimeout(() => {
         toast.classList.add('is-hiding');
-        
-        // 4. Ждем завершения анимации 'toast-out' и удаляем элемент
         toast.addEventListener('animationend', () => {
-            if (toast.parentNode === container) {
-                container.removeChild(toast);
-            }
+            if (toast.parentNode === container) container.removeChild(toast);
         }, { once: true });
-        
     }, duration);
 }

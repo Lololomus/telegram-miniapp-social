@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         feedContainer: document.getElementById('feed-container'),
         userDetailContainer: document.getElementById('user-detail-container'),
         settingsContainer: document.getElementById('settings-container'),
-        skillsModal: document.getElementById('skills-modal'),
+        skillsModal: document.getElementById('skills-modal'), 
         spinner: document.getElementById('loading-spinner'),
 
         posts: {
@@ -81,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
             skillsField: document.getElementById('skills-field'),
             photoInput: document.getElementById('photo-input'),
             avatarPreview: document.getElementById('avatar-preview'),
-            // Кнопка в форме редактирования профиля
             openSkillsModalButton: document.getElementById('open-skills-modal-button'),
             linksContainer: document.getElementById('links-container'),
             addLinkButton: document.getElementById('add-link-button'),
@@ -163,14 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
             linkDisplay: document.getElementById('qr-link-display'),
             closeButton: document.getElementById('close-qr-modal-button')
         },
-
-        skills: {
-            modal: document.getElementById('skills-modal'),
-            saveButton: document.getElementById('save-skills-modal-button'),
-            listContainer: document.getElementById('skills-modal-list-container'),
-            statusFilterContainer: document.getElementById('status-filter-container')
-        },
-
+        
         allViews: [
             document.getElementById('welcome-container'),
             document.getElementById('form-container'),
@@ -178,21 +170,147 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('feed-container'),
             document.getElementById('user-detail-container'),
             document.getElementById('settings-container'),
-            document.getElementById('skills-modal'),
+            document.getElementById('skills-modal'), 
             document.getElementById('posts-feed-container'),
             document.getElementById('create-post-modal')
         ],
          skeletonTemplate: document.getElementById('skeleton-card-template')
     };
 
-    // --- FIX: ВЫТАСКИВАЕМ МОДАЛКИ В КОРЕНЬ (ЧТОБЫ НЕ ПЕРЕКРЫВАЛИСЬ) ---
-    // Это решает проблему, когда QR код или другие окна не открывались
     if (elements.qr.modal && elements.qr.modal.parentNode !== document.body) {
         document.body.appendChild(elements.qr.modal);
     }
     if (elements.postModal.modal && elements.postModal.modal.parentNode !== document.body) {
         document.body.appendChild(elements.postModal.modal);
     }
+
+    // ==========================================================
+    // 🔥 NEW SKILLS MANAGER (SINGLETON)
+    // ==========================================================
+    const SkillsManager = {
+        elements: {
+            modal: document.getElementById('skills-modal'),
+            listContainer: document.getElementById('skills-modal-list-container'),
+            statusContainer: document.getElementById('skills-modal-status-container'),
+            saveButton: document.getElementById('save-skills-modal-button')
+        },
+        state: {
+            selectedSkills: [],
+            selectedStatus: null,
+            resolvePromise: null, 
+            renderStatus: false,
+            returnToId: null
+        },
+
+        init() {
+            if (!this.elements.modal) return;
+            
+            if (this.elements.saveButton) {
+                const newBtn = this.elements.saveButton.cloneNode(true);
+                this.elements.saveButton.parentNode.replaceChild(newBtn, this.elements.saveButton);
+                this.elements.saveButton = newBtn;
+                
+                this.elements.saveButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.handleSave();
+                });
+            }
+            window.SkillsManager = this;
+            console.log("✅ SkillsManager initialized");
+        },
+
+        select(initialSkills = [], options = {}) {
+            return new Promise((resolve) => {
+                if (this.state.resolvePromise) this.state.resolvePromise(null);
+                
+                this.state.resolvePromise = resolve;
+                this.state.selectedSkills = [...(Array.isArray(initialSkills) ? initialSkills : [])];
+                this.state.selectedStatus = options.initialStatus || null;
+                this.state.renderStatus = !!options.showStatus;
+                this.state.returnToId = options.returnTo || null;
+
+                this.render();
+
+                UI.showView(this.elements.modal, elements.allViews, elements.spinner, tg, t, () => {
+                    this.handleCancel();
+                });
+            });
+        },
+
+        render() {
+            const categories = SKILL_CATEGORIES || {};
+            
+            if (this.elements.listContainer) {
+                UI.renderSkillSelectionForm(
+                    this.elements.listContainer,
+                    this.state.selectedSkills,
+                    categories, 
+                    t,
+                    (skill) => {
+                        if (this.state.selectedSkills.includes(skill)) {
+                            this.state.selectedSkills = this.state.selectedSkills.filter(s => s !== skill);
+                        } else {
+                            this.state.selectedSkills.push(skill);
+                        }
+                    }
+                );
+            }
+
+            if (this.elements.statusContainer) {
+                if (this.state.renderStatus) {
+                    this.elements.statusContainer.style.display = 'block';
+                    UI.renderStatusFilters(
+                        this.elements.statusContainer,
+                        this.state.selectedStatus,
+                        t,
+                        (status) => { this.state.selectedStatus = status; }
+                    );
+                } else {
+                    this.elements.statusContainer.style.display = 'none';
+                }
+            }
+        },
+
+        restorePreviousView() {
+            this.elements.modal.style.display = 'none';
+            if (this.state.returnToId) {
+                const target = document.getElementById(this.state.returnToId);
+                if (target) {
+                    let backAction = null;
+                    if (this.state.returnToId === 'create-post-modal') {
+                        backAction = loadPostsFeedData;
+                    } else if (this.state.returnToId === 'form-container') {
+                        backAction = loadProfileData;
+                    }
+                    UI.showView(target, elements.allViews, elements.spinner, tg, t, backAction);
+                }
+            }
+        },
+
+        handleSave() {
+            if (this.state.resolvePromise) {
+                this.state.resolvePromise({
+                    skills: this.state.selectedSkills,
+                    status: this.state.selectedStatus
+                });
+                this.state.resolvePromise = null;
+            }
+            this.restorePreviousView();
+        },
+
+        handleCancel() {
+            if (this.state.resolvePromise) {
+                this.state.resolvePromise(null);
+                this.state.resolvePromise = null;
+            }
+            this.restorePreviousView();
+            document.dispatchEvent(new CustomEvent('skills-modal-canceled'));
+        }
+    };
+
+    SkillsManager.init();
+
 
     async function setLanguage(lang, isInitialLoad = false) {
         lang = supportedLangs.includes(lang) ? lang : 'ru';
@@ -282,7 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSectionTitle('detail-experience', 'experience_section_title');
         updateSectionTitle('detail-education', 'education_section_title');
         
-        // Шаблоны
         [elements.form.linkTemplate, elements.form.experienceTemplate, elements.form.educationTemplate].forEach(template => {
             if (template) {
                 template.content.querySelectorAll('[data-i18n-key]').forEach(el => el.textContent = t(el.dataset.i18nKey));
@@ -479,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadFeedData() {
-        UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
+        UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t, null);
         elements.feed.searchInput.value = '';
         document.dispatchEvent(new CustomEvent('set-feed-mode', { detail: { skills: [] } }));
     }
@@ -488,11 +605,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.dispatchEvent(new CustomEvent('set-posts-feed-mode', { detail: { showMyPostsOnly: false, skills: [], status: null } }));
         elements.posts.searchInput.value = '';
         if (elements.posts.postsStatusFilterInput) elements.posts.postsStatusFilterInput.value = '';
-        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
+        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, null);
     }
 
     async function loadMyPostsFeedData() {
-        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
+        UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
+        
         elements.posts.searchInput.value = '';
         document.dispatchEvent(new CustomEvent('set-posts-feed-mode', { detail: { showMyPostsOnly: true } }));
     }
@@ -579,8 +697,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.REACT_ISLANDS_LOADED = true;
         console.log("🔄 Начинаем СИНХРОННУЮ загрузку React-островков...");
         try {
-            await loadScript('/js/react/feed/FeedApp.js?v=1.4');
-            await loadScript('/js/react/posts/PostsApp.js?v=1.4');
+            await loadScript('/js/react/feed/FeedApp.js?v=1.5');
+            await loadScript('/js/react/posts/PostsApp.js?v=1.5');
             console.log("✅ Все React-островки успешно загружены.");
         } catch (e) {
             console.error("❌ КРИТИЧЕСКАЯ ОШИБКА при загрузке React-скриптов:", e);
@@ -628,32 +746,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainScroll = document.getElementById('main-scroll-container');
 
     const updateLayoutVisibility = (activeViewId) => {
-        // 1. Хедер (Поиск) показываем ТОЛЬКО в лентах (People, Hub)
-        const showHeader = (
+        // 1. Показываем фиксированный хедер ТОЛЬКО в лентах
+        const isFeedMode = (
             activeViewId === 'feed-container' || 
             activeViewId === 'posts-feed-container'
         );
 
-        // 2. Таббар показываем в лентах И в профиле
+        // 2. Таббар показываем везде в основных разделах
         const showTabbar = (
-            activeViewId === 'feed-container' || 
-            activeViewId === 'posts-feed-container' || 
-            activeViewId === 'profile-view-container'
+            isFeedMode ||
+            activeViewId === 'profile-view-container' ||
+            activeViewId === 'settings-container'
         );
 
         // Применяем видимость
-    if (appHeader) appHeader.style.display = showHeader ? 'flex' : 'none';
-    if (appTabbar) appTabbar.style.display = showTabbar ? 'flex' : 'none';
+        if (appHeader) appHeader.style.display = isFeedMode ? 'flex' : 'none';
+        if (appTabbar) appTabbar.style.display = showTabbar ? 'flex' : 'none';
 
-    // 3. ИСПРАВЛЕННЫЙ РАСЧЕТ ОТСТУПА
-    if (mainScroll) {
-        if (showHeader && appHeader) {
-            const headerHeight = appHeader.offsetHeight;
-            mainScroll.style.paddingTop = (headerHeight + 10) + 'px';
-        } else {
-            mainScroll.style.paddingTop = 'calc(env(safe-area-inset-top, 20px) + 20px)';
+        // Отступы контента
+        if (mainScroll) {
+            if (isFeedMode) {
+                // Ленты: Отступ под большой хедер (~110px)
+                mainScroll.style.paddingTop = 'calc(env(safe-area-inset-top, 40px) + 110px)';
+            } else {
+                // Профиль и Настройки: Хедера нет, минимальный отступ от "челки"
+                mainScroll.style.paddingTop = 'calc(env(safe-area-inset-top, 20px) + 10px)';
+            }
         }
-    }
     };
 
     // Перехватываем стандартный showView
@@ -669,10 +788,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const tabPeople = document.getElementById('tab-people');
         const tabHub = document.getElementById('tab-hub');
         const tabProfile = document.getElementById('tab-profile');
+        const tabSettings = document.getElementById('tab-settings');
         const mainScroll = document.getElementById('main-scroll-container');
 
         const resetTabs = () => {
-            [tabPeople, tabHub, tabProfile].forEach(t => t?.classList.remove('active'));
+            [tabPeople, tabHub, tabProfile, tabSettings].forEach(t => t?.classList.remove('active'));
         };
 
         const headerTitle = document.getElementById('header-title');
@@ -702,7 +822,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 resetTabs();
                 tabProfile.classList.add('active');
                 UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t, null);
-                if (headerTitle) headerTitle.textContent = t('profile_title');
+                
+                // ✅ Ставим правильный заголовок "Ваш профиль"
+                if (headerTitle) headerTitle.textContent = t('your_profile_title');
+                
+                localStorage.setItem('last_active_tab', 'profile');
+            });
+        }
+
+        if (tabSettings) {
+            tabSettings.addEventListener('click', () => {
+                resetTabs();
+                tabSettings.classList.add('active');
+                UI.showView(elements.settingsContainer, elements.allViews, elements.spinner, tg, t, null);
+                
+                // ✅ Ставим заголовок "Настройки"
+                if (headerTitle) headerTitle.textContent = t('settings_title');
             });
         }
 
@@ -808,22 +943,91 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- 4. ОСТАЛЬНЫЕ ХЕНДЛЕРЫ ---
+        // --- 4. ОСТАЛЬНЫЕ ХЕНДЛЕРЫ (С УЛУЧШЕННЫМ ПОИСКОМ) ---
         const globalSearchInput = document.getElementById('global-search-input');
+        
         if (globalSearchInput) {
+            // 1. Создаем кнопку очистки (если её нет)
+            const wrapper = globalSearchInput.parentElement;
+            let clearBtn = wrapper.querySelector('.header-search-clear');
+            
+            if (!clearBtn) {
+                clearBtn = document.createElement('button');
+                clearBtn.className = 'header-search-clear';
+                // SVG крестик
+                clearBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+                wrapper.appendChild(clearBtn);
+            }
+
+            // Функция обновления видимости крестика
+            const updateClearBtn = () => {
+                if (globalSearchInput.value.trim().length > 0) {
+                    wrapper.classList.add('has-text');
+                } else {
+                    wrapper.classList.remove('has-text');
+                }
+            };
+
+            // 2. Обработчик ввода (GLOBAL INPUT)
             globalSearchInput.addEventListener('input', (e) => {
+                updateClearBtn(); // Обновляем крестик
+                
                 const val = e.target.value;
+                
+                // Лента постов (Posts Feed)
                 if (tabHub && tabHub.classList.contains('active')) {
                     if (elements.posts.searchInput) {
-                        elements.posts.searchInput.value = val;
-                        elements.posts.searchInput.dispatchEvent(new Event('input'));
+                        // 🔥 FIX: Check if values differ before firing event.
+                        // React has likely already updated the local input via useEffect.
+                        if (elements.posts.searchInput.value !== val) {
+                            elements.posts.searchInput.value = val;
+                            elements.posts.searchInput.dispatchEvent(new Event('input'));
+                        }
                     }
-                } else {
+                } 
+                // Лента людей (People Feed)
+                else {
                     if (elements.feed.searchInput) {
-                        elements.feed.searchInput.value = val;
-                        elements.feed.searchInput.dispatchEvent(new Event('input'));
+                        // Same check for People Feed
+                        if (elements.feed.searchInput.value !== val) {
+                            elements.feed.searchInput.value = val;
+                            elements.feed.searchInput.dispatchEvent(new Event('input'));
+                        }
                     }
                 }
             });
+
+            // 3. Обработчик клика по крестику (ПОЛНЫЙ СБРОС)
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Очищаем визуал
+                globalSearchInput.value = '';
+                updateClearBtn();
+                globalSearchInput.focus(); // Возвращаем фокус
+
+                // Запускаем логику сброса
+                if (tabHub && tabHub.classList.contains('active')) {
+                    // Для ленты постов: очищаем скрытый инпут и диспатчим input
+                    // React поймает пустую строку и сделает setSelectedSkills([])
+                    if (elements.posts.searchInput) {
+                        elements.posts.searchInput.value = '';
+                        elements.posts.searchInput.dispatchEvent(new Event('input'));
+                    }
+                } else {
+                    // Для ленты людей
+                    if (elements.feed.searchInput) {
+                        elements.feed.searchInput.value = '';
+                        elements.feed.searchInput.dispatchEvent(new Event('input'));
+                        // Сбрасываем массив скиллов в ленте людей (если там есть отдельная логика)
+                        document.dispatchEvent(new CustomEvent('set-feed-mode', { detail: { skills: [] } }));
+                    }
+                }
+            });
+            
+            // Инициализация при загрузке (если там уже есть текст)
+            updateClearBtn();
         }
 
         const globalFilterBtn = document.getElementById('global-filter-btn');
@@ -833,35 +1037,86 @@ document.addEventListener('DOMContentLoaded', () => {
                 const currentSearch = globalSearchInput ? globalSearchInput.value : '';
                 const skills = currentSearch ? currentSearch.split(',').map(s => s.trim()).filter(Boolean) : [];
 
+                // С Глобальным фильтром нужно явно указывать куда возвращаться
+                const returnId = isHub ? 'posts-feed-container' : 'feed-container';
+
                 if (isHub) {
                     document.dispatchEvent(new CustomEvent('openSkillsModal', { 
-                        detail: { source: 'postsFeed', skills: skills } 
+                        detail: { source: 'postsFeed', skills: skills, returnTo: returnId } 
                     }));
                 } else {
                     document.dispatchEvent(new CustomEvent('openSkillsModal', { 
-                        detail: { source: 'feed', skills: skills } 
+                        detail: { source: 'feed', skills: skills, returnTo: returnId } 
                     }));
                 }
             });
         }
 
-        // --- 5. КНОПКИ ОТКРЫТИЯ СКИЛЛОВ (ДОБАВЛЕНО ИСПРАВЛЕНИЕ ДЛЯ ПРОФИЛЯ) ---
+        // --- 5. КНОПКИ ОТКРЫТИЯ СКИЛЛОВ ---
 
-        // Для модалки создания поста
-        if (elements.postModal.openSkillsModalButton) {
-            elements.postModal.openSkillsModalButton.addEventListener('click', () => {
-                const currentVal = elements.postModal.skillsField.value || '';
-                const currentSkills = currentVal ? currentVal.split(',').map(s => s.trim()).filter(Boolean) : [];
-                document.dispatchEvent(new CustomEvent('openSkillsModal', { detail: { source: 'postModal', skills: currentSkills } }));
+        // A. Лента ЛЮДЕЙ
+        if (elements.feed.openSkillsModalButtonFeed) {
+             elements.feed.openSkillsModalButtonFeed.addEventListener('click', async () => {
+                const currentSearch = elements.feed.searchInput ? elements.feed.searchInput.value : '';
+                const currentSkills = currentSearch ? currentSearch.split(',').map(s => s.trim()).filter(Boolean) : [];
+                
+                // ✅ ПЕРЕДАЕМ returnTo
+                const result = await SkillsManager.select(currentSkills, { 
+                    showStatus: false,
+                    returnTo: 'feed-container' 
+                });
+
+                if (result) {
+                    const skillsStr = result.skills.join(', ');
+                    if (elements.feed.searchInput) {
+                        elements.feed.searchInput.value = skillsStr;
+                        elements.feed.searchInput.dispatchEvent(new Event('input'));
+                    }
+                    if (globalSearchInput) {
+                        globalSearchInput.value = skillsStr;
+                    }
+                }
+                // Авто-восстановление уже сработает внутри SkillsManager
             });
         }
 
-        // ✅ ИСПРАВЛЕНО: Для формы редактирования профиля (этого не было)
+        // C. Создание поста
+        if (elements.postModal.openSkillsModalButton) {
+            elements.postModal.openSkillsModalButton.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>`;
+
+            elements.postModal.openSkillsModalButton.addEventListener('click', async () => {
+                const currentVal = elements.postModal.skillsField.value || '';
+                const currentSkills = currentVal ? currentVal.split(',').map(s => s.trim()).filter(Boolean) : [];
+                
+                // ✅ ПЕРЕДАЕМ returnTo: 'create-post-modal'
+                const result = await SkillsManager.select(currentSkills, { 
+                    showStatus: false,
+                    returnTo: 'create-post-modal'
+                });
+
+                if (result) {
+                    elements.postModal.skillsField.value = result.skills.join(', ');
+                }
+            });
+        }
+
+        // D. Редактирование профиля
         if (elements.form.openSkillsModalButton) {
-            elements.form.openSkillsModalButton.addEventListener('click', () => {
+            elements.form.openSkillsModalButton.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>`;
+
+            elements.form.openSkillsModalButton.addEventListener('click', async () => {
                 const currentVal = elements.form.skillsField.value || '';
                 const currentSkills = currentVal ? currentVal.split(',').map(s => s.trim()).filter(Boolean) : [];
-                document.dispatchEvent(new CustomEvent('openSkillsModal', { detail: { source: 'form', skills: currentSkills } }));
+                
+                // ✅ ПЕРЕДАЕМ returnTo: 'form-container'
+                const result = await SkillsManager.select(currentSkills, { 
+                    showStatus: false,
+                    returnTo: 'form-container'
+                });
+
+                if (result) {
+                    elements.form.skillsField.value = result.skills.join(', ');
+                }
             });
         }
 
@@ -885,179 +1140,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 savePostData();
             }
         });
-
-        // --- 6. МОДАЛКА СКИЛЛОВ (BRUTE FORCE REMOVE & CREATE) ---
-        // Это гарантирует, что окно всегда будет поверх остальных (Z-index win)
-        document.addEventListener('openSkillsModal', (event) => {
-            console.log('🔵 openSkillsModal EVENT CAUGHT!', event.detail);
-
-            try {
-                const { source, skills } = event.detail;
-                state.skillsModalSource = source;
-                state.selectedSkills = Array.isArray(skills) ? [...skills] : [];
-
-                // 1. УБИВАЕМ ЗОМБИ: Находим ВСЕ элементы с таким ID и удаляем их
-                const zombies = document.querySelectorAll('#skills-modal');
-                zombies.forEach(el => el.remove());
-
-                console.log('💀 Zombies removed. Creating fresh modal...');
-
-                // 2. Создаем чистую модалку
-                const skillsModal = document.createElement('div');
-                skillsModal.id = 'skills-modal';
-                skillsModal.className = 'screen'; 
-                skillsModal.style.display = 'none'; 
-                
-                skillsModal.innerHTML = `
-                    <div class="form-header">
-                        <h1 data-i18n-key="skills_modal_title">Навыки</h1>
-                    </div>
-                    <div id="status-filter-container" class="status-filter-group" style="display: none"></div>
-                    <div id="skills-modal-list-container"></div>
-                    <div class="fab-modal-save-container">
-                        <button id="save-skills-modal-button" class="action-button fab-modal-save" data-i18n-key="select">Готово</button>
-                    </div>
-                `;
-                
-                // Вставляем В КОНЕЦ body, чтобы перекрыть все
-                document.body.appendChild(skillsModal);
-
-                // 3. ОБНОВЛЯЕМ ССЫЛКИ
-                elements.skills.modal = skillsModal;
-                elements.skills.listContainer = skillsModal.querySelector('#skills-modal-list-container');
-                elements.skills.statusFilterContainer = skillsModal.querySelector('#status-filter-container');
-                elements.skills.saveButton = skillsModal.querySelector('#save-skills-modal-button');
-
-                if (elements.allViews) {
-                    elements.allViews = elements.allViews.filter(v => v && v.id !== 'skills-modal');
-                    elements.allViews.push(skillsModal);
-                }
-
-                // 4. ЛОГИКА ОТОБРАЖЕНИЯ ФИЛЬТРОВ
-                const statusContainer = elements.skills.statusFilterContainer;
-                if (statusContainer) {
-                    if (source === 'postsFeed') {
-                        statusContainer.style.display = 'block'; 
-                        const currentStatus = elements.posts.postsStatusFilterInput 
-                            ? elements.posts.postsStatusFilterInput.value 
-                            : null;
-                        
-                        UI.renderStatusFilters(statusContainer, t, (statusObj) => {
-                            const btns = statusContainer.querySelectorAll('.status-tag');
-                            btns.forEach(b => {
-                                if (b.dataset.status === statusObj.key) {
-                                    b.classList.toggle('active');
-                                } else {
-                                    b.classList.remove('active');
-                                }
-                            });
-                        }, currentStatus);
-                    } else {
-                        statusContainer.style.display = 'none';
-                    }
-                }
-
-                // 5. ОПРЕДЕЛЯЕМ КНОПКУ "НАЗАД"
-                let backAction = () => loadFeedData();
-                if (source === 'postsFeed') backAction = () => loadPostsFeedData();
-                else if (source === 'form') backAction = () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                else if (source === 'postModal') backAction = () => UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
-                else if (source === 'editPostModal') backAction = () => document.dispatchEvent(new CustomEvent('skills-modal-canceled'));
-
-                // 6. ПОКАЗЫВАЕМ
-                requestAnimationFrame(() => {
-                    UI.showView(skillsModal, elements.allViews, elements.spinner, tg, t, backAction);
-                    skillsModal.style.display = 'flex';
-                    skillsModal.classList.add('screen-fade-in');
-                });
-
-                // 7. РЕНДЕРИМ СПИСОК
-                setTimeout(() => {
-                    const container = elements.skills.listContainer;
-                    if (!container || !SKILL_CATEGORIES) return;
-
-                    const renderList = () => {
-                        UI.renderSkillSelectionForm(
-                            container,
-                            state.selectedSkills,
-                            SKILL_CATEGORIES,
-                            t,
-                            (skill) => {
-                                if (state.selectedSkills.includes(skill)) {
-                                    state.selectedSkills = state.selectedSkills.filter(s => s !== skill);
-                                } else {
-                                    state.selectedSkills.push(skill);
-                                }
-                                renderList();
-                            }
-                        );
-                    };
-                    renderList();
-                }, 10);
-
-            } catch (error) {
-                console.error('❌ Error inside openSkillsModal:', error);
-                UI.showToast('Ошибка интерфейса', true);
-            }
-        });
-
-        // 7. СОХРАНЕНИЕ НАВЫКОВ (ДЕЛЕГИРОВАНИЕ)
-        document.addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'save-skills-modal-button') {
-                e.preventDefault();
-                e.stopPropagation();
-
-                console.log('💾 Нажата кнопка Сохранить навыки. Источник:', state.skillsModalSource);
-
-                if (state.skillsModalSource === 'postsFeed') {
-                    const globalSearchInput = document.getElementById('global-search-input');
-                    if (globalSearchInput) globalSearchInput.value = state.selectedSkills.join(', ');
-                    
-                    const postsSearchInput = document.getElementById('posts-search-input');
-                    if (postsSearchInput) {
-                        postsSearchInput.value = state.selectedSkills.join(', ');
-                        postsSearchInput.dispatchEvent(new Event('input'));
-                    }
-                    
-                    const statusContainer = document.getElementById('status-filter-container');
-                    const activeStatusBtn = statusContainer ? statusContainer.querySelector('.status-tag.active') : null;
-                    const status = activeStatusBtn ? activeStatusBtn.dataset.status : null;
-                    
-                    const postsStatusInput = document.getElementById('posts-status-filter-input');
-                    if (postsStatusInput) {
-                        postsStatusInput.value = status || '';
-                    }
-
-                    document.dispatchEvent(new CustomEvent('set-posts-feed-mode', { detail: { skills: state.selectedSkills, status: status } }));
-                    UI.showView(elements.posts.container, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                } 
-                else if (state.skillsModalSource === 'feed') {
-                    const globalSearchInput = document.getElementById('global-search-input');
-                    if (globalSearchInput) globalSearchInput.value = state.selectedSkills.join(', ');
-                    
-                    const feedSearchInput = document.getElementById('feed-search-input');
-                    if (feedSearchInput) {
-                        feedSearchInput.value = state.selectedSkills.join(', ');
-                        feedSearchInput.dispatchEvent(new Event('input'));
-                    }
-                    document.dispatchEvent(new CustomEvent('set-feed-mode', { detail: { skills: state.selectedSkills } }));
-                    UI.showView(elements.feedContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                }
-                else if (state.skillsModalSource === 'form') {
-                    elements.form.skillsField.value = state.selectedSkills.join(', ');
-                    tg.MainButton.show();
-                    UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
-                }
-                else if (state.skillsModalSource === 'postModal') {
-                     elements.postModal.skillsField.value = state.selectedSkills.join(', ');
-                    UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
-                }
-                else if (state.skillsModalSource === 'editPostModal') {
-                    document.dispatchEvent(new CustomEvent('skills-updated-for-post', { detail: { skills: state.selectedSkills } }));
-                    document.dispatchEvent(new CustomEvent('skills-modal-canceled'));
-                }
-            }
-        });
         
         linksManager = setupDynamicList(tg, t, elements.form.addLinkButton, elements.form.linksContainer, elements.form.linkTemplate, 5);
         experienceManager = setupDynamicList(tg, t, elements.form.addExperienceButton, elements.form.experienceContainer, elements.form.experienceTemplate, 10);
@@ -1070,7 +1152,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        if (elements.profile.settingsButton) elements.profile.settingsButton.addEventListener('click', () => UI.showView(elements.settingsContainer, elements.allViews, elements.spinner, tg, t, loadProfileData));
         if (elements.profile.logoutButton) elements.profile.logoutButton.addEventListener('click', () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData));
         
         if (elements.settings.glassToggle) {
@@ -1105,12 +1186,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // --- УМНОЕ СКРЫТИЕ ТАББАРА (ТОЛЬКО НА МОБИЛКАХ) ---
         const allInputs = document.querySelectorAll('input, textarea');
         const tabbar = document.getElementById('app-tabbar');
         
+        // Проверка: является ли устройство мобильным (Android, iOS и т.д.)
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
         const handleFocus = () => {
-            if (tabbar) tabbar.classList.add('hide-on-keyboard');
+            // Скрываем бар ТОЛЬКО если это реальное мобильное устройство
+            // На ПК (даже в узком окне) бар останется
+            if (isMobile && tabbar) {
+                tabbar.classList.add('hide-on-keyboard');
+            }
         };
+        
         const handleBlur = () => {
             if (tabbar) tabbar.classList.remove('hide-on-keyboard');
         };
@@ -1209,47 +1299,84 @@ document.addEventListener('DOMContentLoaded', () => {
             
             await loadProfileData();
             
+            // --- ЛОГИКА СТАРТА ПРИЛОЖЕНИЯ (ПОЛНАЯ ВЕРСИЯ) ---
             const startParam = tg.initDataUnsafe?.start_param;
             
+            // 1. Сценарий Deep Link (Высший приоритет)
             if (startParam && state.isRegistered) {
                 if (startParam.startsWith('p_')) {
+                    // --- ОТКРЫТИЕ ПОСТА ---
                     const postId = startParam.replace('p_', '').trim();
+                    // Переходим в HUB
                     const tabHub = document.getElementById('tab-hub');
                     if(tabHub) tabHub.click();
                     
                     try {
                         const postResult = await api.getPostById(tg.initData, postId);
                         if (postResult.ok && postResult.post) {
+                            // Сохраняем пост глобально или кидаем событие
                             window.__DEEP_LINK_POST = postResult.post;
+                            // Небольшая задержка, чтобы React успел смонтироваться
                             setTimeout(() => {
                                 document.dispatchEvent(new CustomEvent('open-deep-link-post', { detail: { post: postResult.post } }));
                             }, 500);
                         } else {
                             UI.showToast('Пост не найден', true);
                         }
-                    } catch (e) { UI.showToast('Ошибка загрузки поста', true); }
+                    } catch (e) { 
+                        UI.showToast('Ошибка загрузки поста', true); 
+                    }
+
                 } else {
+                    // --- ОТКРЫТИЕ ПРОФИЛЯ ---
                     const targetUserId = startParam;
-                    await loadFeedData();
+                    // Переходим в PEOPLE
+                    const tabPeople = document.getElementById('tab-people');
+                    if(tabPeople) tabPeople.click();
+                    
                     try {
                         const userResult = await api.loadTargetUserProfile(tg.initData, targetUserId);
                         if (userResult.ok && userResult.profile) {
                             setTimeout(() => {
+                                // Событие может слушать FeedApp (если реализуем) или просто старая логика
+                                // В текущей архитектуре FeedApp это пока не обрабатывает, но логика остается для совместимости
                                 document.dispatchEvent(new CustomEvent('open-deep-link-profile', { detail: { user: userResult.profile } }));
+                                
+                                // ПРЯМОЙ ВЫЗОВ (Fallback): Показываем профиль поверх ленты
+                                state.currentViewedUserId = userResult.profile.user_id;
+                                UI.showUserDetailView(
+                                    userResult.profile, 
+                                    elements.detail, 
+                                    state.CONFIG, 
+                                    t, 
+                                    (container, skills, btn) => UI.renderSkillTags(container, skills, btn, t), 
+                                    state.currentUserProfile.user_id
+                                );
+                                UI.showView(elements.userDetailContainer, elements.allViews, elements.spinner, tg, t, loadFeedData);
                             }, 500);
                         }
-                    } catch (e) { UI.showToast(t('error_profile_not_found'), true); }
+                    } catch (e) { 
+                        UI.showToast(t('error_profile_not_found'), true); 
+                    }
                 }
                 state.targetUserIdFromLink = null;
-            } else if (startParam && !state.isRegistered) {
-                UI.showToast(t('error_must_create_profile'), true);
-                UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData);
+            
+            // 2. Если не зарегистрирован -> Welcome Screen
             } else if (!state.isRegistered) {
                 UI.showView(elements.welcomeContainer, elements.allViews, elements.spinner, tg, t, undefined);
+            
+            // 3. Обычный вход -> ВСЕГДА HUB (Лента запросов)
             } else {
-                loadFeedData();
+                const tabHub = document.getElementById('tab-hub');
+                if (tabHub) {
+                    tabHub.click(); // Это вызовет loadPostsFeedData()
+                } else {
+                    // Фоллбэк на случай проблем с DOM
+                    loadPostsFeedData();
+                }
             }
 
+            // Расширение на весь экран (для Android)
             function isMobileDevice() {
                 return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             }

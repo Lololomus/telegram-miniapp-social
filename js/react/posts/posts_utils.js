@@ -15,6 +15,7 @@ export {
     PhoneShell,
     ProfileFallback,
     POPULAR_SKILLS,
+    ALL_RECOGNIZED_SKILLS,
     cardVariants,
     listVariants,
     FEED_ITEM_SPRING,

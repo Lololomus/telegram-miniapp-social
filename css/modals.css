@@ -98,17 +98,28 @@
     transform: translateX(-50%);
     width: calc(100% - 40px);
     max-width: 560px;
-    z-index: 4001; 
+    z-index: 4001; /* Для модалки навыков */
 }
 
+/* Общий стиль для главной кнопки действия */
 .action-button.fab-modal-save {
     width: 100%;
-    animation: fab-pulse-main 2.5s infinite ease-in-out;
-    padding: 14px;
-    position: relative;
-    left: auto;
-    bottom: auto;
-    transform: none; 
+    border-radius: 16px; /* Скругление как у iOS кнопок */
+    padding: 16px;
+    font-size: 17px;
+    font-weight: 600;
+    text-align: center;
+    
+    /* Анимация пульсации (как была у тебя) */
+    animation: fab-pulse-main 3s infinite ease-in-out;
+    
+    /* Тень */
+    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+    transition: transform 0.2s;
+}
+
+.action-button.fab-modal-save:active {
+    transform: scale(0.96);
 }
 
 /* --- Фильтр статусов --- */
@@ -185,7 +196,7 @@ body.theme-glass-overlay .modal-content {
   top: 0; left: 0; right: 0; bottom: 0;
   height: 100dvh; /* Для мобильных браузеров */
   height: 100vh;  /* Фоллбэк */
-  z-index: 4000; 
+  z-index: 5001 !important;; 
   
   /* ✅ FIX: Отступ сверху под "челку" и нативные кнопки */
   padding-top: calc(env(safe-area-inset-top, 20px) + 10px);
@@ -520,4 +531,43 @@ body.theme-dark.theme-glass-overlay .form-header h1 {
     color: #ffffff !important;
     opacity: 1;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Тень для читаемости на пестром фоне */
+}
+
+/* --- ЭКРАН РЕДАКТИРОВАНИЯ (React Full Screen) --- */
+
+/* Делаем его похожим на нативный экран */
+.edit-post-screen {
+    background-color: var(--main-bg-color) !important;
+    /* Сбрасываем стили обычной модалки */
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Хедер */
+.edit-post-header {
+    border-bottom: 1px solid var(--secondary-bg-color);
+}
+
+/* Стили для FAB контейнера внутри редактирования */
+.edit-post-fab-container {
+    /* Убедимся, что он выше контента */
+    z-index: 5002;
+}
+
+/* --- АДАПТАЦИЯ ПОД СТЕКЛО --- */
+body.theme-glass-overlay .edit-post-screen {
+    background-color: #09090b !important; /* Сплошной темный */
+}
+
+body.theme-glass-overlay .edit-post-header {
+    border-bottom: var(--glass-border);
+    background-color: rgba(255,255,255,0.02);
+}
+
+body.theme-glass-overlay .edit-post-header h2 {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }

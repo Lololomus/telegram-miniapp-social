@@ -50,20 +50,21 @@ body {
     top: 0; left: 0; right: 0;
     z-index: 50;
     
-    /* 1. Увеличиваем минимальную высоту, добавляя запас под навигацию */
+    /* Автоматическая высота, но с контролем */
     height: auto;
-    /* Было: + 0px, стало: + 44px (стандартная высота навбара) */
-    min-height: calc(var(--header-base-height) + env(safe-area-inset-top, 40px) + 44px);
     
-    /* 2. Увеличиваем отступ сверху, чтобы сдвинуть поиск вниз */
-    padding-top: calc(env(safe-area-inset-top, 40px) + 44px); 
+    /* Отступ сверху: Safe Area + 10px */
+    padding-top: calc(env(safe-area-inset-top, 40px) + 10px);
     
+    /* Отступ снизу: 12px */
     padding-bottom: 12px;
     padding-left: 16px;
     padding-right: 16px;
     
     display: flex;
-    align-items: flex-end; 
+    flex-direction: column; /* Вертикальная колонка */
+    align-items: center; /* Выравнивание по центру */
+    justify-content: flex-end;
     gap: 12px;
     
     background: var(--glass-bg);
@@ -71,126 +72,132 @@ body {
     -webkit-backdrop-filter: blur(20px);
     border-bottom: var(--glass-border);
     box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+/* Заголовок в хедере (Hub, People, Settings) */
+.header-title {
+    font-size: 17px; 
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    margin: 0;
+    padding: 0;
+    color: var(--main-text-color);
+    text-align: center;
+    width: 100%;
+}
+
+body.theme-dark .header-title {
+    color: #ffffff;
+}
+
+/* Ряд поиска (Инпут + Кнопка фильтра) */
+.header-search-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
 }
 
 /* Контейнер поиска */
 .header-search-wrapper {
     flex: 1;
     position: relative;
-    /* ✅ Жесткая высота 36px (стандарт iOS) */
-    height: 36px !important; 
-    min-height: 36px !important;
-    max-height: 36px !important;
-    
+    height: 40px; 
     display: flex;
     align-items: center;
-    margin-bottom: 0;
-    
-    /* Гарантирует, что паддинги не увеличат высоту */
-    box-sizing: border-box; 
-}
-
-/* Иконка */
-.header-search-icon {
-    position: absolute;
-    left: 8px; /* Чуть ближе к краю */
-    top: 50%;
-    transform: translateY(-50%);
-    color: rgba(235, 235, 245, 0.6); /* Светло-серый для темной темы */
-    pointer-events: none;
-    z-index: 5; /* Поверх инпута */
-    width: 18px; 
-    height: 18px;
 }
 
 /* Поле ввода */
 .header-search-input {
     width: 100%;
     height: 100%;
-    
-    /* ✅ Правильный фон для темной темы (темно-серый, не прозрачный) */
     background-color: rgba(118, 118, 128, 0.24) !important;
     border: none;
     border-radius: 10px;
-    
-    /* ✅ ВАЖНО: Паддинги */
-    /* 32px слева (под иконку), 0 справа (или чуть-чуть), 0 вертикально */
-    padding: 0 8px 0 32px !important;
-    margin: 0;
-    
-    /* Текст */
+    padding: 0 36px !important; /* Место под иконку и крестик */
+    font-size: 16px;
     color: #ffffff !important;
-    font-size: 17px;
-    line-height: normal; /* Важно для iOS */
-    
-    /* Убираем стили браузера */
+    outline: none;
     -webkit-appearance: none;
     appearance: none;
-    outline: none;
 }
 
-/* Цвет плейсхолдера ("Поиск...") */
-.header-search-input::placeholder {
+/* Иконка лупы */
+.header-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
     color: rgba(235, 235, 245, 0.6);
-    opacity: 1;
+    pointer-events: none;
+    z-index: 5;
+    width: 16px;
+    height: 16px;
 }
 
-/* Фикс для светлой темы (если включится) */
-body.theme-light .header-search-input {
-    background-color: rgba(118, 118, 128, 0.12) !important;
-    color: #000000 !important;
-}
-body.theme-light .header-search-icon {
-    color: rgba(60, 60, 67, 0.6);
+/* Кнопка очистки (Крестик) */
+.header-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgba(142, 142, 147, 0.5); 
+    border: none;
+    padding: 0;
+    display: none; 
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
 }
 
-/* Стили для темной темы */
-body.theme-dark .header-search-input {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+/* Показываем крестик, когда есть класс has-text */
+.header-search-wrapper.has-text .header-search-clear {
+    display: flex;
 }
+
+.header-search-clear svg {
+    width: 12px;
+    height: 12px;
+    color: #000; 
+    stroke-width: 3;
+}
+
 /* Кнопка фильтра */
 .header-filter-btn {
-    width: 40px; height: 40px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.07);
-    border: var(--glass-border);
+    width: 40px; 
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--main-hint-color);
     cursor: pointer;
 }
-.header-profile-btn { display: none !important; }
 
-/* Стили для заголовка в шапке */
-.header-title {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    
-    /* Центрируем вертикально. Высота навбара 44px. */
-    /* safe-area + половина высоты (22px) - половина шрифта (~10px) = +12px */
-    top: calc(env(safe-area-inset-top, 20px) + 12px);
-    
-    margin: 0;
-    padding: 0;
-    
-    /* ✅ КАК НА СКРИНШОТЕ SELECT SKILLS: */
-    font-size: 17px; 
-    font-weight: 700; /* Жирный (Bold), а не SemiBold */
-    line-height: 22px;
-    letter-spacing: -0.4px; /* Чуть плотнее */
-    
-    color: var(--main-text-color);
-    pointer-events: none;
-    z-index: 55;
-    
-    white-space: nowrap;
+/* --- РЕЖИМ "ПРОСТО ОГЛАВЛЕНИЕ" (Для Настроек) --- */
+.app-header.simple-mode .header-search-row {
+    display: none;
+}
+.app-header.simple-mode {
+    padding-bottom: 12px;
+    /* Сбрасываем высоту для компактности */
+    min-height: auto;
 }
 
-body.theme-dark .header-title {
-    color: #ffffff;
+/* --- ЗАГОЛОВОК ВНУТРИ ПРОФИЛЯ --- */
+.profile-internal-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 20px 0 25px 0 !important;
+    text-align: center;
+    color: #fff;
 }
 
 /* --- 2. КОНТЕНТ (ЛЕНТА) --- */
@@ -198,17 +205,10 @@ body.theme-dark .header-title {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
     z-index: 1;
-    
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    
-    /* ✅ FIX: ЖЕСТКИЙ ОТСТУП СВЕРХУ */
-    /* Хедер (60) + Челка (40) + Зазор (20) = 120px */
-    padding-top: calc(var(--header-base-height) + env(safe-area-inset-top, 40px) + 20px);
-    
-    /* Отступ снизу */
+    padding-top: 120px; /* Базовый паддинг, JS пересчитает */
     padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 20px) + 20px);
-    
     padding-left: 16px;
     padding-right: 16px;
 }
@@ -220,28 +220,20 @@ body.theme-dark .header-title {
     position: fixed;
     bottom: 0; left: 0; right: 0;
     z-index: 50;
-    
-    /* Авто-высота */
     height: auto;
-    
     padding-top: 12px;
     padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 5px);
-    
     display: flex;
     justify-content: space-around;
     align-items: center;
-    
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: var(--glass-border);
     box-sizing: border-box;
-    
-    /* Плавное скрытие при открытии клавиатуры */
     transition: transform 0.3s ease;
 }
 
-/* Класс для скрытия бара (будет добавляться JS-ом) */
 .bottom-tabbar.hide-on-keyboard {
     transform: translateY(100%);
 }
@@ -272,7 +264,6 @@ body.theme-dark .header-title {
     height: 0;
     transition: opacity 0.3s ease;
 }
-/* Скрываем FAB вместе с таббаром */
 .bottom-tabbar.hide-on-keyboard .tab-fab-wrapper {
     opacity: 0;
     pointer-events: none;
@@ -318,7 +309,6 @@ body.theme-dark .header-title {
 .fab-rotate-reset svg { transform: rotate(0deg); transition: transform 0.3s; }
 
 /* --- СТИЛИ ДЛЯ ПОЛЯ ТЕГОВ И КНОПКИ (РОВНЫЕ) --- */
-
 .skills-input-group {
     display: flex;
     align-items: center;
@@ -326,49 +316,53 @@ body.theme-dark .header-title {
     width: 100%;
     position: relative;
 }
-
-/* Настраиваем ИНПУТ: разрешаем ввод, фиксируем высоту */
 .skills-input-group input {
-    flex: 1; /* Занимает всё место */
+    flex: 1; 
     min-width: 0;
-    height: 44px !important; /* Высота под палец */
+    height: 44px !important; 
     padding: 0 12px;
     border-radius: 12px;
     box-sizing: border-box; 
 }
-
-/* Настраиваем КНОПКУ: квадратная, стеклянная */
 .skills-input-button {
-    width: 44px !important; /* КВАДРАТ 44x44 */
+    width: 44px !important; 
     height: 44px !important;
     border-radius: 12px !important;
-    
-    /* Стеклянный стиль (как в шапке) */
     background: rgba(255, 255, 255, 0.07) !important;
     border: var(--glass-border) !important;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0 !important;
     margin: 0 !important;
-    
     color: var(--main-hint-color);
     cursor: pointer;
     flex-shrink: 0;
     transition: background-color 0.2s;
 }
-
-/* Эффект нажатия */
 .skills-input-button:active {
     background: rgba(255, 255, 255, 0.15) !important;
     transform: scale(0.96);
 }
-
 .skills-input-button svg {
     width: 20px;
     height: 20px;
     stroke: currentColor;
+}
+
+/* --- ТИПОГРАФИКА: ЕДИНЫЙ СТАНДАРТ ЗАГОЛОВКОВ (20px Bold) --- */
+.header-title,
+.form-header h1,
+.feed-header h1,
+#skills-modal .form-header h1,
+#create-post-modal .form-header h1,
+.edit-post-header h2 {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.4px !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    text-align: center !important;
 }

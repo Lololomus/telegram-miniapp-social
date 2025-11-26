@@ -322,11 +322,25 @@ export function ProfileFallback() {
     );
 }
 
-export const POPULAR_SKILLS = [
-    "Python", "JavaScript", "Java", "C#", "C++", "Go",
-    "React", "Vue", "Angular", "Node.js", "Django", "Spring",
-    "PostgreSQL", "MongoDB", "Docker", "Kubernetes", "Git", "Figma", "AWS"
+export const ALL_RECOGNIZED_SKILLS = [
+    // Languages
+    "Python", "JavaScript", "Java", "C#", "C++", "Go", "PHP", "Ruby", "Swift", "Kotlin", "Rust", "TypeScript", "Dart", "Lua", "Perl", "Scala", "Elixir",
+    // Frontend
+    "React", "Vue", "Angular", "Svelte", "HTML", "CSS", "Tailwind", "Bootstrap", "jQuery", "Next.js", "Nuxt.js", "Three.js",
+    // Backend
+    "Node.js", "Django", "Spring", "Laravel", "Flask", "ASP.NET", "Express", "FastAPI", "Symfony", "Ruby on Rails",
+    // DB
+    "PostgreSQL", "MongoDB", "MySQL", "Redis", "SQLite", "Firebase", "Elasticsearch", "Cassandra", "MariaDB", "Oracle",
+    // DevOps
+    "Docker", "Kubernetes", "Git", "AWS", "Google Cloud", "Azure", "Jenkins", "Terraform", "Ansible", "CircleCI", "Nginx",
+    // Design
+    "Figma", "Photoshop", "Illustrator", "Blender", "Unity", "Unreal Engine", "After Effects", "Premiere Pro", "Sketch", "InDesign"
 ].sort((a, b) => a.localeCompare(b));
+
+// 2. БЫСТРЫЕ ТЕГИ (Только популярные, для горизонтального скролла)
+export const POPULAR_SKILLS = [
+    "Python", "JavaScript", "React", "Java", "C++", "Go", "PHP", "Design", "DevOps", "Swift", "MySQL"
+];
 
 export const cardVariants = isIOS 
   ? {

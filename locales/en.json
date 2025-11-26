@@ -195,5 +195,8 @@
   "error_must_create_profile": "Please create your profile first.",
   "error_critical": "Critical error: {error}",
   "error_max_items_reached": "Limit reached ({max})",
-  "error_generic_action": "An error occurred. Please try again."
+  "error_generic_action": "An error occurred. Please try again.",
+
+  "your_profile_title": "Your Profile",
+  "edit_profile_title": "Edit Profile"
 }

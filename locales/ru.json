@@ -195,5 +195,8 @@
   "error_must_create_profile": "Сначала создайте свой профиль.",
   "error_critical": "Критическая ошибка: {error}",
   "error_max_items_reached": "Достигнут лимит ({max})",
-  "error_generic_action": "Произошла ошибка. Попробуйте снова."
+  "error_generic_action": "Произошла ошибка. Попробуйте снова.",
+
+  "your_profile_title": "Ваш профиль",
+  "edit_profile_title": "Редактирование"
 }
