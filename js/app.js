@@ -945,15 +945,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        const actionMyPosts = document.getElementById('fab-action-my-posts');
-        if (actionMyPosts) {
-            actionMyPosts.addEventListener('click', () => {
-                toggleFabMenu();
-                if (tabHub) tabHub.click(); 
-                loadMyPostsFeedData();
-            });
-        }
-
         const actionSaved = document.getElementById('fab-action-saved');
         if (actionSaved) {
             actionSaved.addEventListener('click', () => {

@@ -239,5 +239,8 @@
   "exp_less_1": "Less than 1 year",
   "exp_1_3": "1–3 years",
   "exp_3_5": "3–5 years",
-  "exp_5_plus": "5+ years"
+  "exp_5_plus": "5+ years",
+
+  "action_message": "Message in Telegram",
+  "action_close": "Close"
 }

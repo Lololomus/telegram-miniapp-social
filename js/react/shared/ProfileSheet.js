@@ -307,44 +307,48 @@ export function ProfileSheet({ user, onClose }) {
                       )
                 ),
 
-              h('div', { className: 'content-divider' }),
+              h('div', {
+                className: 'content-divider',
+                // Было: margin 15px 0 в CSS. Делаем компактнее и чуть больше снизу.
+                style: { margin: '10px 0 8px' },
+              }),
 
+              // Более компактный блок "Опыт работы"
               h(
                 'div',
-                { className: 'profile-block' },
-                h(
-                  'h3',
-                  { className: 'content-title' },
-                  t('experience') || 'EXPERIENCE'
-                ),
+                {
+                  className: 'profile-block',
+                  // Убираем лишний верхний отступ, оставляем только небольшой нижний
+                  style: { marginTop: 0, marginBottom: 10 },
+                },
+                h('h3', { className: 'content-title' }, t('experience', 'EXPERIENCE')),
                 isLoading
                   ? h(SkeletonTimeline)
-                  : (experience.length > 0
-                      ? experience.map((exp, i) =>
-                          h(ExperienceCard, { key: i, item: exp, type: 'work' })
-                        )
-                      : h(
-                          'div',
-                          { className: 'empty-section' },
-                          t('profile_no_experience') || 'No experience added'
-                        )
-                    )
+                  : experience.length > 0
+                    ? experience.map((exp, i) =>
+                        h(ExperienceCard, { key: i, item: exp, type: 'work' })
+                      )
+                    : h('div', { className: 'empty-section' }, t('profile_no_experience', 'No experience added'))
               ),
 
-              !isLoading &&
-                education.length > 0 &&
-                h(
-                  'div',
-                  { className: 'profile-block', style: { marginTop: 24 } },
-                  h(
-                    'h3',
-                    { className: 'content-title' },
-                    t('education') || 'EDUCATION'
-                  ),
-                  education.map((edu, i) =>
-                    h(ExperienceCard, { key: i, item: edu, type: 'edu' })
-                  )
-                ),
+              // Компактный блок "Образование" — почти без зазора с "Опыт работы"
+              !isLoading && education.length > 0 && h(
+                'div',
+                {
+                  className: 'profile-block',
+                  style: {
+                    // Если есть опыт — минимальный отступ сверху (2px),
+                    // иначе чуть больше, но всё равно компактно.
+                    marginTop: (Array.isArray(experience) && experience.length > 0) ? 2 : 6,
+                    // Снизу тоже совсем маленький отступ
+                    marginBottom: 4,
+                  },
+                },
+                h('h3', { className: 'content-title' }, t('education', 'EDUCATION')),
+                education.map((edu, i) =>
+                  h(ExperienceCard, { key: i, item: edu, type: 'edu' })
+                )
+              ),
 
               links.length > 0 &&
                 h(

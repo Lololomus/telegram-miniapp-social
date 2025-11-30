@@ -195,7 +195,7 @@ body.theme-glass-overlay .post-sheet-unified {
     background-color: #1c1c1e; /* Сплошной цвет! */
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    padding: 20px;
+    padding: 14px 20px 12px;
     
     text-align: left;
     display: flex; flex-direction: column; align-items: flex-start;
@@ -219,7 +219,10 @@ body.theme-glass-overlay .post-sheet-unified {
 }
 
 .content-divider {
-    height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0; width: 100%;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 8px 0 6px;
+  width: 100%;
 }
 
 .post-tags-cloud.bottom {
@@ -257,6 +260,16 @@ body.theme-glass-overlay .post-sheet-unified {
     color: #ffffff; cursor: pointer; flex-shrink: 0; transition: all 0.2s;
 }
 .icon-action-btn:active { background: rgba(255, 255, 255, 0.1); transform: scale(0.95); }
+
+/* НОВОЕ: красный флажок для Report в карточке другого пользователя */
+.icon-action-btn.destructive {
+  color: #FF3B30; /* iOS-стайл красный */
+}
+
+/* На всякий случай гарантируем, что svg наследует этот цвет */
+.icon-action-btn.destructive svg {
+  stroke: currentColor;
+}
 
 .main-action-btn {
     flex: 1; height: 52px; border-radius: 16px; border: none;
@@ -412,10 +425,14 @@ body.theme-glass-overlay .post-sheet-unified {
     display: flex; gap: 14px; padding: 16px;
     background-color: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 16px; margin-bottom: 12px;
+    border-radius: 16px; margin-bottom: 4px;
     transition: background 0.2s;
 }
 .experience-card:active { background-color: rgba(255, 255, 255, 0.06); }
+/* Минимальный отступ у последней карточки внутри блока */
+.post-content-inset .experience-card:last-child {
+  margin-bottom: 0;
+}
 
 .exp-icon-box {
     width: 40px; height: 40px; border-radius: 10px;

@@ -79,18 +79,39 @@ const fallbackTranslations = {
 /**
  * Возвращает переведенную строку по ключу
  */
-export function t(key, params = {}) {
-    // Сначала ищем в загруженных переводах
-    let text = translations[key];
-    
-    // Если не нашли, ищем в резервных
-    if (!text) {
-        text = fallbackTranslations[key] || key;
-    }
-    
-    // Подставляем параметры (если они есть)
-    for (const param in params) {
-        text = text.replace(new RegExp(`{${param}}`, 'g'), params[param]);
+// НОВАЯ БЕЗОПАСНАЯ ВЕРСИЯ t
+export function t(key, params = null) {
+  // 1. Берём строку из загруженных переводов
+  let text = translations[key];
+
+  // 2. Если не нашли — пробуем фоллбэк, иначе оставляем key
+  if (!text) {
+    text = fallbackTranslations[key] || key;
+  }
+
+  // 3. Если второй аргумент — простая строка, считаем её дефолтным текстом
+  //    и используем ТОЛЬКО если перевода нет (text === key)
+  if (typeof params === 'string') {
+    if (text === key) {
+      text = params;
     }
     return text;
+  }
+
+  // 4. Если параметров нет или это не объект (число, null и т.п.) — просто возвращаем строку
+  if (!params || typeof params !== 'object') {
+    return text;
+  }
+
+  // 5. Подстановка плейсхолдеров вида {error}, {limit}, {0} без RegExp
+  //    Работает и для обычных объектов, и для массивов (ключи '0', '1', ...)
+  for (const param in params) {
+    const token = `{${param}}`;
+    const value = String(params[param]);
+
+    // split/join безопасен для любых символов, в отличие от RegExp
+    text = text.split(token).join(value);
+  }
+
+  return text;
 }

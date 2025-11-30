@@ -108,6 +108,18 @@ function PostDetailSheet({
   const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
 
   const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
+
+  // Локальное определение, что пост принадлежит текущему пользователю
+  const currentUserId =
+    window.__CURRENT_USER_ID ?? window.CURRENT_USER_ID ?? window.CURRENTUSERID;
+
+  const authorId = String(author.user_id ?? author.userid ?? '');
+
+  const isOwnPost =
+    currentUserId != null && authorId &&
+    String(currentUserId) === authorId
+      ? true
+      : !!isMyPost; // оставляем флаг из "Мои запросы" как запасной
   const {
     content,
     full_description,
@@ -141,6 +153,7 @@ function PostDetailSheet({
     tg.showAlert(t('report_sent') || 'Жалоба отправлена');
   };
 
+  // Для своих постов: только репост и закрыть
   const footerMyPost = [
     h(
       'button',
@@ -168,110 +181,112 @@ function PostDetailSheet({
         h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 }),
       ),
     ),
-
-    h(
-      'button',
-      {
-        key: 'delete',
-        className: 'icon-action-btn destructive',
-        onClick: () => onDelete(post),
-        style: { backgroundColor: '#ff3b30' },
-      },
-      h(
-        'svg',
-        {
-          width: 24,
-          height: 24,
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          stroke: 'currentColor',
-          strokeWidth: 2,
-          strokeLinecap: 'round',
-          strokeLinejoin: 'round',
-        },
-        h('polyline', { points: '3 6 5 6 21 6' }),
-        h('path', { d: 'M19 6l-1 14H6L5 6' }),
-        h('path', { d: 'M10 11v6' }),
-        h('path', { d: 'M14 11v6' }),
-        h('path', { d: 'M9 6V4h6v2' }),
-      ),
-    ),
-
-    h(
-      'button',
-      {
-        key: 'edit',
-        className: 'main-action-btn edit',
-        onClick: () => onEdit(post),
-      },
-      t('action_edit') || 'Edit',
-    ),
-  ];
-
-  const footerForeignPost = [
-    h(
-      'button',
-      {
-        key: 'report',
-        className: 'icon-action-btn destructive',
-        onClick: handleReport,
-      },
-      h(
-        'svg',
-        {
-          width: 24,
-          height: 24,
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          stroke: 'currentColor',
-          strokeWidth: 2,
-          strokeLinecap: 'round',
-          strokeLinejoin: 'round',
-        },
-        h('path', {
-          d: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z',
-        }),
-        h('line', { x1: 4, y1: 22, x2: 4, y2: 15 }),
-      ),
-    ),
-
-    h(
-      'button',
-      {
-        key: 'share',
-        className: 'icon-action-btn',
-        onClick: () => onRepost(post),
-      },
-      h(
-        'svg',
-        {
-          width: 24,
-          height: 24,
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          stroke: 'currentColor',
-          strokeWidth: 2,
-          strokeLinecap: 'round',
-          strokeLinejoin: 'round',
-        },
-        h('circle', { cx: 18, cy: 5, r: 3 }),
-        h('circle', { cx: 6, cy: 12, r: 3 }),
-        h('circle', { cx: 18, cy: 19, r: 3 }),
-        h('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
-        h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 }),
-      ),
-    ),
-
     h(
       'button',
       {
         key: 'respond',
         className: 'main-action-btn',
-        onClick: () => onRespond(post),
+        onClick: onClose, // вместо onRespond(post)
       },
-      t('action_respond') || 'Respond',
+      t('action_close') || 'Закрыть',
     ),
   ];
+
+  const footerForeignPost = [
+  // 1) Репорт
+  h(
+    'button',
+    {
+      key: 'report',
+      className: 'icon-action-btn destructive',
+      onClick: handleReport,
+    },
+    h(
+      'svg',
+      {
+        width: 24,
+        height: 24,
+        viewBox: '0 0 24 24',
+        fill: 'none',
+        stroke: 'currentColor',
+        strokeWidth: 2,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+      },
+      h('path', {
+        d: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z',
+      }),
+      h('line', { x1: 4, y1: 22, x2: 4, y2: 15 }),
+    ),
+  ),
+
+  // 2) Профиль автора
+  h(
+    'button',
+    {
+      key: 'profile',
+      className: 'icon-action-btn',
+      onClick: () => onOpenProfile && onOpenProfile(author),
+    },
+    h(
+      'svg',
+      {
+        width: 24,
+        height: 24,
+        viewBox: '0 0 24 24',
+        fill: 'none',
+        stroke: 'currentColor',
+        strokeWidth: 2,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+      },
+      // Иконка пользователя: туловище + голова
+      h('path', {
+        d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2',
+      }),
+      h('circle', { cx: 12, cy: 7, r: 4 }),
+    ),
+  ),
+
+  // 3) Репост (сейчас — репост запроса)
+  h(
+    'button',
+    {
+      key: 'share',
+      className: 'icon-action-btn',
+      onClick: () => onRepost(post),
+    },
+    h(
+      'svg',
+      {
+        width: 24,
+        height: 24,
+        viewBox: '0 0 24 24',
+        fill: 'none',
+        stroke: 'currentColor',
+        strokeWidth: 2,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+      },
+      h('circle', { cx: 18, cy: 5, r: 3 }),
+      h('circle', { cx: 6, cy: 12, r: 3 }),
+      h('circle', { cx: 18, cy: 19, r: 3 }),
+      h('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
+      h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 }),
+    ),
+  ),
+
+  // 4) Откликнуться
+  h(
+    'button',
+    {
+      key: 'respond',
+      className: 'main-action-btn',
+      onClick: () => onRespond(post),
+    },
+    t('action_respond') || 'Respond',
+  ),
+];
 
   return createPortal(
     h(
@@ -482,8 +497,8 @@ function PostDetailSheet({
           h(
             'div',
             { className: `sheet-sticky-footer ${isIOS ? 'is-ios' : ''}` },
-            ...(isMyPost ? footerMyPost : footerForeignPost)
-          )
+            ...(isOwnPost ? footerMyPost : footerForeignPost)
+          ),
         )
       )
     ),

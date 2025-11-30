@@ -219,3 +219,12 @@ body.theme-dark.theme-glass-overlay .theme-option-button.active,
 body.theme-dark.theme-glass-overlay .language-option-button.active {
     text-shadow: none;
 }
+
+/* НОВОЕ: оформление настроек в темной + стекло теме */
+body.theme-dark.theme-glass-overlay #settings-container .settings-group {
+  border-radius: 18px;
+  background-color: var(--glass-bg-secondary);
+  border: var(--glass-border);
+  /* Чуть больше “карточности” без сильной тени */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}

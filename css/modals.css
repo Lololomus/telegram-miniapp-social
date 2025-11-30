@@ -188,7 +188,7 @@ body.theme-glass-overlay .modal-content {
     -webkit-backdrop-filter: blur(25px);
     border: var(--glass-border);
     box-shadow: var(--glass-shadow);
-    border-radius: var(--glass-radius-main);
+    border-radius: 24px;
 }
 
 /* ПОЛНОЭКРАННЫЕ МОДАЛКИ (База) */
