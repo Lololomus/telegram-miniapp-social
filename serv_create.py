@@ -159,6 +159,32 @@ cursor.execute("CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts (create
 print("✅ Table 'posts' (for Networking Hub) created or already exists.")
 # --- КОНЕЦ НОВОГО БЛОКА ---
 
+# --- МИГРАЦИЯ: Добавляем колонку 'experience_years' ---
+cursor.execute("PRAGMA table_info(posts)")
+posts_columns = [row[1] for row in cursor.fetchall()]
+
+if 'experience_years' not in posts_columns:
+    try:
+        # Добавляем текстовое поле для хранения диапазона (например, "1-3 года")
+        cursor.execute("ALTER TABLE posts ADD COLUMN experience_years TEXT DEFAULT NULL")
+        print("✅ Column 'experience_years' added to 'posts'.")
+    except sqlite3.OperationalError as e:
+        print(f"⚠️ Error adding column 'experience_years': {e}")
+else:
+    print("ℹ️ Column 'experience_years' already exists in 'posts'.")
+
+# --- МИГРАЦИЯ: Добавляем колонку 'status' в profiles ---
+cursor.execute("PRAGMA table_info(profiles)")
+profiles_columns = [row[1] for row in cursor.fetchall()]
+
+if 'status' not in profiles_columns:
+    try:
+        # По умолчанию 'networking' (Фиолетовый)
+        cursor.execute("ALTER TABLE profiles ADD COLUMN status TEXT DEFAULT 'networking'")
+        print("✅ Column 'status' added to 'profiles'.")
+    except sqlite3.OperationalError as e:
+        print(f"⚠️ Error adding column 'status': {e}")
+
 conn.commit()
 conn.close()
 

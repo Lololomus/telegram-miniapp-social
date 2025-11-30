@@ -15,6 +15,10 @@
   "my_profile": "My Profile",
   "your_profile": "Your Profile",
   "profile_title": "Profile",
+
+  "about_me": "About me",
+  "bio": "About",
+
   "name_label": "Name:",
   "name_placeholder": "Your name",
   "bio_label": "About:",
@@ -23,7 +27,7 @@
   "skills_placeholder": "Python, React, Docker...",
   "nationality_label_new": "Nationality:",
   "nationality_placeholder_tomselect_new": "Type or select...",
-  
+
   "links": "Links",
   "links_section_title": "Links",
   "add_link_button": "+ Add link",
@@ -39,6 +43,7 @@
 
   "experience": "Experience",
   "experience_section_title": "Experience",
+  "experience_short": "Experience",
   "add_experience_button": "+ Add position",
   "job_not_specified": "Experience not specified",
   "job_title_label": "Job Title:",
@@ -48,6 +53,7 @@
   "present_time": "present",
   "present_time_label": "Present",
   "present_time_short": "Pres.",
+  "present": "Present",
   "start_date_label": "Start Date:",
   "end_date_label": "End Date:",
   "date_placeholder": "YYYY or MM.YYYY",
@@ -56,6 +62,7 @@
 
   "education": "Education",
   "education_section_title": "Education",
+  "education_short": "Education",
   "add_education_button": "+ Add education",
   "institution_label": "Institution:",
   "institution_placeholder": "University, College name...",
@@ -74,20 +81,26 @@
   "feed_empty_search": "No one was found for your request.",
   "search_placeholder": "🔍 Filter by skills (e.g., Python)",
   "action_reset_filters": "Reset filters",
-  
+
   "feed_posts_title": "Requests Feed",
   "my_posts_title": "My Requests",
+  "my_requests": "My Requests",
   "create_post_title": "New Request",
   "edit_post_title": "Edit Request",
   "search_placeholder_posts": "Search posts and authors...",
-  
+
+  "tab_people": "People",
+  "tab_hub": "Hub",
+  "tab_profile": "Profile",
+  "tab_settings": "Settings",
+
   "post_type_label": "Request type:",
   "post_type_placeholder": "Select request type...",
   "post_type_looking": "🤝 Looking for",
   "post_type_offering": "💼 Offering",
   "post_type_showcase": "🚀 Showcase",
   "post_type_default": "Request",
-  
+
   "post_content_label": "Short Description:",
   "post_content_placeholder": "Describe your request, project, or offer...",
   "post_full_description_label": "Full Description:",
@@ -132,6 +145,7 @@
   "share_text": "Check out my profile: {name}",
 
   "filter_all": "All",
+
   "settings_title": "Settings",
   "settings_button": "...",
   "language_label": "Language",
@@ -170,6 +184,22 @@
   "status_long_ago": "was online long ago",
   "status_last_seen_date": "was online on {date}",
 
+  "status_networking": "Open to networking",
+  "status_open_to_work": "Open to work",
+  "status_hiring": "Hiring",
+  "status_open_to_gigs": "Open to gigs",
+  "status_busy": "Busy",
+
+  "status_desc_networking": "Open to new connections and networking.",
+  "status_desc_open_to_work": "Open to new full-time job opportunities.",
+  "status_desc_hiring": "Looking for specialists to join the team.",
+  "status_desc_open_to_gigs": "Open to freelance and project-based work.",
+  "status_desc_busy": "Currently busy and not looking for new offers.",
+
+  "choose_status_title": "Your Status",
+  "edit_profile": "Edit profile",
+  "confirm_delete": "Delete this item?",
+
   "cat_lang": "Languages",
   "cat_frontend": "Frontend",
   "cat_backend": "Backend",
@@ -197,6 +227,17 @@
   "error_max_items_reached": "Limit reached ({max})",
   "error_generic_action": "An error occurred. Please try again.",
 
+  "profile_headline_loading": "Loading profile...",
+  "profile_headline_default": "Community member",
+  "profile_no_experience": "No experience added yet",
+
   "your_profile_title": "Your Profile",
-  "edit_profile_title": "Edit Profile"
+  "edit_profile_title": "Edit Profile",
+
+  "post_exp_label": "Experience in this area",
+  "exp_no_exp": "No experience",
+  "exp_less_1": "Less than 1 year",
+  "exp_1_3": "1–3 years",
+  "exp_3_5": "3–5 years",
+  "exp_5_plus": "5+ years"
 }

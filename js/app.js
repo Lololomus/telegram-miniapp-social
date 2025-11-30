@@ -6,6 +6,7 @@ import * as api from './api.js';
 
 import * as uiRaw from './ui-helpers.js?v=1.6';
 const UI = { ...uiRaw }; 
+window.UI = UI;
 
 import { state, SKILL_CATEGORIES } from './app-state.js';
 import { setupDynamicList } from './app-form-helpers.js';
@@ -72,7 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
             contentField: document.getElementById('post-content-field'),
             fullDescriptionField: document.getElementById('post-full-description-field'),
             skillsField: document.getElementById('post-skills-field'),
-            openSkillsModalButton: document.getElementById('select-post-skills-button')
+            openSkillsModalButton: document.getElementById('select-post-skills-button'),
+            expContainer: document.getElementById('post-experience-container'),
+            expInput: document.getElementById('post-experience-input')
         },
 
         form: {
@@ -316,14 +319,19 @@ document.addEventListener('DOMContentLoaded', () => {
         lang = supportedLangs.includes(lang) ? lang : 'ru';
         state.currentLang = lang;
         localStorage.setItem('userLanguage', lang);
+
         await loadTranslations(lang);
         updateUIText();
+
+        // 🔹 сообщаем React-компонентам, что язык сменился
+        document.dispatchEvent(new CustomEvent('lang-changed', { detail: { lang } }));
+
         if (!isInitialLoad && state.currentUserProfile?.user_id) {
             try {
-                await api.saveLanguagePreference(tg.initData, lang);
-                state.currentUserProfile.language_code = lang;
+            await api.saveLanguagePreference(tg.initData, lang);
+            state.currentUserProfile.language_code = lang;
             } catch (e) {
-                console.warn("Failed to save lang", e);
+            console.warn("Failed to save lang", e);
             }
         }
     }
@@ -422,6 +430,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await api.loadProfileData(tg.initData);
             if (data.ok && data.profile.user_id) {
                 state.currentUserProfile = data.profile;
+                  // 🔔 Сообщаем React-профилю, что профиль обновился
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(
+                    new CustomEvent('profile-updated', {
+                        detail: { profile: state.currentUserProfile },
+                    })
+                    );
+                }
                 state.isRegistered = true;
                 window.__CURRENT_USER_ID = data.profile.user_id;
                 const savedLang = state.currentUserProfile.language_code;
@@ -616,10 +632,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showCreatePostModal() {
+        // Сброс полей
         elements.postModal.typeSelect.value = 'looking';
         elements.postModal.contentField.value = '';
         elements.postModal.fullDescriptionField.value = '';
         elements.postModal.skillsField.value = '';
+        
+        // --- 🔥 НОВАЯ ЛОГИКА: Отрисовка кнопок опыта ---
+        if (elements.postModal.expInput) elements.postModal.expInput.value = ''; // Сбрасываем значение
+        
+        if (elements.postModal.expContainer) {
+            elements.postModal.expContainer.innerHTML = ''; // Чистим контейнер
+            
+            // Варианты выбора
+            const opts = [
+                { val: 'no_exp', label: 'Без опыта' },
+                { val: 'less_1', label: 'До 1 года' },
+                { val: '1-3', label: '1–3 года' },
+                { val: '3-5', label: '3–5 лет' },
+                { val: '5+', label: '5+ лет' }
+            ];
+            
+            opts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'exp-pill'; // Класс берется из feed.css
+                
+                // Если есть переводчик t(), используем его, иначе дефолтный текст
+                // Ключи в i18n должны быть: exp_no, exp_less_1, exp_1_3, и т.д.
+                // Пока используем label напрямую, если перевода нет
+                btn.textContent = (typeof t === 'function' && t('exp_' + opt.val.replace('+','_plus').replace('1-3', '1_3').replace('3-5', '3_5'))) || opt.label;
+                
+                btn.onclick = (e) => {
+                    e.preventDefault(); 
+                    // 1. Убираем класс selected у всех кнопок
+                    Array.from(elements.postModal.expContainer.children).forEach(c => c.classList.remove('selected'));
+                    // 2. Добавляем текущей
+                    btn.classList.add('selected');
+                    // 3. Пишем значение в скрытый инпут
+                    if (elements.postModal.expInput) elements.postModal.expInput.value = opt.val;
+                    
+                    // Вибрация
+                    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                };
+                elements.postModal.expContainer.appendChild(btn);
+            });
+        }
+        // --- 🔥 КОНЕЦ НОВОЙ ЛОГИКИ ---
+
+        // Счетчики символов (если есть)
         if (elements.postModal.contentCounter) {
             const limit = state.VALIDATION_LIMITS?.post_content || 500;
             elements.postModal.contentField.maxLength = limit;
@@ -630,6 +690,8 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.postModal.fullDescriptionField.maxLength = limit;
             elements.postModal.fullDescriptionCounter.textContent = `0 / ${limit}`;
         }
+        
+        // Показываем окно
         UI.showView(elements.postModal.modal, elements.allViews, elements.spinner, tg, t, loadPostsFeedData);
     }
 
@@ -640,7 +702,8 @@ document.addEventListener('DOMContentLoaded', () => {
             post_type: elements.postModal.typeSelect.value,
             content: elements.postModal.contentField.value.trim(),
             full_description: elements.postModal.fullDescriptionField.value.trim(),
-            skill_tags: elements.postModal.skillsField.value.split(',').map(s => s.trim()).filter(Boolean)
+            skill_tags: elements.postModal.skillsField.value.split(',').map(s => s.trim()).filter(Boolean),
+            experience_years: elements.postModal.expInput ? elements.postModal.expInput.value : null
         };
         if (!postData.content) {
             tg.MainButton.hideProgress();
@@ -697,14 +760,16 @@ document.addEventListener('DOMContentLoaded', () => {
         window.REACT_ISLANDS_LOADED = true;
         console.log("🔄 Начинаем СИНХРОННУЮ загрузку React-островков...");
         try {
-            await loadScript('/js/react/feed/FeedApp.js?v=1.5');
-            await loadScript('/js/react/posts/PostsApp.js?v=1.5');
-            console.log("✅ Все React-островки успешно загружены.");
-        } catch (e) {
-            console.error("❌ КРИТИЧЕСКАЯ ОШИБКА при загрузке React-скриптов:", e);
-            window.REACT_ISLANDS_LOADED = false;
-            throw e;
-        }
+    await loadScript('js/react/feed/FeedApp.js?v1.5');
+    await loadScript('js/react/posts/PostsApp.js?v1.5');
+    await loadScript('js/react/posts/MyProfileScreen.js?v1.0');
+
+    console.log('React islands loaded');
+    } catch (e) {
+        console.error('React islands load error', e);
+        window.REACT_ISLANDS_LOADED = false;
+        throw e;
+    }
     }
 
     function loadScript(src, retries = 3) {
@@ -798,47 +863,42 @@ document.addEventListener('DOMContentLoaded', () => {
         const headerTitle = document.getElementById('header-title');
 
         if (tabPeople) {
-            tabPeople.addEventListener('click', () => {
-                resetTabs();
-                tabPeople.classList.add('active');
-                loadFeedData();
-                if (headerTitle) headerTitle.textContent = 'People';
-                if (mainScroll) mainScroll.scrollTop = 0;
-            });
+        tabPeople.addEventListener('click', () => {
+            resetTabs();
+            tabPeople.classList.add('active');
+            loadFeedData();
+            if (headerTitle) headerTitle.textContent = t('tab_people') || 'People';
+            if (mainScroll) mainScroll.scrollTop = 0;
+        });
         }
 
         if (tabHub) {
-            tabHub.addEventListener('click', () => {
-                resetTabs();
-                tabHub.classList.add('active');
-                loadPostsFeedData();
-                if (headerTitle) headerTitle.textContent = 'Hub';
-                if (mainScroll) mainScroll.scrollTop = 0;
-            });
+        tabHub.addEventListener('click', () => {
+            resetTabs();
+            tabHub.classList.add('active');
+            loadPostsFeedData();
+            if (headerTitle) headerTitle.textContent = t('tab_hub') || 'Hub';
+            if (mainScroll) mainScroll.scrollTop = 0;
+        });
         }
 
         if (tabProfile) {
-            tabProfile.addEventListener('click', () => {
-                resetTabs();
-                tabProfile.classList.add('active');
-                UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t, null);
-                
-                // ✅ Ставим правильный заголовок "Ваш профиль"
-                if (headerTitle) headerTitle.textContent = t('your_profile_title');
-                
-                localStorage.setItem('last_active_tab', 'profile');
-            });
+        tabProfile.addEventListener('click', () => {
+            resetTabs();
+            tabProfile.classList.add('active');
+            UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t, null);
+            if (headerTitle) headerTitle.textContent = t('tab_profile') || t('your_profile_title');
+            localStorage.setItem('last-active-tab', 'profile');
+        });
         }
 
         if (tabSettings) {
-            tabSettings.addEventListener('click', () => {
-                resetTabs();
-                tabSettings.classList.add('active');
-                UI.showView(elements.settingsContainer, elements.allViews, elements.spinner, tg, t, null);
-                
-                // ✅ Ставим заголовок "Настройки"
-                if (headerTitle) headerTitle.textContent = t('settings_title');
-            });
+        tabSettings.addEventListener('click', () => {
+            resetTabs();
+            tabSettings.classList.add('active');
+            UI.showView(elements.settingsContainer, elements.allViews, elements.spinner, tg, t, null);
+            if (headerTitle) headerTitle.textContent = t('tab_settings') || t('settings_title');
+        });
         }
 
         // --- 2. FAB MENU LOGIC ---
@@ -1163,6 +1223,67 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
+        if (elements.postModal.saveButton) {
+            elements.postModal.saveButton.addEventListener('click', (e) => {
+                e.preventDefault(); // На всякий случай
+                savePostData();
+            });
+        }
+
+        // 1. Язык (Language)
+        if (elements.settings.langBtnRu) {
+            elements.settings.langBtnRu.addEventListener('click', () => {
+                if (state.currentLang !== 'ru') {
+                    setLanguage('ru');
+                    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                }
+            });
+        }
+
+        if (elements.settings.langBtnEn) {
+            elements.settings.langBtnEn.addEventListener('click', () => {
+                if (state.currentLang !== 'en') {
+                    setLanguage('en');
+                    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                }
+            });
+        }
+
+        // 2. Режим управления (Control Mode)
+        const updateControlModeUI = () => {
+            // Читаем из localStorage (по умолчанию 'swipes')
+            const mode = localStorage.getItem('controlmode') || 'swipes';
+            
+            if (elements.settings.controlBtnTaps) {
+                elements.settings.controlBtnTaps.classList.toggle('active', mode === 'taps');
+            }
+            if (elements.settings.controlBtnSwipes) {
+                elements.settings.controlBtnSwipes.classList.toggle('active', mode === 'swipes');
+            }
+        };
+
+        // Инициализируем UI при загрузке
+        updateControlModeUI();
+
+        if (elements.settings.controlBtnTaps) {
+            elements.settings.controlBtnTaps.addEventListener('click', () => {
+                localStorage.setItem('controlmode', 'taps');
+                // Важно: сообщаем React-компонентам об изменении
+                window.dispatchEvent(new Event('control-mode-changed')); 
+                updateControlModeUI();
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            });
+        }
+
+        if (elements.settings.controlBtnSwipes) {
+            elements.settings.controlBtnSwipes.addEventListener('click', () => {
+                localStorage.setItem('controlmode', 'swipes');
+                window.dispatchEvent(new Event('control-mode-changed'));
+                updateControlModeUI();
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            });
+        }
+
         elements.settings.themeButtons.forEach(button => {
             if (button) {
                 button.addEventListener('click', async () => {
@@ -1185,6 +1306,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (error) { UI.showToast(t('error_open_chat_failed'), true); }
             });
         }
+
+          // --- REACT Профиль → Vanilla мост ---
+
+        // Открытие формы редактирования из нового React-профиля
+        document.addEventListener('open-edit-profile-form', () => {
+            UI.showView(
+            elements.formContainer,
+            elements.allViews,
+            elements.spinner,
+            tg,
+            t,
+            loadProfileData
+            );
+        });
+
+        // Открытие QR-модалки из нового React-профиля
+        document.addEventListener('open-profile-qr', () => {
+            if (!state.currentUserProfile) return;
+
+            UI.showQrCodeModal(
+            elements.qr,
+            state.CONFIG,
+            state.currentUserProfile,
+            t
+            );
+        });
 
         // --- УМНОЕ СКРЫТИЕ ТАББАРА (ТОЛЬКО НА МОБИЛКАХ) ---
         const allInputs = document.querySelectorAll('input, textarea');

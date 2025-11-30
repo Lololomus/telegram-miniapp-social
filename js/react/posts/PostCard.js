@@ -35,45 +35,31 @@ const PostCard = memo(function PostCard({
   const timeAgo = formatPostTime(created_at);
   const postKey = post.post_id || `temp-post-${Math.random()}`;
 
-  // --- ✅ ПРИМЕНЯЕМ DRY ХУК ---
   const { targetRef, gestureProps } = useCardGestures({
       // Главный клик (по телу): Открыть шторку поста
       onOpenPrimary: () => onOpenPostSheet(post),
       
-      // Вторичный клик (по аватару): Открыть профиль
-      onOpenSecondary: () => onOpenProfile(author),
+      // Вторичный клик теперь НЕ используется для аватара в ленте
+      // (Мы хотим, чтобы аватар тоже открывал пост)
+      onOpenSecondary: null, 
       
-      // Лонг-тап: Открыть меню (передаем элемент для привязки координат)
+      // Лонг-тап: Открыть меню
       onOpenContextMenu: (el) => onOpenContextMenu(post, el),
       
       disableClick: disableClick || isContextMenuOpen
   });
 
-  // --- Стили и Анимации (без изменений логики) ---
   const layoutMode = (disableClick || isHighlight) ? undefined : (isMobile ? false : 'position');
   
-  // Стили для клона (когда isHighlight = true)
   const cloneStyles = isHighlight ? {
-      // Яркая тень для эффекта "полета"
       boxShadow: '0 20px 50px rgba(0,0,0,0.5)', 
-      
-      // Убираем стандартные транзишны, так как анимацией управляет PostContextMenu
       transition: 'none',
-      
-      // Убеждаемся, что клон перекрывает всё
       zIndex: 10,
-      
-      // Фон должен быть непрозрачным (берем цвет из темы)
       backgroundColor: 'var(--secondary-bg-color)', 
-      
-      // Выключаем блюр внутри самой карточки (если он был), чтобы не размывать контент дважды
       backdropFilter: 'none',
       WebkitBackdropFilter: 'none',
-      
-      // Граница ярче
       borderColor: 'rgba(255,255,255,0.2)'
   } : {
-      // Обычное состояние
       transition: 'transform 0.2s ease, background-color 0.3s, border-color 0.3s',
   };
 
@@ -101,8 +87,8 @@ const PostCard = memo(function PostCard({
   return h(
     motion.div,
     {
-      ref: targetRef, // ✅ Привязываем реф хука
-      ...gestureProps, // ✅ Пробрасываем события хука
+      ref: targetRef,
+      ...gestureProps,
       
       layout: layoutMode,
       variants: variants,
@@ -139,11 +125,10 @@ const PostCard = memo(function PostCard({
         'div',
         { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 } },
         
-        // --- КНОПКА АВАТАРА ---
+        // --- АВАТАР (Больше не secondary) ---
         h(
-          'button',
+          'div', // Был button, стал div, чтобы не смущать семантику (клик обработает родитель)
           {
-            'data-action': 'secondary', // ✅ ВАЖНО: Метка для хука
             style: { padding: 0, border: 'none', background: 'none', cursor: 'pointer', flexShrink: 0 },
           },
           h(
@@ -159,14 +144,13 @@ const PostCard = memo(function PostCard({
           ),
         ),
         
-        // --- КНОПКА ИМЕНИ ---
+        // --- ИМЯ (Больше не secondary) ---
         h(
           'div',
           { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, marginRight: '5px' } },
           h(
-            'button',
+            'div', // Был button
             {
-              'data-action': 'secondary', // ✅ ВАЖНО: Метка для хука
               style: { padding: 0, border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit' },
             },
             h(

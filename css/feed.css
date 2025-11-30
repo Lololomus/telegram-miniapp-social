@@ -1,4 +1,6 @@
 /* css/feed.css */
+/* ОБНОВЛЕНО: Восстановлены Context Menu styles */
+/* ОБНОВЛЕНО: Исправлена размытость текста */
 
 /* --- 1. ВЕРХНИЕ ТЕГИ (QUICK FILTERS) --- */
 .quick-filters {
@@ -6,39 +8,19 @@
     flex-wrap: nowrap !important;
     justify-content: flex-start;
     gap: 8px;
-    
     overflow-x: auto;
-    
-    /* ✅ ИСПРАВЛЕНИЕ: */
-    /* Убираем margin-left! Теперь контент начнется там же, где и поиск (с учетом padding родителя) */
     margin-left: 0; 
-    
-    /* Справа оставляем отрицательный margin, чтобы теги уходили "за край" экрана */
     margin-right: -16px;
-    
-    /* Внутренние отступы */
-    padding: 4px 0 10px 0; /* Слева 0, так как отступ уже есть у родителя */
-    
-    /* Градиент (Fade) только справа */
+    padding: 4px 0 10px 0;
     -webkit-mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
     mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
-    
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     margin-bottom: 0;
 }
 .quick-filters::-webkit-scrollbar { display: none; }
-
-/* Убираем все распорки, они больше не нужны слева */
-.quick-filters::before { display: none; }
-
-/* Распорка справа для красивого скролла */
 .quick-filters::after {
-    content: '';
-    display: block;
-    flex-shrink: 0;
-    width: 20px;
-    height: 1px;
+    content: ''; display: block; flex-shrink: 0; width: 20px; height: 1px;
 }
 
 /* --- 2. КОНТЕЙНЕР ЛЕНТЫ --- */
@@ -47,253 +29,258 @@
     flex-direction: column;
     gap: 16px;
     width: 100%;
-    /* Отступ снизу, чтобы контент не перекрывался таббаром */
     padding-bottom: 120px; 
-    /* Убираем отступ сверху, так как у тегов уже есть padding-bottom */
     padding-top: 0 !important;
     position: relative;
     min-height: 100px;
 }
 
-
-/* --- 3. ГЛАВНАЯ КАРТОЧКА (GLASS DESIGN) --- */
+/* --- 3. ГЛАВНАЯ КАРТОЧКА (В ЛЕНТЕ) --- */
 .react-feed-card {
-    /* Используем новую переменную темного стекла */
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    
-    /* Тонкая обводка */
-    border: var(--glass-border) !important;
+    background: var(--secondary-bg-color);
+    border: 1px solid transparent;
     border-radius: 24px !important;
-    
-    /* Глубокая тень */
-    box-shadow: var(--glass-shadow);
-    
-    /* ... остальные стили карточки ... */
     padding: 18px;
     position: relative;
     overflow: hidden;
     color: var(--main-text-color);
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+    transition: transform 0.1s ease, background-color 0.2s;
 }
 
-/* Эффект нажатия на карточку */
-.react-feed-card:active {
-    transform: scale(0.98);
-    /* При нажатии делаем чуть светлее (подсветка) */
-    background: rgba(30, 30, 35, 0.8) !important;
+body.theme-glass-overlay .react-feed-card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: var(--glass-border) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.react-feed-card:active { transform: scale(0.98); }
+body.theme-glass-overlay .react-feed-card:active {
+    background: rgba(255, 255, 255, 0.07) !important;
 }
 
-/* Обёртка React (убираем влияние на бордеры) */
-.react-feed-card-wrapper {
-    border-radius: 24px !important;
-    overflow: hidden;
-    background: transparent !important;
-}
-
-
-/* --- 4. ВНУТРЕННОСТИ КАРТОЧКИ --- */
-
-/* Хедер карточки: Аватар, Имя, Бейдж */
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-    width: 100%;
-}
-
-/* Аватар */
+/* --- 4. ВНУТРЕННОСТИ КАРТОЧКИ (ЛЕНТА) --- */
 .react-feed-card img {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px !important; /* Squircle форма */
-    object-fit: cover;
-    border: 1px solid rgba(255,255,255,0.1);
-    display: block;
+    width: 44px; height: 44px; border-radius: 14px !important;
+    object-fit: cover; border: 1px solid rgba(255,255,255,0.1); display: block;
 }
-
-/* Блок с именем и датой */
-.react-feed-card button[data-action="open-profile"] {
-    text-align: left;
-}
-.react-feed-card button[data-action="open-profile"] div:first-child {
-    font-size: 15px !important;
-    font-weight: 700 !important;
-    color: #ffffff !important;
-    line-height: 1.3;
-    letter-spacing: 0.2px;
-    margin-bottom: 2px;
-}
-
-/* Мета-инфо (время, роль) */
-.react-feed-card .meta-info {
-    font-size: 13px !important;
-    color: #9ca3af !important; /* Gray-400 */
-    font-weight: 500;
-}
-
-/* Текст поста */
 .post-content-clamped {
-    font-size: 14px !important;
-    line-height: 1.5 !important;
-    color: #e4e4e7 !important; /* Gray-200 */
-    margin-bottom: 16px;
-    font-weight: 400;
-    
-    /* Обрезка текста градиентом */
-    max-height: 4.5em;
-    overflow: hidden;
+    font-size: 14px !important; line-height: 1.5 !important;
+    color: #e4e4e7 !important; margin-bottom: 16px; font-weight: 400;
+    max-height: 4.5em; overflow: hidden;
     -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
     mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
 }
-
-/* Контейнер тегов ВНУТРИ карточки */
 .feed-card-skills-container {
-    display: flex;
-    flex-wrap: nowrap; /* Одна строка */
-    gap: 8px;
-    overflow: hidden;
-    /* Маска справа, чтобы теги плавно исчезали */
+    display: flex; flex-wrap: nowrap; gap: 8px; overflow: hidden;
     -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
     mask-image: linear-gradient(to right, black 85%, transparent 100%);
 }
 
-/* Стиль самих тегов (Glass) */
-.skill-tag--display {
-    height: 26px;
-    padding: 0 10px !important;
-    border-radius: 8px !important;
-    font-size: 12px !important;
-    font-weight: 500;
-    white-space: nowrap;
-    
-    /* Прозрачный стиль */
-    background: rgba(255, 255, 255, 0.08) !important;
+/* --- 5. PILLS (КНОПКИ ОПЫТА) --- */
+.experience-pills-container { margin-top: 8px; }
+.exp-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 14px;
+  border-radius: 20px;
+
+  border: 1px solid var(--secondary-bg-color);
+  background-color: var(--main-bg-color);
+  color: var(--main-hint-color);
+
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.exp-pill.selected {
+    border-color: var(--main-button-color) !important;
+    background-color: var(--main-button-color) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+body.theme-glass-overlay .exp-pill {
+    background-color: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #d4d4d8 !important;
-    backdrop-filter: none;
+    color: #ffffff !important;
+}
+body.theme-glass-overlay .exp-pill.selected {
+    background-color: #007AFF !important;
+    border-color: #007AFF !important;
 }
 
 
-/* --- 5. БЕЙДЖИ СТАТУСОВ (NEON GLASS) --- */
-/* .status-badge добавляется в JS */
-.status-badge {
-    padding: 6px 10px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+/* ==========================================
+   🔥 UNIFIED CARD (DETAIL VIEW)
+   ========================================== */
+
+.post-sheet-unified {
+    padding: 0 !important; 
+    background-color: #121212 !important; /* Fallback */
     display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid;
-    line-height: 1;
-    flex-shrink: 0;
-}
-
-/* 🔵 Looking for (Синий) */
-.status-looking {
-    background: rgba(59, 130, 246, 0.15) !important;
-    color: #60a5fa !important;
-    border-color: rgba(59, 130, 246, 0.3) !important;
-    box-shadow: 0 0 15px -5px rgba(59, 130, 246, 0.5);
-}
-
-/* 🟢 Offering (Изумрудный) */
-.status-offering {
-    background: rgba(16, 185, 129, 0.15) !important;
-    color: #34d399 !important;
-    border-color: rgba(16, 185, 129, 0.3) !important;
-    box-shadow: 0 0 15px -5px rgba(16, 185, 129, 0.5);
-}
-
-/* 🟠 Showcase (Янтарный) */
-.status-showcase {
-    background: rgba(245, 158, 11, 0.15) !important;
-    color: #fbbf24 !important;
-    border-color: rgba(245, 158, 11, 0.3) !important;
-    box-shadow: 0 0 15px -5px rgba(245, 158, 11, 0.5);
-}
-
-/* Default */
-.status-default {
-    background: rgba(255, 255, 255, 0.1) !important;
-    color: #9ca3af !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-
-/* --- 6. SKELETONS (Заглушки при загрузке) --- */
-.skeleton-card {
-    background: rgba(30, 30, 35, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 24px;
-    padding: 18px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: none;
-}
-/* Мерцание */
-.skeleton-card::before {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
-    animation: shimmer 1.5s infinite linear;
-}
-.skeleton-avatar {
-    width: 44px; height: 44px; border-radius: 14px;
-    background-color: rgba(255, 255, 255, 0.1);
-}
-.skeleton-info { flex-grow: 1; display: flex; flex-direction: column; gap: 8px; }
-.skeleton-line {
-    width: 100%; height: 14px; border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.1);
-}
-.skeleton-line.short { width: 60%; }
-
-
-/* --- 7. СКРЫВАЕМ СТАРЫЕ ЭЛЕМЕНТЫ (CLEANUP) --- */
-/* Старые кнопки действий внутри карточек */
-.post-actions-menu, .post-actions-button { display: none !important; }
-
-/* Старые FAB контейнеры (справа снизу) */
-.fab-container, 
-.fab-create-post-container,
-.fab-main-container { display: none !important; }
-
-/* Исключение: FAB в чужом профиле (перепозиционирован) */
-#user-detail-container .fab-container {
-    display: flex !important;
-    position: fixed;
-    bottom: 100px; /* Выше таббара */
-    right: 20px;
-    z-index: 60;
     flex-direction: column;
+    overflow: hidden;
 }
 
-/* Скрываем старые нативные инпуты (теперь они в хедере) */
-#feed-search-input, 
-#posts-search-input, 
-.feed-filter { display: none !important; }
+/* ✅ FIX: Оптимизированный стиль для стекла (Четкий текст) */
+body.theme-glass-overlay .post-sheet-unified {
+    /* 1. Фон плотнее (94%), чтобы не просвечивал мусор */
+    background-color: rgba(18, 18, 18, 0.94) !important;
+    
+    /* 2. Блюр меньше (15px), чтобы не мылить контент на Windows */
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    
+    /* 3. Аппаратное ускорение */
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
 
-/* --- ПЛАВАЮЩЕЕ МЕНЮ (Стили и Ховеры) --- */
+/* HEADER */
+.post-sheet-header {
+    padding: 20px 20px 10px 20px; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: 20px;
+    position: relative; z-index: 2;
+}
 
-/* Контейнер меню (Если он не в modals.css) */
+.header-left {
+    display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;
+}
+
+.header-avatar img {
+    width: 52px; height: 52px; border-radius: 18px; 
+    object-fit: cover; border: 1px solid rgba(255,255,255,0.1);
+    background-color: #2c2c2e;
+}
+
+.header-info {
+    display: flex; flex-direction: column; gap: 4px; min-width: 0;
+}
+
+.header-name {
+    font-size: 19px; font-weight: 700; color: #ffffff;
+    line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.header-subtitle {
+    font-size: 14px; color: #9ca3af; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.header-badge {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid; flex-shrink: 0; margin-left: 12px;
+}
+
+/* SCROLL AREA */
+.post-sheet-scroll-area {
+    flex: 1; overflow-y: auto;
+    padding: 10px 20px 100px 20px; 
+    -webkit-overflow-scrolling: touch;
+    position: relative; z-index: 2;
+}
+
+/* ✅ FIX: Вдавленный контент (Сплошной фон для четкости) */
+.post-content-inset {
+    background-color: #1c1c1e; /* Сплошной цвет! */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 20px;
+    
+    text-align: left;
+    display: flex; flex-direction: column; align-items: flex-start;
+    
+    /* Отключаем блюр внутри блока, чтобы текст был резким */
+    backdrop-filter: none;
+    transform: translateZ(0); 
+}
+
+/* ТИПОГРАФИКА */
+.post-text-title {
+    display: block; width: 100%;
+    font-size: 20px; line-height: 1.3; color: #ffffff; font-weight: 800;
+    margin: 0 0 16px 0; word-wrap: break-word; text-align: left;
+}
+
+.post-text-body {
+    display: block; width: 100%;
+    font-size: 16px; line-height: 1.6; color: #d4d4d8; font-weight: 400;
+    margin: 0; white-space: pre-wrap; word-wrap: break-word; text-align: left;
+}
+
+.content-divider {
+    height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0; width: 100%;
+}
+
+.post-tags-cloud.bottom {
+    margin-top: 20px !important; margin-bottom: 0; width: 100%; justify-content: flex-start;
+}
+
+/* META ROW */
+.post-meta-row {
+    display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; width: 100%; margin-top: auto;
+}
+.meta-item {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: #a1a1aa; white-space: nowrap;
+}
+.meta-item.budget { color: #e4e4e7; font-weight: 600; }
+.meta-item.date { margin-left: auto; opacity: 0.6; font-size: 12px; }
+
+/* FOOTER */
+.sheet-sticky-footer {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 16px 20px calc(env(safe-area-inset-bottom, 20px) + 16px) 20px;
+    
+    /* Плотный фон футера */
+    background: rgba(18, 18, 18, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex; gap: 12px; z-index: 50;
+}
+
+.icon-action-btn {
+    width: 52px; height: 52px; border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex; align-items: center; justify-content: center;
+    color: #ffffff; cursor: pointer; flex-shrink: 0; transition: all 0.2s;
+}
+.icon-action-btn:active { background: rgba(255, 255, 255, 0.1); transform: scale(0.95); }
+
+.main-action-btn {
+    flex: 1; height: 52px; border-radius: 16px; border: none;
+    font-size: 16px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 0.2s;
+    background: #0A84FF; color: #ffffff;
+    box-shadow: 0 8px 20px rgba(10, 132, 255, 0.3);
+}
+.main-action-btn:active { transform: scale(0.97); }
+.main-action-btn.edit { background: #30d158; box-shadow: 0 8px 20px rgba(48, 209, 88, 0.3); }
+
+
+/* ==========================================
+   🔥 RESTORED: CONTEXT MENU (Меню по зажатию)
+   ========================================== */
+
+/* Контейнер меню */
 .post-context-menu-container {
-    /* Темный, плотный фон (убирает прозрачность, чтобы текст читался) */
     background-color: #1c1c1e; 
     border-radius: 14px;
     overflow: hidden;
-    /* Глубокая тень */
     box-shadow: 0 20px 60px rgba(0,0,0,0.9);
     border: 1px solid rgba(255,255,255,0.1);
-    
-    /* Важно: Флекс, чтобы дочерние элементы слушались */
     display: flex;
     flex-direction: column;
 }
@@ -306,20 +293,16 @@
 
 /* Кнопки меню */
 .post-context-menu-button {
-    /* ✅ FIX: Растягиваем кнопку на всю ширину */
     width: 100%;
     box-sizing: border-box;
-    
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* Текст слева */
-    gap: 12px; /* Отступ иконки от текста */
-    
-    padding: 16px 20px; /* Больше воздуха */
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
     background: none;
     border: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    
     color: #ffffff;
     font-size: 16px;
     font-weight: 500;
@@ -331,20 +314,422 @@
     border-bottom: none;
 }
 
-/* ✅ FIX: Явный Ховер (Светлеет фон) */
 .post-context-menu-button:active,
 .post-context-menu-button:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Красная кнопка (Destructive) */
+/* Красная кнопка */
 .post-context-menu-button.destructive {
     color: #ff453a;
 }
 
-/* ✅ FIX: Красный Ховер */
 .post-context-menu-button.destructive:active,
 .post-context-menu-button.destructive:hover {
     background-color: rgba(255, 69, 58, 0.15);
-    color: #ff453a;
+}
+
+/* ВОДЯНОЙ ЗНАК НА ФОНЕ КАРТОЧКИ */
+.post-watermark {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 280px;
+    height: 280px;
+    z-index: 0; /* Лежит на дне */
+    pointer-events: none; /* Сквозь него можно кликать */
+    opacity: 0.04; /* 4% непрозрачности - едва заметно */
+    transform: rotate(-15deg);
+}
+
+.post-watermark svg {
+    width: 100% !important;  /* !important перебьет inline-стиль 20px из JS */
+    height: 100% !important;
+    /* Цвет наследуется от родителя */
+}
+
+/* Убедимся, что контент лежит ПОВЕРХ водяного знака */
+.post-sheet-header,
+.post-sheet-scroll-area,
+.sheet-sticky-footer {
+    position: relative;
+    z-index: 1;
+}
+
+/* ==========================================
+   🔥 PRO PROFILE STYLES & SKELETONS
+   ========================================== */
+
+/* HEADER ROW */
+.profile-header-row {
+    display: flex;
+    align-items: center;
+    padding: 20px 20px 10px 20px;
+    margin-top: 20px;
+    gap: 16px;
+    width: 100%;
+}
+
+.profile-avatar-squircle img {
+    width: 72px; height: 72px;
+    border-radius: 24px; object-fit: cover;
+    background-color: #2c2c2e;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.profile-info-col {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; justify-content: center;
+}
+
+.profile-name {
+    font-size: 20px; font-weight: 800; color: #ffffff;
+    line-height: 1.2; margin-bottom: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.profile-headline {
+    font-size: 14px; color: #9ca3af; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 6px;
+}
+
+.profile-mini-stats {
+    font-size: 12px; color: #52525b; font-weight: 600;
+}
+
+.profile-status-badge {
+    width: 48px; height: 48px; border-radius: 16px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+
+/* EXPERIENCE CARD */
+.experience-card {
+    display: flex; gap: 14px; padding: 16px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px; margin-bottom: 12px;
+    transition: background 0.2s;
+}
+.experience-card:active { background-color: rgba(255, 255, 255, 0.06); }
+
+.exp-icon-box {
+    width: 40px; height: 40px; border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    display: flex; align-items: center; justify-content: center;
+    color: #a1a1aa; flex-shrink: 0;
+}
+
+.exp-info { flex: 1; min-width: 0; }
+.exp-title { font-size: 15px; font-weight: 700; color: #ffffff; line-height: 1.3; }
+.exp-subtitle { font-size: 14px; color: #a1a1aa; margin-top: 2px; }
+.exp-date { font-size: 12px; color: #52525b; margin-top: 4px; font-weight: 500; }
+.exp-desc { margin-top: 8px; font-size: 13px; line-height: 1.4; color: #d4d4d8; opacity: 0.8; }
+
+.profile-links-grid {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);
+}
+.profile-link-chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; font-size: 13px; color: #0A84FF; text-decoration: none;
+}
+
+/* SKELETON STYLES (LOADER) */
+.skeleton-tag {
+    width: 80px; height: 28px; border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    animation: pulse 1.5s infinite ease-in-out;
+}
+.skeleton-text {
+    width: 120px; height: 14px; border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.05);
+    animation: pulse 1.5s infinite ease-in-out;
+    display: inline-block;
+}
+.experience-card.skeleton { border-color: transparent; }
+.skeleton-box {
+    background-color: rgba(255, 255, 255, 0.05);
+    animation: pulse 1.5s infinite ease-in-out;
+}
+.skeleton-line {
+    height: 12px; border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.05);
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; }
+}
+
+.empty-section {
+    font-size: 13px; color: #52525b; font-style: italic; padding: 10px 0;
+}
+
+/* ==========================================
+   🖥 PC SPECIFIC FIXES (ANTI-SOAP)
+   ========================================== */
+
+/* Если устройство управляется мышью (ПК), отключаем блюр для четкости */
+@media (hover: hover) and (pointer: fine) {
+    
+    body.theme-glass-overlay .post-sheet-unified {
+        /* Отключаем размытие, так как на Windows оно мылит текст */
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        
+        /* Делаем фон почти непрозрачным (98%), чтобы сохранить контраст */
+        background-color: rgba(18, 18, 18, 0.98) !important;
+        
+        /* Добавляем легкий шум или границу для сохранения стиля */
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    body.theme-glass-overlay .sheet-sticky-footer {
+        backdrop-filter: none !important;
+        /* Футер тоже делаем сплошным */
+        background-color: #121212 !important; 
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Убираем вотермарк на ПК, если он создает грязь (опционально, пока оставим) */
+    .post-watermark {
+        opacity: 0.03; /* Делаем еще прозрачнее */
+    }
+}
+
+/* ==========================================
+   🧼 ANTI-SOAP SQUAD (ФИНАЛЬНАЯ ВЕРСИЯ)
+   ========================================== */
+
+/* Применяем хак ко всем элементам с текстом, чтобы убрать мыло на ПК */
+
+/* 1. Структурные блоки */
+.post-sheet-header,
+.profile-header-row,
+.sheet-sticky-footer,
+
+/* 2. Тексты Карточки Поста (Hub) */
+.header-name,
+.header-subtitle,
+.header-badge,          /* <-- Добавлено */
+.post-text-title,
+.post-text-body,
+.post-meta-row,
+.meta-item,
+
+/* 3. Тексты Профиля (People) */
+.profile-name,
+.profile-headline,
+.profile-mini-stats,
+.profile-status-badge,
+.profile-bio-text,      /* <-- Добавлено */
+
+/* 4. Опыт и Образование (БЫЛО ПРОПУЩЕНО) */
+.experience-card,       /* <-- ВАЖНО: Сама карточка опыта */
+.exp-info,
+.exp-title,
+.exp-subtitle,
+.exp-date,
+.exp-desc,
+
+/* 5. Общие элементы (Теги, Кнопки, Ссылки) */
+.post-tags-cloud,
+.skill-tag,             /* <-- Добавлено */
+.profile-links-grid,
+.profile-link-chip,     /* <-- Добавлено */
+.icon-action-btn,
+.main-action-btn,
+.profile-avatar-squircle,
+.header-avatar
+{
+    /* 1. Выносим на отдельный GPU-слой (Главный фикс мыла) */
+    transform: translateZ(0);
+    
+    /* 2. Максимальное сглаживание шрифтов */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    /* 3. Фикс дрожания */
+    backface-visibility: hidden;
+    
+    /* 4. Гарантируем слой поверх блюра */
+    position: relative;
+    z-index: 10;
+}
+
+/* Дополнительно для футера: делаем фон плотнее */
+.sheet-sticky-footer {
+    background-color: rgba(18, 18, 18, 0.96) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* ==========================================
+   🌈 PROFILE STATUSES (Бейджи и Меню)
+   ========================================== */
+
+/* Базовый стиль бейджа в хедере */
+.profile-status-badge {
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.profile-status-badge:active { transform: scale(0.92); }
+
+/* ЦВЕТОВЫЕ МОДИФИКАТОРЫ */
+
+/* 🟣 Networking (Default) */
+.profile-status-badge.networking {
+    color: #BF5AF2; border-color: rgba(191, 90, 242, 0.3); background-color: rgba(191, 90, 242, 0.1);
+}
+/* 🟢 Open to Work */
+.profile-status-badge.open_to_work {
+    color: #30D158; border-color: rgba(48, 209, 88, 0.3); background-color: rgba(48, 209, 88, 0.1);
+    box-shadow: 0 0 15px rgba(48, 209, 88, 0.2); /* Glow effect */
+}
+/* 🔵 Hiring */
+.profile-status-badge.hiring {
+    color: #0A84FF; border-color: rgba(10, 132, 255, 0.3); background-color: rgba(10, 132, 255, 0.1);
+}
+/* 🟠 Gigs */
+.profile-status-badge.open_to_gigs {
+    color: #FF9F0A; border-color: rgba(255, 159, 10, 0.3); background-color: rgba(255, 159, 10, 0.1);
+}
+/* ⚪ Busy */
+.profile-status-badge.busy {
+    color: #98989D; border-color: rgba(152, 152, 157, 0.3); background-color: rgba(152, 152, 157, 0.1);
+}
+
+/* --- STATUS PICKER (Меню выбора) --- */
+.status-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5001;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: flex-end;
+}
+
+.status-picker-sheet {
+    width: 100%;
+    background-color: #1c1c1e;
+    border-top-left-radius: 24px; border-top-right-radius: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 24px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    transform: translateZ(0);
+}
+
+.status-drag-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.35);
+  margin: 0 auto 16px;
+}
+
+.status-picker-title {
+    font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 20px; text-align: center;
+}
+
+.status-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.status-grid .status-option:last-child { grid-column: 1 / -1; } /* Busy на всю ширину */
+
+.status-option {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 16px;
+    border-radius: 16px; border: 1px solid transparent;
+    background-color: rgba(255,255,255,0.05);
+    cursor: pointer; transition: all 0.2s;
+}
+.status-option:active { transform: scale(0.96); }
+
+.status-option.selected {
+    background-color: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+}
+
+.status-icon { font-size: 24px; }
+.status-label { font-size: 14px; font-weight: 600; color: #fff; }
+
+/* Цвета в меню */
+.status-option.networking .status-icon { color: #BF5AF2; }
+.status-option.open_to_work .status-icon { color: #30D158; }
+.status-option.hiring .status-icon { color: #0A84FF; }
+.status-option.open_to_gigs .status-icon { color: #FF9F0A; }
+.status-option.busy .status-icon { color: #98989D; }
+
+/* Бейдж статуса в ленте (Маленький) */
+.feed-status-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Цвета для бейджа в ленте (наследуем логику) */
+.feed-status-badge.networking { color: #BF5AF2; background: rgba(191, 90, 242, 0.1); border-color: rgba(191, 90, 242, 0.2); }
+.feed-status-badge.open_to_work { color: #30D158; background: rgba(48, 209, 88, 0.1); border-color: rgba(48, 209, 88, 0.2); }
+.feed-status-badge.hiring { color: #0A84FF; background: rgba(10, 132, 255, 0.1); border-color: rgba(10, 132, 255, 0.2); }
+.feed-status-badge.open_to_gigs { color: #FF9F0A; background: rgba(255, 159, 10, 0.1); border-color: rgba(255, 159, 10, 0.2); }
+.feed-status-badge.busy { color: #98989D; background: rgba(152, 152, 157, 0.1); border-color: rgba(152, 152, 157, 0.2); }
+
+/* Контейнер оверлея подсказки статуса */
+.status-hint-overlay {
+  position: absolute;
+  top: 14px;                 /* подгони под свои отступы в шите */
+  right: 16px;
+  z-index: 40;               /* выше контента и хедера в шите */
+  max-width: min(320px, 90vw);
+  pointer-events: none;      /* чтобы не блокировать свайпы/клики */
+}
+
+/* Внутренняя «пилюля» */
+.status-hint-bubble {
+  pointer-events: auto;      /* сам чип можно тапать, если захочешь */
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  font-size: 13px;
+  color: #f9fafb;
+  line-height: 1.35;
+
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Иконка слева в чипе */
+.status-hint-bubble .status-hint-label {
+  font-size: 15px;
+  margin-top: 1px;
+}
+
+/* В стеклянной теме чуть прозрачнее фон */
+body.theme-glass-overlay .status-hint-bubble {
+  background: rgba(15, 15, 20, 0.78);
+  border-color: rgba(255, 255, 255, 0.3);
 }

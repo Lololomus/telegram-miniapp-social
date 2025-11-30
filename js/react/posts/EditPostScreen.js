@@ -1,4 +1,7 @@
 // react/posts/EditPostScreen.js
+// ОБНОВЛЕНО: Добавлен выбор опыта работы (Pills)
+// ОБНОВЛЕНО: Удалены лишние стили (все перенесено в CSS)
+
 import React, { useState, useEffect, useCallback, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
@@ -9,23 +12,33 @@ const limits = window.__CONFIG?.VALIDATION_LIMITS || {};
 const MAX_CONTENT_LENGTH = limits.post_content || 500;
 const MAX_FULL_DESC_LENGTH = limits.post_full_description || 2000;
 
-function EditPostScreen({ post, onClose, onSave }) {
+// Опции опыта (ключи для i18n)
+const EXPERIENCE_OPTIONS = [
+  { key: 'exp_no_exp',  value: 'no_exp',  label: 'Без опыта' },
+  { key: 'exp_less_1',  value: 'less_1', label: 'До 1 года' },
+  { key: 'exp_1_3',     value: '1-3',    label: '1–3 года' },
+  { key: 'exp_3_5',     value: '3-5',    label: '3–5 лет' },
+  { key: 'exp_5_plus',  value: '5+',     label: '5+ лет' }
+];
+
+function EditPostScreen({ post, onClose, onSave, originId }) {
   const [postType, setPostType] = useState(post.post_type || 'looking');
   const [content, setContent] = useState(post.content || '');
   const [fullDescription, setFullDescription] = useState(post.full_description || '');
+  
+  // --- НОВОЕ: Состояние для опыта ---
+  const [experience, setExperience] = useState(post.experience_years || null);
+
   const [skillTags, setSkillTags] = useState((post.skill_tags || []).join(', '));
   const [currentSkillsArray, setCurrentSkillsArray] = useState(post.skill_tags || []);
   
-  // Флаг блокировки: если true, значит открыта модалка навыков поверх
   const isExternalModalOpen = useRef(false);
 
-  // Обработчик кнопки Назад с проверкой флага
   const handleBack = useCallback(() => {
       if (isExternalModalOpen.current) return;
       onClose();
   }, [onClose]);
 
-  // --- УПРАВЛЕНИЕ КНОПКОЙ ПРИ МОНТАЖЕ ---
   useEffect(() => {
       const setupBack = () => {
           if (tg?.BackButton) {
@@ -36,7 +49,6 @@ function EditPostScreen({ post, onClose, onSave }) {
       setupBack();
 
       return () => {
-          // При размонтировании подчищаем
           if (tg?.BackButton) {
               tg.BackButton.offClick(handleBack);
               tg.BackButton.hide();
@@ -46,36 +58,25 @@ function EditPostScreen({ post, onClose, onSave }) {
 
   const handleOpenSkillsModal = useCallback(async () => { 
       if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light'); 
-      
-      // 1. Блокируем реакцию на кнопку "Назад" в этом компоненте
       isExternalModalOpen.current = true;
 
       if (window.SkillsManager) {
-          // 2. Открываем модалку навыков
-          // Важно: returnTo: 'posts-feed-container' гарантирует, что app.js
-          // восстановит видимость основного контейнера при закрытии модалки
-          const result = await window.SkillsManager.select(currentSkillsArray, { 
-              showStatus: false,
-              returnTo: 'posts-feed-container' 
-          });
+          const result = await window.SkillsManager.select(currentSkillsArray, {
+            showStatus: false,
+            returnTo: originId || 'posts-feed-container',
+            });
           
           if (result && result.skills) {
               setCurrentSkillsArray(result.skills); 
               setSkillTags(result.skills.join(', ')); 
           }
 
-          // 3. Восстанавливаем кнопку "Назад" (так как UI.showView мог её скрыть)
           if (tg?.BackButton) {
               tg.BackButton.show();
               tg.BackButton.onClick(handleBack);
           }
       }
-      
-      // 4. Снимаем блокировку с задержкой (чтобы пропустить событие клика)
-      setTimeout(() => {
-          isExternalModalOpen.current = false;
-      }, 100);
-
+      setTimeout(() => { isExternalModalOpen.current = false; }, 100);
   }, [currentSkillsArray, handleBack]);
   
   const handleSave = () => { 
@@ -83,43 +84,39 @@ function EditPostScreen({ post, onClose, onSave }) {
           if (tg && tg.showAlert) tg.showAlert(t('error_post_content_empty')); 
           return; 
       } 
-      onSave({ post_type: postType, content: content.trim(), full_description: fullDescription.trim(), skill_tags: currentSkillsArray }); 
+      
+      // --- ВАЖНО: Передаем опыт в onSave ---
+      onSave({ 
+          post_type: postType, 
+          content: content.trim(), 
+          full_description: fullDescription.trim(), 
+          skill_tags: currentSkillsArray,
+          experience_years: experience // <--- Добавлено
+      }); 
   };
 
   return createPortal(
     h(motion.div, {
       className: `screen edit-post-screen ${isIOS ? 'is-ios' : ''}`,
+      id: 'edit-post-screen', 
       style: { 
           position: 'fixed', inset: 0, zIndex: 5000,
-          display: 'flex', 
-          flexDirection: 'column',
-          backgroundColor: 'var(--main-bg-color)', 
-          padding: 0,
+          display: 'flex', flexDirection: 'column',
       },
       initial: { y: '100%' }, 
       animate: { y: 0 }, 
       exit: { y: '100%' },
       transition: { type: 'spring', damping: 25, stiffness: 200 }
     },
-      // --- ХЕДЕР ---
-      h('div', { 
-          className: 'edit-post-header',
-          style: {
-              padding: 'calc(env(safe-area-inset-top, 20px) + 10px) 16px 10px 16px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'var(--main-bg-color)',
-              borderBottom: '1px solid var(--secondary-bg-color)',
-              flexShrink: 0, position: 'relative'
-          }
-      },
+      // ХЕДЕР
+      h('div', { className: 'edit-post-header', style: { flexShrink: 0 } },
           h('h2', { style: { margin: 0, fontSize: 17, fontWeight: 600 } }, t('edit_post_title') || "Редактирование")
       ),
 
-      // --- КОНТЕНТ ---
-      h('div', { 
-          className: 'edit-post-scroll-content',
-          style: { flex: 1, overflowY: 'auto', padding: '20px', paddingBottom: '100px' }
-      },
+      // КОНТЕНТ
+      h('div', { className: 'edit-post-scroll-content', style: { flex: 1 } },
+          
+          // 1. Тип поста
           h('div', { className: 'form-group' }, 
               h('label', { htmlFor: 'edit-post-type-select' }, t('post_type_label')), 
               h('select', { id: 'edit-post-type-select', value: postType, onChange: (e) => setPostType(e.target.value) }, 
@@ -128,16 +125,52 @@ function EditPostScreen({ post, onClose, onSave }) {
                   h('option', { value: 'showcase' }, t('post_type_showcase'))
               )
           ),
+
+          // 2. Опыт работы (Pills) - Показываем только для 'looking' и 'offering'
+          (postType === 'looking' || postType === 'offering') && h('div', { className: 'form-group' },
+              h('label', null, t('post_exp_label') || "Опыт в этой сфере"),
+              h('div', { className: 'experience-pills-container', style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } },
+                  EXPERIENCE_OPTIONS.map(opt => {
+                      const isSelected = experience === opt.value;
+                      return h('button', {
+                          key: opt.value,
+                          className: `exp-pill ${isSelected ? 'selected' : ''}`,
+                          onClick: () => { 
+                              setExperience(opt.value); 
+                              if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                          },
+                          // Стили будут в CSS, но базовые зададим здесь для надежности
+                          style: {
+                              padding: '8px 14px',
+                              borderRadius: '20px',
+                              border: '1px solid var(--secondary-bg-color)',
+                              background: isSelected ? 'var(--main-button-color)' : 'transparent',
+                              color: isSelected ? '#fff' : 'var(--main-text-color)',
+                              fontSize: '14px',
+                              fontWeight: 500,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                          }
+                      }, t(opt.key) || opt.label);
+                  })
+              )
+          ),
+
+          // 3. Краткое описание
           h('div', { className: 'form-group' }, 
               h('label', { htmlFor: 'edit-post-content' }, t('post_content_label')), 
               h('textarea', { id: 'edit-post-content', value: content, onChange: (e) => setContent(e.target.value), rows: 3, maxLength: MAX_CONTENT_LENGTH }), 
               h('div', { className: 'char-counter' }, `${content.length} / ${MAX_CONTENT_LENGTH}`)
           ),
+
+          // 4. Полное описание
           h('div', { className: 'form-group' }, 
               h('label', { htmlFor: 'edit-post-full' }, t('post_full_description_label')), 
               h('textarea', { id: 'edit-post-full', value: fullDescription, onChange: (e) => setFullDescription(e.target.value), rows: 6, maxLength: MAX_FULL_DESC_LENGTH }), 
               h('div', { className: 'char-counter' }, `${fullDescription.length} / ${MAX_FULL_DESC_LENGTH}`)
           ),
+
+          // 5. Навыки
           h('div', { className: 'form-group' }, 
               h('label', null, t('post_skills_label')), 
               h('div', { className: 'skills-input-group', onClick: handleOpenSkillsModal }, 
@@ -154,30 +187,11 @@ function EditPostScreen({ post, onClose, onSave }) {
           )
       ),
 
-      // --- КНОПКА СОХРАНИТЬ (Full Width) ---
-      h('div', {
-          className: 'fab-modal-save-container', // Используем контейнер из modals.css
-          style: {
-              // Дополнительная фиксация позиции для этого экрана
-              position: 'fixed', 
-              bottom: '25px', 
-              left: '50%', 
-              transform: 'translateX(-50%)',
-              width: 'calc(100% - 40px)', 
-              maxWidth: '560px', 
-              zIndex: 5002 
-          }
-      },
+      // КНОПКА СОХРАНИТЬ
+      h('div', { className: 'fab-modal-save-container', style: { zIndex: 5002 } },
           h('button', {
               onClick: handleSave,
-              // Используем класс широкой кнопки из модалки навыков
               className: 'action-button fab-modal-save',
-              style: {
-                  width: '100%',
-                  justifyContent: 'center',
-                  fontSize: '17px',
-                  padding: '16px'
-              }
           }, t('action_save') || "Сохранить")
       )
     ),

@@ -1,4 +1,6 @@
 // react/feed/FeedCard.js
+// ОБНОВЛЕНО: Добавлен статус (Badge) в карточку ленты
+
 import React, { memo, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
 import { 
@@ -7,6 +9,15 @@ import {
 } from './feed_utils.js';
 
 const h = React.createElement;
+
+// Конфиг статусов (дублируем для скорости, либо выносим в utils)
+const STATUS_CONFIG = {
+    'networking':   { icon: '🤝', colorClass: 'networking' },
+    'open_to_work': { icon: '⚡', colorClass: 'open_to_work' },
+    'hiring':       { icon: '💎', colorClass: 'hiring' },
+    'open_to_gigs': { icon: '🚀', colorClass: 'open_to_gigs' },
+    'busy':         { icon: '⛔', colorClass: 'busy' }
+};
 
 const FeedCard = memo(function FeedCard({ u, index, onOpen }) {
     
@@ -22,17 +33,19 @@ const FeedCard = memo(function FeedCard({ u, index, onOpen }) {
     const skillsOverflow = useTwoLineSkillsOverflow(skillsContainerRef, skills.length);
     const avatar = u.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${u.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
 
+    // Получаем конфиг статуса
+    const statusConf = STATUS_CONFIG[u.status] || null;
+
     // --- ЖЕСТЫ ---
     const { targetRef, gestureProps } = useCardGestures({
         onOpenPrimary: () => onOpen(u),
         disableClick: false
     });
 
-    // --- АНИМАЦИЯ (ТОЧНАЯ КОПИЯ ЛОГИКИ ПОСТОВ) ---
+    // --- АНИМАЦИЯ ---
     const isFirstBatch = index < 10;
     const shouldForceAnimate = isMobile || isFirstBatch;
     
-    // Варианты (ПК - сдвиг, Мобайл - нет)
     const variants = isMobile 
       ? {} 
       : (isIOS 
@@ -44,11 +57,9 @@ const FeedCard = memo(function FeedCard({ u, index, onOpen }) {
           }
       );
 
-    // Задержка для волны
     const delayStep = 0.05; 
     const delay = (!isMobile && isFirstBatch) ? index * delayStep : 0;
 
-    // Конфиг перехода
     const fixedTransition = {
         ...FEED_ITEM_SPRING, 
         delay: delay,        
@@ -59,73 +70,63 @@ const FeedCard = memo(function FeedCard({ u, index, onOpen }) {
 
     const visibleState = { opacity: 1, x: 0, scale: 1 };
 
-    // --- РЕНДЕР: СТРУКТУРА WRAPPER -> CONTENT ---
     return h(motion.div, {
         ref: targetRef,
-        ...gestureProps, // Жесты вешаем на обертку
-        
-        // 1. ВНЕШНИЙ СЛОЙ: Отвечает за появление и layout
+        ...gestureProps,
         layout: isMobile ? false : "position",
         variants: variants,
-        
         initial: isMobile ? "visible" : "hidden",
         animate: shouldForceAnimate ? visibleState : undefined,
         whileInView: shouldForceAnimate ? undefined : visibleState,
         viewport: shouldForceAnimate ? undefined : { once: true, margin: "200px" },
         exit: "exit",
-        
         transition: isMobile ? { duration: 0 } : fixedTransition,
-        
-        // КЛАСС ОБЕРТКИ (Важно: он должен быть прозрачным и без transition: transform)
         className: 'react-feed-card-wrapper', 
         style: {
-            width: '100%',
-            position: 'relative',
-            cursor: 'pointer',
-            // Убираем стили фона отсюда
+            width: '100%', position: 'relative', cursor: 'pointer',
         }
     },
-        // 2. ВНУТРЕННИЙ СЛОЙ: Отвечает за визуал (Glass) и CSS-анимацию нажатия
         h(motion.div, {
-            className: 'react-feed-card', // Сюда применяются стили из feed.css
+            className: 'react-feed-card', 
             style: {
-                width: '100%',
-                textAlign: 'left',
-                borderRadius: 24,
-                padding: 15,
-                // position: 'relative' и overflow: 'hidden' уже есть в CSS класса
+                width: '100%', textAlign: 'left', borderRadius: 24, padding: 15,
+                display: 'flex', flexDirection: 'column', gap: '12px'
             }
         },
-            // Хедер: Аватар + Имя
+            // Хедер: Аватар + Имя + СТАТУС
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, pointerEvents: 'none' } },
                 h('div', {
                     style: {
-                        height: 44, width: 44, borderRadius: 14,
+                        height: 48, width: 48, borderRadius: 16, // Чуть больше и квадратнее
                         background: 'rgba(255,255,255,0.1)',
                         overflow: 'hidden', flexShrink: 0
                     }
                 }, h('img', {
-                    src: avatar, alt: '', 
-                    decoding: 'async', // Важно для производительности
-                    draggable: 'false',
+                    src: avatar, alt: '', decoding: 'async', draggable: 'false',
                     style: { width: '100%', height: '100%', objectFit: 'cover' }
                 })),
                 
-                h('div', { style: { minWidth: 0 } },
+                h('div', { style: { minWidth: 0, flex: 1 } },
                     h('div', {
                         style: {
-                            fontWeight: 700, fontSize: 16, color: '#ffffff',
+                            fontWeight: 700, fontSize: 17, color: '#ffffff',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                         }
                     }, u.first_name || 'User'),
                     
                     h('div', {
                         style: {
+                            marginTop: 2,
                             opacity: 0.7, fontSize: 13, color: '#9ca3af',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                         }
                     }, job)
-                )
+                ),
+
+                // 🔥 СТАТУС (Бейдж справа)
+                statusConf && h('div', {
+                    className: `feed-status-badge ${statusConf.colorClass}`,
+                }, statusConf.icon)
             ),
             
             // Навыки
@@ -133,7 +134,7 @@ const FeedCard = memo(function FeedCard({ u, index, onOpen }) {
                 layout: false,
                 ref: skillsContainerRef,
                 className: 'feed-card-skills-container',
-                style: { pointerEvents: 'none', marginTop: 12 }
+                style: { pointerEvents: 'none' }
             },
                 ...skills.slice(0, skillsOverflow.visibleCount).map((skill, i) =>
                     h('span', { key: skill + i, className: 'skill-tag skill-tag--display' }, skill)

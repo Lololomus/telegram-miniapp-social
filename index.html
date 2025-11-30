@@ -10,7 +10,7 @@
 <body class="theme-dark"> 
     
     <header class="app-header" id="app-header">
-        <h1 id="header-title" class="header-title">Hub</h1>
+        <h1 id="header-title" class="header-title" data-i18n-key="tab_hub">Hub</h1>
 
         <div id="header-search-container" class="header-search-row">
             <div class="header-search-wrapper">
@@ -251,12 +251,12 @@
     <nav class="bottom-tabbar" id="app-tabbar">
         <button class="tab-item active" id="tab-people">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            <span class="tab-label">People</span>
+            <span class="tab-label" data-i18n-key="tab_people">People</span>
         </button>
 
         <button class="tab-item" id="tab-hub">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
-            <span class="tab-label">Hub</span>
+            <span class="tab-label" data-i18n-key="tab_hub">Hub</span>
         </button>
 
         <div class="tab-fab-wrapper">
@@ -270,7 +270,7 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
             </svg>
-            <span class="tab-label">Профиль</span>
+            <span class="tab-label" data-i18n-key="tab_profile"></span>
         </button>
 
         <button class="tab-item" id="tab-settings">
@@ -278,7 +278,7 @@
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
-            <span class="tab-label">Настройки</span>
+            <span class="tab-label" data-i18n-key="tab_settings"></span>
         </button>
     </nav>
 
@@ -292,6 +292,11 @@
                     <option value="offering" data-i18n-key="post_type_offering">💼 Предлагаю услуги</option>
                     <option value="showcase" data-i18n-key="post_type_showcase">🚀 Демо</option>
                 </select>
+            </div>
+            <div class="form-group" id="post-experience-group">
+                <label>Опыт в этой сфере:</label>
+                <div id="post-experience-container" class="experience-pills-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
+                <input type="hidden" id="post-experience-input">
             </div>
             <div class="form-group">
                 <label for="post-content-field" data-i18n-key="post_content_label">Кратко:</label>

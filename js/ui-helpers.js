@@ -423,31 +423,59 @@ export function renderStatusFilters(container, currentStatus, t, onToggle) {
     if (!container) return;
     container.innerHTML = '';
     
-    const title = document.createElement('h3');
-    title.className = 'status-filter-group-title';
-    title.textContent = t('post_type_label') || "Тип";
-    container.appendChild(title);
+    // Заголовок группы (опционально, если нужно, но мы его уже добавили в CSS)
+    // const title = document.createElement('h3'); ...
+    // container.appendChild(title);
 
     const list = document.createElement('div');
     list.className = 'status-filter-list';
     
     const statuses = [
-        { key: 'looking', text: t('post_type_looking') || "Ищу" },
-        { key: 'offering', text: t('post_type_offering') || "Предлагаю" },
-        { key: 'showcase', text: t('post_type_showcase') || "Демо" }
+        { key: 'looking', text: t('post_type_looking') || "Looking for" },
+        { key: 'offering', text: t('post_type_offering') || "Offering" },
+        { key: 'showcase', text: t('post_type_showcase') || "Showcase" }
     ];
 
     statuses.forEach(st => {
         const btn = document.createElement('button');
         btn.className = 'status-tag';
-        if (st.key === currentStatus) btn.classList.add('active');
-        btn.textContent = st.text;
         
-        btn.onclick = () => {
+        // Добавляем data-атрибут для стилизации в CSS
+        btn.setAttribute('data-status', st.key);
+        
+        if (st.key === currentStatus) btn.classList.add('active');
+        
+        // Иконка для кнопки
+        const icon = st.key === 'looking' ? '🤝' : (st.key === 'offering' ? '💼' : '🚀');
+        
+        // ✅ FIX: Удаляем любые эмодзи из начала текста, если они там есть (в json)
+        // Регулярка удаляет любые символы, не являющиеся буквами/цифрами/знаками препинания в начале
+        let cleanText = st.text;
+        try {
+            // Простая очистка: убираем первые 2 символа, если это эмодзи (обычно они занимают 2 чара)
+            // Или более надежно: если в JSON "🤝 Looking", убираем "🤝 "
+            cleanText = cleanText.replace(/(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/, '').trim();
+        } catch (e) {}
+
+        btn.innerHTML = `<span style="margin-right:6px; font-size: 1.2em;">${icon}</span>${cleanText}`;
+        
+        btn.onclick = (e) => {
+            e.preventDefault(); // Чтобы не сабмитило форму, если вдруг
+            
+            // Проверяем, был ли он уже активен
+            const wasActive = btn.classList.contains('active');
+            
+            // Сбрасываем все кнопки
             Array.from(container.querySelectorAll('.status-tag')).forEach(el => el.classList.remove('active'));
-            const newStatus = (currentStatus === st.key) ? null : st.key;
-            if (newStatus) btn.classList.add('active');
-            onToggle(newStatus);
+            
+            if (wasActive) {
+                // Если был активен -> Снимаем выбор (null)
+                onToggle(null);
+            } else {
+                // Если не был -> Активируем
+                btn.classList.add('active');
+                onToggle(st.key);
+            }
         };
         list.appendChild(btn);
     });

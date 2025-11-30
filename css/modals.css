@@ -73,8 +73,10 @@
 
 /* 2. Группа фильтров (Тип запроса) */
 #skills-modal > .status-filter-group {
+  /* Отступ для фильтров, если они есть */
+  margin-top: calc(env(safe-area-inset-top, 40px) + 90px) !important;
+  margin-bottom: 20px;
   padding: 0 16px;
-  margin-bottom: 24px;
 }
 
 .skill-category { margin: 0; padding: 0; }
@@ -179,6 +181,7 @@ body.theme-dark .status-tag.active { color: #ffffff; }
 
 /* --- HTML СТЕКЛО --- */
 body.theme-glass-overlay .modal-overlay { background-color: rgba(0, 0, 0, 0.4); }
+
 body.theme-glass-overlay .modal-content {
     background-color: var(--glass-bg);
     backdrop-filter: blur(25px);
@@ -188,72 +191,183 @@ body.theme-glass-overlay .modal-content {
     border-radius: var(--glass-radius-main);
 }
 
-#skills-modal,
+/* ПОЛНОЭКРАННЫЕ МОДАЛКИ (База) */
 #create-post-modal {
-  display: none; /* flex при открытии */
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100dvh;
+  z-index: 5001 !important;
+  padding-top: 0;
+  background-color: var(--main-bg-color);
+  transition: background 0.3s;
+}
+
+/* ✅ Z-INDEX FIX: Навыки должны быть ВЫШЕ редактирования */
+#skills-modal {
+  display: none;
   flex-direction: column;
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  height: 100dvh; /* Для мобильных браузеров */
-  height: 100vh;  /* Фоллбэк */
-  z-index: 5001 !important;; 
-  
-  /* ✅ FIX: Отступ сверху под "челку" и нативные кнопки */
-  padding-top: calc(env(safe-area-inset-top, 20px) + 10px);
-  
-  /* ✅ FIX: Фон сплошной темный (чтобы не просвечивало) */
-  background-color: #09090b !important; 
-  
-  transition: background-color 0.3s;
+  height: 100dvh;
+  z-index: 6000 !important; /* Уровень 2 (Поверх всего) */
+  padding-top: 0;
+  background-color: var(--main-bg-color);
+  transition: background 0.3s;
 }
 
-#create-post-modal .form-header {
-  padding: 0 20px 10px 20px;
-  margin-bottom: 0;
-  flex-shrink: 0;
+.fab-modal-save-container { z-index: 6001 !important; }
+
+/* Хедер модалки (Общий для Создания и Навыков) */
+#create-post-modal .form-header,
+#skills-modal .form-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  
+  /* Делаем хедер чуть выше (65px + safe area), чтобы текст "New Request" сел ниже */
+  height: calc(env(safe-area-inset-top, 40px) + 65px);
+  
+  display: flex;
+  align-items: flex-end; /* Прижимаем текст к низу */
+  justify-content: center;
+  
+  /* Небольшой отступ снизу для воздуха */
+  padding-bottom: 12px;
+  
+  background: var(--main-bg-color);
+  z-index: 10;
+  border-bottom: 1px solid var(--secondary-bg-color);
 }
 
+/* --- ЛОГИКА ОТСТУПОВ (SPACING) --- */
+
+/* 1. Контент СОЗДАНИЯ поста (New Request) */
 #create-post-modal .form-content {
+  box-sizing: border-box;
   flex: 1;
   overflow-y: auto;
-  padding: 0 20px;
-  padding-bottom: 120px;
-  min-height: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+  
+  /* Хедер (60) + Safe (40) + Воздух (20) = 120px */
+  padding-top: 120px !important; 
+  margin-top: 0 !important;
+  
+  padding-bottom: 100px;
 }
 
-body.theme-glass-overlay #skills-modal,
-body.theme-glass-overlay #create-post-modal {
-    background-color: var(--main-bg-color);
+/* 2. Контент НАВЫКОВ (Select Skills) */
+#skills-modal {
+    /* ✅ ГЛАВНЫЙ ФИКС: Отступ задаем КОНТЕЙНЕРУ */
+    /* Теперь неважно, есть фильтры или нет — контент начнется с 120px */
+    padding-top: 120px !important;
+    box-sizing: border-box;
+    /* Скроллбар скрыт, но скролл работает */
+    scrollbar-width: none; 
+}
+#skills-modal::-webkit-scrollbar { width: 0; }
+
+/* Сбрасываем отступы у детей, т.к. отступ дает родитель */
+#skills-modal > .status-filter-group {
+  margin-top: 0 !important;
+  padding: 0 16px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+  border: none;
 }
 
-/* Читаемость текста в стекле */
-body.theme-glass-overlay .skill-category-title,
-body.theme-glass-overlay .status-filter-group-title {
-    color: var(--main-text-color);
-    opacity: 0.9;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+#skills-modal-list-container {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 100px; 
 }
 
+
+/* --- СТИЛЬ ДЛЯ РЕЖИМА СТЕКЛА (ВКЛ) --- */
+body.theme-glass-overlay #create-post-modal,
+body.theme-glass-overlay .edit-post-screen {
+    background: var(--deep-glass-background) !important;
+    background-attachment: fixed;
+}
+
+/* ✅ ФИКС ПУСТОГО ЭКРАНА */
+body.theme-glass-overlay #skills-modal {
+    background: var(--deep-glass-background) !important;
+    background-attachment: fixed;
+    
+    /* УБРАЛИ display: block !important, чтобы не ломать flex из JS */
+}
+
+/* Хедер в режиме Стекла */
+body.theme-glass-overlay #create-post-modal .form-header,
+body.theme-glass-overlay #skills-modal .form-header,
+body.theme-glass-overlay .edit-post-header {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    pointer-events: none;
+    
+    /* Легкий градиент под текстом, чтобы читалось */
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%) !important;
+}
+
+/* Заголовки */
+body.theme-glass-overlay h1, 
+body.theme-glass-overlay .edit-post-header h2 {
+    color: #ffffff !important;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    margin: 0 !important;
+}
+
+/* 3. ЦВЕТНЫЕ ТЕГИ СТАТУСА (В Стекле) */
 body.theme-glass-overlay .status-tag {
-    background-color: var(--glass-bg-input);
-    border: var(--glass-border);
-    color: #ffffff; 
-    opacity: 1; 
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-}
-body.theme-glass-overlay .status-tag.active {
-    opacity: 1;
-    color: #ffffff;
-    border-color: transparent;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cccccc;
+    font-weight: 600;
+    transition: all 0.1s ease; /* Быстрая анимация */
 }
 
-body.theme-glass-overlay .action-button.fab-modal-save {
-    background-color: var(--main-button-color);
-    color: var(--main-button-text-color);
-    border: none;
-    box-shadow: var(--glass-shadow);
+/* Looking for */
+body.theme-glass-overlay .status-tag[data-status="looking"] { color: #60a5fa !important; border-color: rgba(96, 165, 250, 0.3) !important; }
+body.theme-glass-overlay .status-tag[data-status="looking"].active {
+    background: #2563eb !important; color: white !important; border-color: #2563eb !important;
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.6);
 }
+
+/* Offering */
+body.theme-glass-overlay .status-tag[data-status="offering"] { color: #4ade80 !important; border-color: rgba(74, 222, 128, 0.3) !important; }
+body.theme-glass-overlay .status-tag[data-status="offering"].active {
+    background: #16a34a !important; color: white !important; border-color: #16a34a !important;
+    box-shadow: 0 0 15px rgba(22, 163, 74, 0.6);
+}
+
+/* Showcase */
+body.theme-glass-overlay .status-tag[data-status="showcase"] { color: #f472b6 !important; border-color: rgba(244, 114, 182, 0.3) !important; }
+body.theme-glass-overlay .status-tag[data-status="showcase"].active {
+    background: #db2777 !important; color: white !important; border-color: #db2777 !important;
+    box-shadow: 0 0 15px rgba(219, 39, 119, 0.6);
+}
+
+/* 4. КНОПКИ ДЕЙСТВИЙ */
+body.theme-glass-overlay .fab-modal-save-container .action-button,
+body.theme-glass-overlay #save-post-button,
+body.theme-glass-overlay #save-skills-modal-button, 
+body.theme-glass-overlay .action-button.fab-modal-save {
+    background-color: #007AFF !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0, 122, 255, 0.5) !important;
+    opacity: 1 !important;
+}
+body.theme-glass-overlay .action-button:active { transform: scale(0.96); filter: brightness(1.1); }
 
 /* --- REACT МОДАЛКИ --- */
 .react-sheet-content {

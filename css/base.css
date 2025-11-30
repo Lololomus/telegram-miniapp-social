@@ -240,50 +240,51 @@ img[data-avatar="loaded"] {
 }
 
 .toast-item {
-    background-color: #2c2c2e; /* Темный фон по умолчанию */
+    background-color: var(--main-button-color, #0A84FF);
     color: #ffffff;
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 500;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    padding: 14px 20px;
+    border-radius: 18px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(20px) scale(0.98);
     animation: toast-in 0.3s ease-out forwards;
-    pointer-events: auto; /* На сам тост можно нажать */
+    pointer-events: auto;
+    max-width: min(480px, calc(100% - 40px));
 }
 
+/* Состояние скрытия оставляем тем же */
 .toast-item.is-hiding {
-    animation: toast-out 0.3s ease-in forwards;
+    animation: toast-out 0.25s ease-in forwards;
 }
 
+/* Ошибки — ярко-красные */
 .toast-item.error {
-    background-color: #FF3B30; /* Яркий красный для ошибок */
+    background-color: #FF3B30;
     color: #ffffff;
 }
 
-/* Адаптация под темы */
+/* Светлая тема: делаем тоже заметным, но читаемым */
 body.theme-light .toast-item {
-    background-color: var(--secondary-bg-color, #efefef);
-    color: var(--main-text-color, #000000);
+    background-color: var(--main-button-color, #0A84FF);
+    color: #ffffff;
 }
 body.theme-light .toast-item.error {
     background-color: #FF3B30;
     color: #ffffff;
 }
 
+/* Кастомная тема: опираемся на основную кнопку / текст */
 body.theme-custom .toast-item {
-    background-color: var(--secondary-bg-color);
-    color: var(--main-text-color);
-    /* Используем кастомные цвета, если фон слишком светлый/темный */
-    /* (можно усложнить, но пока так) */
+    background-color: var(--main-button-color, #0A84FF);
+    color: var(--main-button-text-color, #ffffff);
 }
 body.theme-custom .toast-item.error {
     background-color: #FF3B30;
     color: #ffffff;
 }
 
-/* Анимации "Тоста" */
 @keyframes toast-in {
     from {
         opacity: 0;
@@ -304,6 +305,7 @@ body.theme-custom .toast-item.error {
         transform: translateY(10px) scale(0.95);
     }
 }
+
 
 /* 1. Фон-градиент */
 .glass-background {

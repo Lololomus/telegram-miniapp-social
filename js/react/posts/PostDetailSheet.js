@@ -1,122 +1,494 @@
 // react/posts/PostDetailSheet.js
+// v3.5: Report Button + Text Rendering Fixes + i18n meta
 
-import React, { useState, useRef, useCallback, useEffect } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
+import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
+import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-import { t, formatPostTime, isIOS, useSheetLogic, SheetControls } from './posts_utils.js';
+
+import { t, formatPostTime, isIOS, useSheetLogic, SheetControls, tg } from './posts_utils.js';
 
 const h = React.createElement;
 
-function PostDetailSheet({ post, onClose, onOpenProfile, isMyPost, onEdit, onDelete, onRespond, onRepost }) {
-    const sheetRef = useRef(null);
-    
-    const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
+const getPostTypeConfig = (type) => {
+  switch (type) {
+    case 'looking':
+      return {
+        color: '#0A84FF',
+        label: t('post_type_looking') || 'Looking for',
+        icon: h(
+          'svg',
+          {
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            stroke: 'currentColor',
+            strokeWidth: '2.5',
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+            style: { width: 20, height: 20 },
+          },
+          h('circle', { cx: 11, cy: 11, r: 8 }),
+          h('line', { x1: 21, y1: 21, x2: 16.65, y2: 16.65 }),
+        ),
+      };
+    case 'offering':
+      return {
+        color: '#34C759',
+        label: t('post_type_offering') || 'Offering',
+        icon: h(
+          'svg',
+          {
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            stroke: 'currentColor',
+            strokeWidth: '2.5',
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+            style: { width: 20, height: 20 },
+          },
+          h('rect', { x: 2, y: 7, width: 20, height: 14, rx: 2, ry: 2 }),
+          h('path', {
+            d: 'M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16',
+          }),
+        ),
+      };
+    case 'showcase':
+      return {
+        color: '#FF9500',
+        label: t('post_type_showcase') || 'Showcase',
+        icon: h(
+          'svg',
+          {
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            stroke: 'currentColor',
+            strokeWidth: '2.5',
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+            style: { width: 20, height: 20 },
+          },
+          h('polygon', {
+            points: '13 2 3 14 12 14 11 22 21 10 12 10 13 2',
+          }),
+        ),
+      };
+    default:
+      return {
+        color: '#8E8E93',
+        label: t('post_type_default') || 'Post',
+        icon: null,
+      };
+  }
+};
 
-    const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
-    const { content, full_description, post_type = 'default', skill_tags = [], created_at } = post;
-    const avatar = author.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
-    
-    const type_map = { 
-        'looking': { text: t('post_type_looking'), color: '#0A84FF' }, 
-        'offering': { text: t('post_type_offering'), color: '#34C759' }, 
-        'showcase': { text: t('post_type_showcase'), color: '#FF9500' } 
-    };
-    const type_info = type_map[post_type] || { text: t('post_type_default'), color: '#8E8E93' };
-    
-    const timeAgo = formatPostTime(created_at);
-    
-    return h(motion.div, { 
-        style:{ position:'fixed', inset:0, zIndex:1001, display: 'flex', alignItems: 'flex-end' }, 
-        initial:{opacity:0}, 
-        animate:{opacity:1}, 
-        // ✅ ФИКС: Мгновенная разблокировка кликов при начале закрытия
-        exit:{opacity:0, pointerEvents: 'none', transition: { duration: 0.2 }} 
-    },
-        // Фон (Backdrop)
-        h(motion.div, { 
-            onClick:onClose, 
-            style:{ position:'absolute', inset:0, background:'rgba(0,0,0,.5)' }, 
-            initial:{opacity:0}, 
-            animate:{opacity:1, pointerEvents: 'auto'}, 
-            // ✅ ФИКС: Быстрое исчезновение фона
-            exit:{opacity:0, pointerEvents: 'none', transition: { duration: 0.2 }} 
-        }),
-        
-        h(motion.div, {
-            style: { position: 'relative', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' },
-            ...sheetProps,
-            
-            // ✅ ФИКС: Вход - пружина (красиво), Выход - таймер (быстро и без лагов)
-            transition: { type: 'spring', damping: 30, stiffness: 300 },
-            exit: { 
-                y: '100%', 
-                transition: { type: 'tween', ease: 'easeInOut', duration: 0.2 } 
-            }
+const getExperienceLabel = (expValue) => {
+  if (!expValue) return null;
+
+  const map = {
+  no_exp: 'exp_no_exp',
+  less_1: 'exp_less_1',
+  '1-3':  'exp_1_3',
+  '3-5':  'exp_3_5',
+  '5+':   'exp_5_plus'
+};
+
+  const key = map[expValue];
+  return key ? (t(key) || expValue) : expValue;
+};
+
+function PostDetailSheet({
+  post,
+  onClose,
+  onOpenProfile,
+  isMyPost,
+  onEdit,
+  onDelete,
+  onRespond,
+  onRepost,
+}) {
+  const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
+
+  const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
+  const {
+    content,
+    full_description,
+    post_type = 'default',
+    skill_tags = [],
+    created_at,
+    experience_years,
+  } = post;
+
+  const avatar = author.photo_path
+    ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}`
+    : 'https://t.me/i/userpic/320/null.jpg';
+
+  const typeConfig = getPostTypeConfig(post_type);
+  const timeAgo = formatPostTime(created_at);
+
+  const mainRole =
+    skill_tags.length > 0
+      ? skill_tags[0]
+      : (t('specialist') || 'Specialist');
+
+  const expLabel = getExperienceLabel(experience_years);
+  const subtitleParts = [mainRole];
+  if (expLabel) subtitleParts.push(expLabel);
+  const subtitleText = subtitleParts.join(' • ');
+
+  const handleReport = () => {
+    if (tg?.HapticFeedback?.notificationOccurred) {
+      tg.HapticFeedback.notificationOccurred('success');
+    }
+    tg.showAlert(t('report_sent') || 'Жалоба отправлена');
+  };
+
+  const footerMyPost = [
+    h(
+      'button',
+      {
+        key: 'share',
+        className: 'icon-action-btn',
+        onClick: () => onRepost(post),
+      },
+      h(
+        'svg',
+        {
+          width: 24,
+          height: 24,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
         },
-            h(SheetControls, { controlMode, dragControls, onClose }),
-            
-            h('div', {
-                ref: sheetRef,
-                className: `react-sheet-content ${isIOS ? 'is-ios' : ''}`,
-                style: { 
-                    position: 'relative', width: '100%', maxHeight: '70vh', 
-                    borderTopLeftRadius: 20, borderTopRightRadius: 20, 
-                    display: 'flex', flexDirection: 'column',
-                    overflow: 'hidden',
-                    paddingTop: controlMode === 'swipes' ? '20px' : '0',
-                    willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden'
-                },
-                onClick: (e) => e.stopPropagation()
+        h('circle', { cx: 18, cy: 5, r: 3 }),
+        h('circle', { cx: 6, cy: 12, r: 3 }),
+        h('circle', { cx: 18, cy: 19, r: 3 }),
+        h('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
+        h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 }),
+      ),
+    ),
+
+    h(
+      'button',
+      {
+        key: 'delete',
+        className: 'icon-action-btn destructive',
+        onClick: () => onDelete(post),
+        style: { backgroundColor: '#ff3b30' },
+      },
+      h(
+        'svg',
+        {
+          width: 24,
+          height: 24,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+        },
+        h('polyline', { points: '3 6 5 6 21 6' }),
+        h('path', { d: 'M19 6l-1 14H6L5 6' }),
+        h('path', { d: 'M10 11v6' }),
+        h('path', { d: 'M14 11v6' }),
+        h('path', { d: 'M9 6V4h6v2' }),
+      ),
+    ),
+
+    h(
+      'button',
+      {
+        key: 'edit',
+        className: 'main-action-btn edit',
+        onClick: () => onEdit(post),
+      },
+      t('action_edit') || 'Edit',
+    ),
+  ];
+
+  const footerForeignPost = [
+    h(
+      'button',
+      {
+        key: 'report',
+        className: 'icon-action-btn destructive',
+        onClick: handleReport,
+      },
+      h(
+        'svg',
+        {
+          width: 24,
+          height: 24,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+        },
+        h('path', {
+          d: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z',
+        }),
+        h('line', { x1: 4, y1: 22, x2: 4, y2: 15 }),
+      ),
+    ),
+
+    h(
+      'button',
+      {
+        key: 'share',
+        className: 'icon-action-btn',
+        onClick: () => onRepost(post),
+      },
+      h(
+        'svg',
+        {
+          width: 24,
+          height: 24,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+        },
+        h('circle', { cx: 18, cy: 5, r: 3 }),
+        h('circle', { cx: 6, cy: 12, r: 3 }),
+        h('circle', { cx: 18, cy: 19, r: 3 }),
+        h('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
+        h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 }),
+      ),
+    ),
+
+    h(
+      'button',
+      {
+        key: 'respond',
+        className: 'main-action-btn',
+        onClick: () => onRespond(post),
+      },
+      t('action_respond') || 'Respond',
+    ),
+  ];
+
+  return createPortal(
+    h(
+      motion.div,
+      {
+        style: {
+          position: 'fixed',
+          inset: 0,
+          zIndex: 5000,
+          display: 'flex',
+          alignItems: 'flex-end'
+        },
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: {
+          opacity: 0,
+          pointerEvents: 'none',
+          transition: { duration: 0.2 }
+        }
+      },
+
+      h(
+        motion.div,
+        {
+          onClick: onClose,
+          style: {
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0,0,0,.7)'
+          },
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
+          exit: { opacity: 0, transition: { duration: 0.2 } }
+        }
+      ),
+
+      h(
+        motion.div,
+        {
+          style: {
+            position: 'relative',
+            width: '100%',
+            margin: '0 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            pointerEvents: 'auto'
+          },
+          ...sheetProps,
+          transition: { type: 'spring', damping: 30, stiffness: 300 },
+          exit: {
+            y: '100%',
+            transition: { type: 'tween', ease: 'easeInOut', duration: 0.2 }
+          }
+        },
+
+        h(SheetControls, { controlMode, dragControls, onClose }),
+
+        h(
+          'div',
+          {
+            className: `react-sheet-content post-sheet-unified ${isIOS ? 'is-ios' : ''}`,
+            style: {
+              position: 'relative',
+              width: '100%',
+              maxHeight: '85vh',
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              display: 'flex',
+              flexDirection: 'column',
+              paddingTop: controlMode === 'swipes' ? '25px' : '10px'
             },
-                h('div', { style: { flex: 1, overflowY: 'auto', padding: '20px' } },
-                    
-                    // --- ХЕДЕР КАРТОЧКИ ---
-                    h('div', { style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 20 } },
-                        
-                        // Левая часть: Аватар + Имя + Время
-                        h('button', { onClick: (e) => { e.stopPropagation(); onOpenProfile(author); }, style: { display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', flex: 1, minWidth: 0, textAlign: 'left' } },
-                            h('div', { style: { height: 48, width: 48, borderRadius: '50%', background: 'var(--main-bg-color)', overflow: 'hidden', flexShrink: 0 } }, h('img', { src: avatar, alt: '', loading: 'lazy', style: { width: '100%', height: '100%', objectFit: 'cover' } })),
-                            
-                            h('div', { style: { flex: 1, minWidth: 0 } }, 
-                                h('div', { 
-                                    style: { 
-                                        fontWeight: 600, 
-                                        fontSize: 16, 
-                                        color: 'var(--main-text-color)',
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis' 
-                                    } 
-                                }, author.first_name || 'User'), 
-                                
-                                timeAgo && h('div', { style: { fontSize: 14, color: 'var(--main-hint-color)', marginTop: 2 } }, timeAgo)
-                            )
-                        ),
-                        
-                        // Правая часть: Тег типа
-                        h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: type_info.color, color: '#FFFFFF', fontSize: 15, fontWeight: 600, flexShrink: 0 } }, type_info.text)
-                    ),
-                    
-                    h('div', { style: { background: 'var(--main-bg-color)', borderRadius: 12, padding: 16, marginBottom: 16 } }, h('h3', { style: { margin: '0 0 12px 0', fontSize: 17, fontWeight: 600, color: 'var(--main-text-color)' } }, t('post_view_short')), h('p', { style: { margin: 0, fontSize: 15, lineHeight: 1.6, color: 'var(--main-text-color)', whiteSpace: 'pre-wrap' } }, content || 'Нет описания')),
-                    
-                    full_description && full_description.trim() && h('div', { style: { background: 'var(--main-bg-color)', borderRadius: 12, padding: 16, marginBottom: 16 } }, h('h3', { style: { margin: '0 0 12px 0', fontSize: 17, fontWeight: 600, color: 'var(--main-text-color)' } }, t('post_view_full')), h('p', { style: { margin: 0, fontSize: 15, lineHeight: 1.6, color: 'var(--main-text-color)', whiteSpace: 'pre-wrap' } }, full_description)),
-                    
-                    skill_tags && skill_tags.length > 0 && h('div', { style: { background: 'var(--main-bg-color)', borderRadius: 12, padding: 16, marginBottom: 16 } }, h('h3', { style: { margin: '0 0 12px 0', fontSize: 17, fontWeight: 600, color: 'var(--main-text-color)' } }, t('post_view_skills')), h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8 } }, ...skill_tags.map(tag => h('span', { key: tag, className: 'skill-tag skill-tag--display', }, tag))))
-                ),
-                
-                h('div', { className: `sheet-footer ${isIOS ? 'is-ios' : ''}`, style: { padding: '16px 20px 20px 20px', display: 'grid', gap: 10, flexShrink: 0 } },
-                    isMyPost && h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } }, 
-                        h('button', { className: 'action-button secondary', onClick: () => { onEdit(post); onClose(); }, style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#34C759', color: '#ffffff' } }, t('action_edit')), 
-                        h('button', { className: 'action-button', onClick: () => { onDelete(post); onClose(); }, style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#FF3B30' } }, t('action_delete'))
-                    ),
-                    !isMyPost && h('div', { className: 'post-detail-actions-row', style: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 } }, 
-                        h('button', { className: 'action-button secondary', onClick: () => onRespond(post) }, t('action_respond')), 
-                        h('button', { className: 'action-button secondary', onClick: () => onRepost(post) }, t('action_repost')), 
-                        h('button', { className: 'action-button secondary', onClick: () => onOpenProfile(author) }, t('action_view_profile'))
-                    ),
-                    isMyPost && h('div', { style: { display: 'grid' } }, h('button', { className: 'action-button secondary', onClick: () => onRepost(post) }, t('action_repost')))
-                )
+            onClick: (e) => e.stopPropagation()
+          },
+
+          h(
+            'div',
+            {
+              className: 'post-watermark',
+              style: { color: typeConfig.color }
+            },
+            typeConfig.icon
+          ),
+
+          // HEADER
+          h(
+            'div',
+            { className: 'post-sheet-header' },
+            h(
+              'div',
+              { className: 'header-left' },
+              h(
+                'div',
+                { className: 'header-avatar' },
+                h('img', { src: avatar, alt: '' })
+              ),
+              h(
+                'div',
+                { className: 'header-info' },
+                h('div', { className: 'header-name' }, author.first_name),
+                h('div', { className: 'header-subtitle' }, subtitleText)
+              )
+            ),
+            h(
+              'div',
+              {
+                className: 'header-badge',
+                style: {
+                  color: typeConfig.color,
+                  borderColor: typeConfig.color,
+                  backgroundColor: `${typeConfig.color}1A`
+                }
+              },
+              typeConfig.icon
             )
+          ),
+
+          // CONTENT
+          h(
+            'div',
+            { className: 'post-sheet-scroll-area' },
+            h(
+              'div',
+              { className: 'post-content-inset' },
+
+              h(
+                'h2',
+                {
+                  className: 'post-text-title',
+                  style: { transform: 'translateZ(0)' }
+                },
+                content
+              ),
+
+              full_description &&
+                h(
+                  'div',
+                  {
+                    className: 'post-text-body',
+                    style: { transform: 'translateZ(0)' }
+                  },
+                  full_description
+                ),
+
+              skill_tags.length > 0 &&
+                h(
+                  'div',
+                  { className: 'post-tags-cloud bottom' },
+                  skill_tags.map((tag) =>
+                    h(
+                      'span',
+                      {
+                        key: tag,
+                        className: 'skill-tag skill-tag--display'
+                      },
+                      tag
+                    )
+                  )
+                ),
+
+              h('div', { className: 'content-divider' }),
+
+              h(
+                'div',
+                { className: 'post-meta-row' },
+                h(
+                  'div',
+                  { className: 'meta-item' },
+                  h(
+                    'span',
+                    null,
+                    '📍 ',
+                    t('post_meta_remote') || 'Remote'
+                  )
+                ),
+                h(
+                  'div',
+                  { className: 'meta-item budget' },
+                  h(
+                    'span',
+                    null,
+                    '💰 ',
+                    t('post_meta_negotiable') || 'Negotiable'
+                  )
+                ),
+                h(
+                  'div',
+                  { className: 'meta-item date' },
+                  h(
+                    'svg',
+                    {
+                      viewBox: '0 0 24 24',
+                      width: 14,
+                      height: 14,
+                      fill: 'none',
+                      stroke: 'currentColor',
+                      strokeWidth: 2
+                    },
+                    h('circle', { cx: 12, cy: 12, r: 10 }),
+                    h('polyline', { points: '12 6 12 12 16 14' })
+                  ),
+                  h('span', null, timeAgo)
+                )
+              )
+            )
+          ),
+
+          // FOOTER
+          h(
+            'div',
+            { className: `sheet-sticky-footer ${isIOS ? 'is-ios' : ''}` },
+            ...(isMyPost ? footerMyPost : footerForeignPost)
+          )
         )
-    );
+      )
+    ),
+    document.body
+  );
 }
+
 export default PostDetailSheet;

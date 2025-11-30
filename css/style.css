@@ -11,38 +11,48 @@
 
 :root {
     /* --- ЦВЕТА (Deep Dark) --- */
-    --main-bg-color: #050505; 
-    --secondary-bg-color: #121212;
+    --main-bg-color: #09090b; /* Статичный темный фон (Zinc-950) */
+    --secondary-bg-color: #18181b; /* Zinc-900 */
     --main-text-color: #f3f4f6;
-    --main-hint-color: #9ca3af;
-    --main-hint-opacity: 1;
-    --main-button-color: #2563eb;
-    --main-button-text-color: #ffffff;
-
-    --glass-bg: rgba(18, 18, 20, 0.98); /* Почти непрозрачный, чтобы скрыть контент под ним */
-    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     
-    /* --- РАЗМЕРЫ (С ЗАПАСОМ) --- */
-    /* Базовая высота хедера (без учета safe-area) */
+    /* --- ГРАДИЕНТНЫЙ ФОН (DEEP GLASS) --- */
+    /* Выносим в переменную, чтобы использовать и в body, и в модалках */
+    --deep-glass-background: 
+        radial-gradient(circle at 10% 20%, rgba(69, 10, 245, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 50%, rgba(100, 50, 255, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, #0f172a 0%, #000000 100%); /* Slate-900 to Black base */
+
+    /* Настройки Стекла */
+    --glass-bg: rgba(255, 255, 255, 0.03); /* Очень прозрачный белый (3%) */
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    
     --header-base-height: 60px; 
-    /* Высота таббара */
     --tabbar-height: 80px; 
 }
 
 body {
-    background-color: #000000;
-    background-image: 
-        radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 85% 30%, rgba(124, 58, 237, 0.15) 0%, transparent 50%);
-    background-attachment: fixed;
+    /* ПО УМОЛЧАНИЮ: Статичный серый фон (когда стекло ВЫКЛ) */
+    background: var(--main-bg-color);
     color: var(--main-text-color);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     margin: 0;
     padding: 0;
     height: 100vh;
     overflow: hidden; 
+    transition: background 0.3s ease;
 }
+
+/* --- РЕЖИМ СТЕКЛА (ВКЛ) --- */
+body.theme-glass-overlay {
+    /* Применяем наш красивый градиент */
+    background: var(--deep-glass-background);
+    background-attachment: fixed; /* Фиксируем, чтобы не дергался при скролле */
+}
+
+/* Убираем старый блок .glass-background, он больше не нужен, так как мы красим body напрямую */
+.glass-background { display: none !important; }
 
 /* --- 1. ХЕДЕР (ПОИСК) --- */
 .app-header {
@@ -256,30 +266,47 @@ body.theme-dark .header-title {
 /* FAB КНОПКА */
 .tab-fab-wrapper {
     position: relative;
-    top: -28px; 
+    /* Поднимаем кнопку выше (было -28px) */
+    top: -35px; 
     display: flex;
     justify-content: center;
     width: 60px;
     z-index: 60;
     height: 0;
     transition: opacity 0.3s ease;
-}
-.bottom-tabbar.hide-on-keyboard .tab-fab-wrapper {
-    opacity: 0;
-    pointer-events: none;
+    pointer-events: none; 
 }
 
 .tab-fab-button {
+    pointer-events: auto;
     width: 56px; height: 56px;
-    border-radius: 18px;
-    background: var(--main-button-color);
+    border-radius: 18px; /* Squircle форма */
+    
+    /* Яркий синий цвет всегда */
+    background: #007AFF; 
     border: none;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    
+    /* Яркая тень */
+    box-shadow: 0 10px 25px rgba(0, 122, 255, 0.5);
+    
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Фикс для режима стекла: принудительно оставляем синим */
+body.theme-glass-overlay .tab-fab-button {
+    background: #007AFF !important;
+    box-shadow: 0 10px 25px rgba(0, 122, 255, 0.5) !important;
+    border: none !important;
+    color: white !important;
+}
+
+.tab-fab-button:active {
+    transform: scale(0.9);
 }
 
 /* --- ПРОЧЕЕ --- */

@@ -639,3 +639,406 @@ body.theme-glass-overlay .icon-button {
     color: var(--main-text-color);
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
+
+/* === MyProfileScreen (Dashboard Style) === */
+
+.dashboard-container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 8px 0 120px;
+  box-sizing: border-box;
+}
+
+/* Верхняя панель внутри профиля */
+.dashboard-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.dashboard-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--main-text-color, #ffffff);
+  text-align: center;
+  width: 100%;
+}
+
+/* HERO-карточка профиля */
+.dashboard-hero {
+  background-color: var(--secondary-bg-color, #18181b);
+  border-radius: 24px;
+  padding: 40px 20px 20px; /* больше место сверху под иконки */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  position: relative; /* важно для абсолютного позиционирования кнопок */
+}
+
+/* Стеклянный вариант */
+body.theme-glass-overlay .dashboard-hero {
+  background-color: var(--glass-bg);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.hero-icon-btn {
+  position: absolute;
+  top: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(18, 18, 20, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+  padding: 0;
+  cursor: pointer;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+  z-index: 2;
+}
+
+.hero-icon-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.hero-icon-btn:active {
+  transform: scale(0.93);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.6);
+}
+
+/* Никаких перекрасов по темам — тёмное стекло всегда */
+body.theme-glass-overlay .hero-icon-btn {
+  background: rgba(18, 18, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.hero-icon-left {
+  left: 18px;
+}
+
+.hero-icon-right {
+  right: 18px;
+}
+
+.hero-avatar img {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background-color: #2c2c2e;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  display: block;
+  margin: 0 auto 12px;
+}
+
+.hero-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Статус-пилюля под именем */
+.hero-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-top: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  font-weight: 600;
+  color: #e5e7eb;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.hero-status-pill .status-icon {
+  font-size: 16px;
+}
+
+.hero-status-pill .status-text {
+  white-space: nowrap;
+}
+
+.hero-status-pill .status-arrow {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.hero-status-pill:active {
+  transform: scale(0.97);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Цвета под существующие статусы (синхронизируем с .profile-status-badge / .feed-status-badge) */
+.hero-status-pill.networking {
+  color: #BF5AF2;
+  border-color: rgba(191, 90, 242, 0.4);
+  background-color: rgba(191, 90, 242, 0.12);
+}
+
+.hero-status-pill.open_to_work {
+  color: #30D158;
+  border-color: rgba(48, 209, 88, 0.4);
+  background-color: rgba(48, 209, 88, 0.12);
+}
+
+.hero-status-pill.hiring {
+  color: #0A84FF;
+  border-color: rgba(10, 132, 255, 0.4);
+  background-color: rgba(10, 132, 255, 0.12);
+}
+
+.hero-status-pill.open_to_gigs {
+  color: #FF9F0A;
+  border-color: rgba(255, 159, 10, 0.4);
+  background-color: rgba(255, 159, 10, 0.12);
+}
+
+.hero-status-pill.busy {
+  color: #98989D;
+  border-color: rgba(152, 152, 157, 0.4);
+  background-color: rgba(152, 152, 157, 0.12);
+}
+
+/* Статистика подписчиков */
+.hero-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--main-hint-color, #9ca3af);
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.stat-box b {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--main-text-color, #ffffff);
+}
+
+.stat-divider {
+  width: 1px;
+  height: 36px;
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Кнопка "Edit profile" */
+.dashboard-edit-btn {
+  margin-top: 4px;
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  border: none;
+  outline: none;
+  background-color: var(--main-button-color, #007aff);
+  color: var(--main-button-text-color, #ffffff);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 122, 255, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-edit-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+}
+
+/* TABы (posts / about) */
+.dashboard-tabs-wrapper {
+  margin-top: 18px;
+  margin-bottom: 10px;
+}
+
+.segmented-control {
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.segment-btn {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--main-hint-color, #9ca3af);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.segment-btn.active {
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Контентная часть */
+.dashboard-content {
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.dashboard-posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+/* Лоадер и пустое состояние */
+.dashboard-loading,
+.loader-placeholder,
+.empty-state-dashboard {
+  padding: 40px 12px 32px;
+  text-align: center;
+  color: var(--main-hint-color, #9ca3af);
+  font-size: 14px;
+}
+
+.empty-state-dashboard span {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.empty-state-dashboard p {
+  margin: 0;
+}
+
+/* Блок "About Me" (резюме) */
+.resume-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 24px;
+}
+
+.resume-block {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.resume-block h4 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--main-text-color, #ffffff);
+}
+
+.resume-block p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #d4d4d8;
+  white-space: pre-wrap;
+}
+
+.resume-exp-item {
+  margin-top: 8px;
+}
+
+.resume-exp-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--main-text-color, #ffffff);
+}
+
+.resume-exp-sub {
+  font-size: 13px;
+  color: var(--main-hint-color, #9ca3af);
+}
+
+/* === MyProfileScreen: compact posts row === */
+
+.my-post-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.my-post-card-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.my-post-icon-btn {
+  width: 40px;
+  min-width: 40px;
+  height: 64px;
+  border-radius: 16px;
+  border: none;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  background: rgba(24, 24, 27, 0.95);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+}
+
+.my-post-icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 🔴 Явно красим корзину */
+.my-post-row .my-post-icon-btn.destructive {
+  background-color: #ff3b30 !important;
+  color: #ffffff !important;
+}
+
+/* 🟢 Явно красим карандаш */
+.my-post-row .my-post-icon-btn.edit {
+  background-color: #30d158 !important;
+  color: #ffffff !important;
+}
+
+/* Немного ужимаем карточку, чтобы ряд смотрелся плотнее */
+.my-post-card-wrapper .react-feed-card-wrapper {
+  margin: 0;
+}

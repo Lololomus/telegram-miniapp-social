@@ -130,15 +130,20 @@ export function applyTheme(tg, t, settingsElements, profile, theme, custom_theme
  * Обновляет состояние кнопок выбора темы
  */
 export function updateThemeButtons(themeButtons, customThemeGroup, activeTheme) {
-    if (!Array.isArray(themeButtons) || !customThemeGroup) { return; }
+    if (!Array.isArray(themeButtons)) return;
+
     themeButtons.forEach(button => {
-        if (button) { 
-            button.classList.toggle('active', button.dataset.theme === activeTheme); 
-        } else { 
-            console.warn("updateThemeButtons: Одна из кнопок темы не найдена."); 
+        if (button) {
+            // Сравниваем текущую тему с data-theme кнопки
+            const isActive = button.dataset.theme === activeTheme;
+            button.classList.toggle('active', isActive);
         }
     });
-    customThemeGroup.style.display = (activeTheme === 'custom') ? 'block' : 'none';
+
+    // 🔥 FIX: Проверяем существование группы перед обращением к style
+    if (customThemeGroup) {
+        customThemeGroup.style.display = (activeTheme === 'custom') ? 'block' : 'none';
+    }
 }
 
 /**

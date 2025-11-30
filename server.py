@@ -1,8 +1,7 @@
 # server.py
+# ОБНОВЛЕНО: Добавлена поддержка поля experience_years для постов
 # ОБНОВЛЕНО: Добавлена валидация на стороне сервера
 # ОБНОВЛЕНО (Glass): Добавлен эндпоинт /api/save-glass-preference
-# УДАЛЕНО: Эндпоинты /update-status, /flags/, /countries.json
-# УДАЛЕНО: Логика last_seen и nationality_code
 
 import sqlite3
 import hmac
@@ -39,7 +38,6 @@ if not BOT_TOKEN:
     raise ValueError("🔴 Не найден BOT_TOKEN в .env файле!")
 
 TRANSLATIONS = {
-    # ... (блок переводов без изменений) ...
     'ru': {
         'profile_updated': "✅ *Ваш профиль успешно обновлен!*\n\n",
         'bio_label': "👤 *О себе:*\n",
@@ -61,25 +59,27 @@ TRANSLATIONS = {
 }
 
 # --- НОВЫЙ БЛОК: Лимиты валидации ---
-# Мы будем использовать их для проверки всех входящих данных
 VALIDATION_LIMITS = {
     # Профиль
     'first_name': 100,
     'bio': 1000,
-    'skills_json': 5000, # Лимит на JSON-строку
+    'skills_json': 5000,
     'links_count': 5,
     'experience_count': 10,
     'education_count': 5,
     
     # Посты
-    'post_content': 200,
+    'post_content': 500,
     'post_full_description': 2000,
-    'post_skills_json': 2000 # Лимит на JSON-строку
+    'post_skills_json': 2000,
+    
+    # --- НОВОЕ ПОЛЕ ---
+    'post_experience': 50 # Например "1-3 года"
 }
 # --- КОНЕЦ НОВОГО БЛОКА ---
 
 
-# --- Маршруты для фронтенда (без изменений) ---
+# --- Маршруты для фронтенда ---
 @app.route('/')
 def serve_index():
     return send_from_directory(APP_ROOT, 'index.html')
@@ -92,32 +92,26 @@ def serve_css(filename):
 def serve_js(filename):
     return send_from_directory(os.path.join(APP_ROOT, 'js'), filename)
 
-# (УДАЛЕНО) @app.route('/flags/<path:filename>')
-# (УДАЛЕНО) @app.route('/countries.json')
-
 @app.route('/locales/<path:filename>')
 def serve_locales(filename):
     return send_from_directory(os.path.join(APP_ROOT, 'locales'), filename)
 
-# --- Маршруты API (без изменений) ---
+# --- Маршруты API ---
 @app.route('/config')
 def get_config():
-    # --- ИЗМЕНЕНИЕ: Добавляем лимиты валидации в конфиг ---
     return jsonify({
         'backendUrl': BACKEND_URL,
         'botUsername': os.getenv('BOT_USERNAME'),
         'appSlug': os.getenv('APP_SLUG'),
         'validationLimits': VALIDATION_LIMITS 
     })
-    # --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# --- Функции (без изменений) ---
+# --- Функции ---
 def validate_init_data(init_data: str, bot_token: str):
-    # ... (код без изменений) ...
     try:
         parsed_data = dict(item.split("=") for item in init_data.split("&"))
         received_hash = parsed_data.pop("hash")
@@ -132,7 +126,6 @@ def validate_init_data(init_data: str, bot_token: str):
     except Exception: return None
 
 def send_telegram_message(user_id, profile_data, photo_path, lang='ru'):
-    # ... (код без изменений) ...
     t = TRANSLATIONS.get(lang, TRANSLATIONS['ru'])
     caption = t['profile_updated']
     if profile_data.get('bio'):
@@ -151,27 +144,20 @@ def send_telegram_message(user_id, profile_data, photo_path, lang='ru'):
         url = f"https.api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         payload = {"chat_id": user_id, "text": caption, "parse_mode": "Markdown", "disable_web_page_preview": True}
     try:
-        response = requests.post(url, json=payload)
-        print(f"Telegram response: {response.status_code} - {response.text}")
+        requests.post(url, json=payload)
     except Exception as e:
         print(f"Ошибка отправки сообщения: {e}")
 
-# --- Вспомогательные функции для БД (без изменений) ---
+# --- Вспомогательные функции для БД ---
 def get_db_connection():
-    # ... (код без изменений) ...
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
-# SECURITY: Whitelist разрешённых таблиц для защиты от SQL-инъекций
 ALLOWED_TABLES = ['work_experience', 'education']
 
 def fetch_list_from_db(conn, table_name, user_id):
-    """
-    Универсальная функция для получения списка ...
-    """
-    # SECURITY: Whitelist проверка table_name
     if table_name not in ALLOWED_TABLES:
         raise ValueError(f"[SECURITY] Invalid table name: {table_name}")
     cursor = conn.cursor()
@@ -180,8 +166,6 @@ def fetch_list_from_db(conn, table_name, user_id):
     return items
 
 def save_list_to_db(conn, table_name, user_id, items_json, max_items):
-    # ... (код БЕЗ ИЗМЕНЕНИЙ, т.к. лимит уже применяется здесь) ...
-    # SECURITY: Whitelist проверка table_name
     if table_name not in ALLOWED_TABLES:
         raise ValueError(f"[SECURITY] Invalid table name: {table_name}")
     cursor = conn.cursor()
@@ -190,7 +174,7 @@ def save_list_to_db(conn, table_name, user_id, items_json, max_items):
         items = json.loads(items_json)
         if not isinstance(items, list):
             raise ValueError("Data is not a list")
-        items_to_save = items[:max_items] # <--- ЛОГИКА ЛИМИТА УЖЕ БЫЛА ЗДЕСЬ
+        items_to_save = items[:max_items]
         if not items_to_save:
              return
         sample_item = items_to_save[0]
@@ -208,7 +192,6 @@ def save_list_to_db(conn, table_name, user_id, items_json, max_items):
 
 
 def get_follow_counts(conn, user_id):
-    # ... (код без изменений) ...
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM follows WHERE following_id = ?", (user_id,))
     followers_count = cursor.fetchone()[0]
@@ -217,7 +200,6 @@ def get_follow_counts(conn, user_id):
     return followers_count, following_count
 
 def check_is_followed(conn, viewer_id, target_user_id):
-    # ... (код без изменений) ...
     if viewer_id == target_user_id:
         return None
     cursor = conn.cursor()
@@ -229,7 +211,6 @@ def check_is_followed(conn, viewer_id, target_user_id):
 
 @app.route("/get-profile", methods=["POST"])
 def get_profile():
-    # ... (код без изменений) ...
     data = request.json
     user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
     if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
@@ -246,14 +227,11 @@ def get_profile():
             profile['followers_count'] = followers_count
             profile['following_count'] = following_count
             conn.close()
-            print("--- /get-profile: УСПЕХ. Профиль найден, отправляю.")
             return jsonify({"ok": True, "profile": profile})
         else:
             conn.close()
-            print("--- /get-profile: УСПЕХ. Профиль НЕ найден, отправляю пустой.")
             return jsonify({"ok": True, "profile": {}})
     except Exception as e:
-        print(f"--- /get-profile: КРИТИЧЕСКАЯ ОШИБКА (ПАДЕНИЕ): {e}")
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -283,7 +261,6 @@ def get_user_by_id():
             conn.close()
             return jsonify({"ok": False, "error": "User not found"})
     except Exception as e:
-        print(f"Ошибка получения профиля по ID: {e}")
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": "Server error"}), 500
 
@@ -296,7 +273,6 @@ def get_post_by_id():
     post_id = data.get("post_id")
     if not post_id: return jsonify({"ok": False, "error": "Missing post_id"}), 400
 
-    # ✅ ИСПРАВЛЕНИЕ: Принудительно конвертируем в int для корректного поиска в SQLite
     try:
         post_id_int = int(post_id)
     except ValueError:
@@ -305,16 +281,18 @@ def get_post_by_id():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # --- ОБНОВЛЕНО: Добавлено experience_years ---
         cursor.execute('''
             SELECT 
-                p.post_id, p.user_id, p.post_type, p.content, p.full_description, p.skill_tags,
+                p.post_id, p.user_id, p.post_type, p.content, p.full_description, p.skill_tags, p.experience_years,
                 SUBSTR(STRFTIME('%Y-%m-%dT%H:%M:%f', p.created_at), 1, 23) || 'Z' as created_at,
                 pr.first_name as author_first_name,
                 pr.photo_path as author_photo_path
             FROM posts p
             JOIN profiles pr ON p.user_id = pr.user_id
             WHERE p.post_id = ?
-        ''', (post_id_int,)) # Используем числовой ID
+        ''', (post_id_int,))
         
         row = cursor.fetchone()
         conn.close()
@@ -336,31 +314,21 @@ def get_post_by_id():
         
         return jsonify({"ok": True, "post": post})
     except Exception as e:
-        print(f"❌ ОШИБКА /api/get-post-by-id: {e}")
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# --- ОБНОВЛЕНО: /save-profile ---
 @app.route("/save-profile", methods=["POST"])
 def save_profile():
-    # 1. Валидация initData
     init_data = request.form.get('initData')
     user_id = validate_init_data(init_data, BOT_TOKEN)
     if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
 
-    # 2. Загрузка фото (без изменений)
     photo_path = None
     if 'photo' in request.files:
         file = request.files['photo']
         if file and file.filename != '':
-            # SECURITY: Проверка MIME-типа (только изображения)
             if not file.content_type or not file.content_type.startswith('image/'):
-                return jsonify({
-                    "ok": False,
-                    "error": "validation",
-                    "details": {"key": "error_invalid_file_type", "message": "Only images allowed"}
-                }), 400
-            # SECURITY: Проверка расширения файла
+                return jsonify({"ok": False, "error": "validation", "details": {"key": "error_invalid_file_type", "message": "Only images allowed"}}), 400
             allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
             file_ext = os.path.splitext(file.filename)[1].lower()
             if file_ext not in allowed_extensions:
@@ -370,24 +338,18 @@ def save_profile():
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(filepath)
                 photo_path = f"uploads/{filename}"
-                print(f"📸 Фото сохранено: {filepath}")
             except Exception as e:
                  print(f"❌ Ошибка сохранения фото: {e}")
 
     try:
-        # --- 3. НОВЫЙ БЛОК: Валидация данных ПЕРЕД сохранением ---
-        
-        # Получаем данные
         first_name = request.form.get("first_name", "Пользователь")
         bio = request.form.get("bio")
-        skills_json = request.form.get("skills", "[]") # JSON строка
+        skills_json = request.form.get("skills", "[]")
         lang = request.form.get("lang", "ru")
-        # nationality_code = request.form.get("nationality_code") # УДАЛЕНО
         links = {f'link{i}': request.form.get(f'link{i}') for i in range(1, 6)}
         experience_json = request.form.get("experience", "[]")
         education_json = request.form.get("education", "[]")
 
-        # Проверяем лимиты
         if len(first_name) > VALIDATION_LIMITS['first_name']:
             return jsonify({"ok": False, "error": "validation", "details": {"key": "error_name_too_long", "limit": VALIDATION_LIMITS['first_name']}}), 400
         
@@ -397,53 +359,39 @@ def save_profile():
         if len(skills_json) > VALIDATION_LIMITS['skills_json']:
             return jsonify({"ok": False, "error": "validation", "details": {"key": "error_skills_too_long", "limit": VALIDATION_LIMITS['skills_json']}}), 400
 
-        # Проверяем количество элементов в JSON-списках
         if len(json.loads(experience_json)) > VALIDATION_LIMITS['experience_count']:
             return jsonify({"ok": False, "error": "validation", "details": {"key": "error_experience_max_items", "limit": VALIDATION_LIMITS['experience_count']}}), 400
             
         if len(json.loads(education_json)) > VALIDATION_LIMITS['education_count']:
             return jsonify({"ok": False, "error": "validation", "details": {"key": "error_education_max_items", "limit": VALIDATION_LIMITS['education_count']}}), 400
 
-        # (Лимит на ссылки не нужен, т.к. save_list_to_db их обрежет до 5)
-        # --- КОНЕЦ БЛОКА ВАЛИДАЦИИ ---
-
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Получаем текущий photo_path (без изменений)
         if not photo_path:
             cursor.execute("SELECT photo_path FROM profiles WHERE user_id = ?", (user_id,))
             res = cursor.fetchone()
             if res: photo_path = res[0]
         
-        print(f"💾 Сохраняем профиль user_id={user_id}")
         cursor.execute("BEGIN TRANSACTION")
 
-        # 1. Обновляем/вставляем профиль (без изменений)
         cursor.execute("SELECT user_id FROM profiles WHERE user_id = ?", (user_id,))
         exists = cursor.fetchone()
         
-        # ЗАМЕЧАНИЕ: Поле 'is_glass_enabled' здесь НЕ трогаем,
-        # т.к. оно управляется отдельным эндпоинтом.
-        
-        # (УДАЛЕНО) nationality_code из кортежа
         profile_fields = (first_name, bio, links['link1'], links['link2'], links['link3'], links['link4'], links['link5'], photo_path, skills_json, lang, user_id)
         if exists:
             cursor.execute('''
                 UPDATE profiles
                 SET first_name = ?, bio = ?, link1 = ?, link2 = ?, link3 = ?, link4 = ?, link5 = ?, photo_path = ?, skills = ?, language_code = ?
                 WHERE user_id = ?
-            ''', profile_fields) # (УДАЛЕНО) nationality_code = ?
+            ''', profile_fields)
         else:
             cursor.execute('''
                 INSERT INTO profiles (first_name, bio, link1, link2, link3, link4, link5, photo_path, skills, language_code, user_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', profile_fields) # (УДАЛЕНО) nationality_code
+            ''', profile_fields)
 
-        # 2. Сохраняем опыт (лимит 10)
         save_list_to_db(conn, 'work_experience', user_id, experience_json, VALIDATION_LIMITS['experience_count'])
-
-        # 3. Сохраняем образование (лимит 5)
         save_list_to_db(conn, 'education', user_id, education_json, VALIDATION_LIMITS['education_count'])
 
         conn.commit()
@@ -452,20 +400,16 @@ def save_profile():
         message_data = {"bio": bio, **links}
         send_telegram_message(user_id, message_data, photo_path, lang)
 
-        print(f"✅ Профиль user_id={user_id} успешно сохранен.")
         return jsonify({"ok": True})
 
     except Exception as e:
-        print(f"❌ КРИТИЧЕСКАЯ Ошибка сохранения профиля: {e}")
         if 'conn' in locals() and conn:
             conn.rollback()
             conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# --- Остальные API (без изменений) ---
 @app.route("/save-language", methods=["POST"])
 def save_language():
-    # ... (код без изменений) ...
     data = request.json
     user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
     if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
@@ -484,7 +428,6 @@ def save_language():
 
 @app.route("/save-theme", methods=["POST"])
 def save_theme():
-    # ... (код без изменений) ...
     data = request.json
     user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
     if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
@@ -503,7 +446,6 @@ def save_theme():
 
 @app.route("/save-custom-theme", methods=["POST"])
 def save_custom_theme():
-    # ... (код без изменений) ...
     data = request.json
     user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
     if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
@@ -521,11 +463,8 @@ def save_custom_theme():
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# (УДАЛЕНО) @app.route("/update-status", methods=["POST"])
-
 @app.route("/get-telegram-user-info", methods=["POST"])
 def get_telegram_user_info():
-    # ... (код без изменений) ...
     data = request.json
     viewer_id = validate_init_data(data.get("initData"), BOT_TOKEN)
     if not viewer_id: return jsonify({"ok": False, "error": "Invalid viewer data"}), 403
@@ -551,17 +490,17 @@ def get_telegram_user_info():
 
 @app.route("/get-all-profiles", methods=["POST"])
 def get_all_profiles():
-    # ... (код без изменений) ...
     init_data = request.json.get("initData")
     user_id = validate_init_data(init_data, BOT_TOKEN)
     if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # (УДАЛЕНО) p.last_seen, p.nationality_code из SELECT
+        
+        # --- ОБНОВЛЕНО: Добавлено p.status в SELECT ---
         cursor.execute('''
             SELECT
-                p.user_id, p.first_name, p.bio, p.photo_path, p.skills, p.language_code,
+                p.user_id, p.first_name, p.bio, p.photo_path, p.skills, p.language_code, p.status,
                 we.job_title,
                 we.company
             FROM profiles p
@@ -587,19 +526,16 @@ def get_all_profiles():
                     (p.skills IS NOT NULL AND p.skills != '[]')
                 )
         ''', (user_id,))
+        
         profiles = [dict(row) for row in cursor.fetchall()]
         conn.close()
-        print(f"✅ /get-all-profiles (OPTIMIZED + FIXED) OK: Найдено {len(profiles)} профилей.")
         return jsonify({"ok": True, "profiles": profiles})
     except Exception as e:
-        print(f"❌ ОШИБКА /get-all-profiles: {e}")
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# --- Подписки (без изменений) ---
 @app.route("/follow", methods=["POST"])
 def follow_user():
-    # ... (код без изменений) ...
     data = request.json
     viewer_id = validate_init_data(data.get("initData"), BOT_TOKEN)
     if not viewer_id: return jsonify({"ok": False, "error": "Invalid viewer data"}), 403
@@ -622,7 +558,6 @@ def follow_user():
 
 @app.route("/unfollow", methods=["POST"])
 def unfollow_user():
-    # ... (код без изменений) ...
     data = request.json
     viewer_id = validate_init_data(data.get("initData"), BOT_TOKEN)
     if not viewer_id: return jsonify({"ok": False, "error": "Invalid viewer data"}), 403
@@ -643,7 +578,6 @@ def unfollow_user():
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# --- ОБНОВЛЕНО: /api/create-post ---
 @app.route("/api/create-post", methods=["POST"])
 def create_post():
     data = request.json
@@ -654,11 +588,13 @@ def create_post():
     content = data.get("content")
     full_description = data.get("full_description", "")
     skill_tags_json = json.dumps(data.get("skill_tags", []))
+    
+    # --- ОБНОВЛЕНО: Получаем опыт ---
+    experience_years = data.get("experience_years")
 
     if not post_type or not content:
         return jsonify({"ok": False, "error": "Missing fields"}), 400
 
-    # --- НОВЫЙ БЛОК: Валидация ---
     if len(content) > VALIDATION_LIMITS['post_content']:
         return jsonify({"ok": False, "error": "validation", "details": {"key": "error_post_content_too_long", "limit": VALIDATION_LIMITS['post_content']}}), 400
     
@@ -667,37 +603,39 @@ def create_post():
         
     if len(skill_tags_json) > VALIDATION_LIMITS['post_skills_json']:
         return jsonify({"ok": False, "error": "validation", "details": {"key": "error_post_skills_too_long", "limit": VALIDATION_LIMITS['post_skills_json']}}), 400
-    # --- КОНЕЦ БЛОКА ВАЛИДАЦИИ ---
+    
+    # --- ОБНОВЛЕНО: Валидация опыта ---
+    if experience_years and len(str(experience_years)) > VALIDATION_LIMITS['post_experience']:
+        return jsonify({"ok": False, "error": "validation", "details": {"key": "error_post_experience_too_long", "limit": VALIDATION_LIMITS['post_experience']}}), 400
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        # --- ОБНОВЛЕНО: Insert experience_years ---
         cursor.execute(
-            "INSERT INTO posts (user_id, post_type, content, full_description, skill_tags) VALUES (?, ?, ?, ?, ?)",
-            (user_id, post_type, content, full_description, skill_tags_json)
+            "INSERT INTO posts (user_id, post_type, content, full_description, skill_tags, experience_years) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, post_type, content, full_description, skill_tags_json, experience_years)
         )
         conn.commit()
         conn.close()
-        print(f"✅ УСПЕХ: Новый пост создан пользователем {user_id}")
         return jsonify({"ok": True})
     except Exception as e:
         print(f"❌ ОШИБКА /api/create-post: {e}")
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# --- Лента постов (без изменений) ---
 @app.route("/api/get-posts-feed", methods=["POST"])
 def get_posts_feed():
-    # ... (код без изменений) ...
     init_data = request.json.get("initData")
     user_id = validate_init_data(init_data, BOT_TOKEN)
     if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        # --- ОБНОВЛЕНО: Select experience_years ---
         cursor.execute('''
             SELECT 
-                p.post_id, p.user_id, p.post_type, p.content, p.full_description, p.skill_tags,
+                p.post_id, p.user_id, p.post_type, p.content, p.full_description, p.skill_tags, p.experience_years,
                 SUBSTR(STRFTIME('%Y-%m-%dT%H:%M:%f', p.created_at), 1, 23) || 'Z' as created_at,
                 pr.first_name as author_first_name,
                 pr.photo_path as author_photo_path
@@ -720,7 +658,6 @@ def get_posts_feed():
             }
             posts.append(post)
         conn.close()
-        print(f"✅ УСПЕХ: /api/get-posts-feed, найдено {len(posts)} постов.")
         return jsonify({"ok": True, "posts": posts})
     except Exception as e:
         print(f"❌ ОШИБКА /api/get-posts-feed: {e}")
@@ -729,16 +666,16 @@ def get_posts_feed():
 
 @app.route("/api/get-my-posts", methods=["POST"])
 def get_my_posts():
-    # ... (код без изменений) ...
     init_data = request.json.get("initData")
     user_id = validate_init_data(init_data, BOT_TOKEN)
     if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        # --- ОБНОВЛЕНО: Select experience_years ---
         cursor.execute('''
             SELECT 
-                p.post_id, p.user_id, p.post_type, p.content, p.full_description, p.skill_tags,
+                p.post_id, p.user_id, p.post_type, p.content, p.full_description, p.skill_tags, p.experience_years,
                 SUBSTR(STRFTIME('%Y-%m-%dT%H:%M:%f', p.created_at), 1, 23) || 'Z' as created_at,
                 pr.first_name as author_first_name,
                 pr.photo_path as author_photo_path
@@ -761,16 +698,13 @@ def get_my_posts():
             }
             posts.append(post)
         conn.close()
-        print(f"✅ УСПЕХ: /api/get-my-posts, найдено {len(posts)} постов пользователя {user_id}.")
         return jsonify({"ok": True, "posts": posts})
     except Exception as e:
-        print(f"❌ ОШИБКА /api/get-my-posts: {e}")
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
 @app.route("/api/delete-post", methods=["POST"])
 def delete_post():
-    # ... (код без изменений) ...
     data = request.json
     user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
     if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
@@ -790,14 +724,11 @@ def delete_post():
         cursor.execute("DELETE FROM posts WHERE post_id = ?", (post_id,))
         conn.commit()
         conn.close()
-        print(f"✅ Пост {post_id} удален пользователем {user_id}")
         return jsonify({"ok": True})
     except Exception as e:
-        print(f"❌ ОШИБКА /api/delete-post: {e}")
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# --- ОБНОВЛЕНО: /api/update-post ---
 @app.route("/api/update-post", methods=["POST"])
 def update_post():
     data = request.json
@@ -809,11 +740,12 @@ def update_post():
     content = data.get("content")
     full_description = data.get("full_description", "")
     skill_tags_json = json.dumps(data.get("skill_tags", []))
+    # --- ОБНОВЛЕНО: Получаем опыт ---
+    experience_years = data.get("experience_years")
     
     if not post_id or not post_type or not content:
         return jsonify({"ok": False, "error": "Missing fields"}), 400
 
-    # --- НОВЫЙ БЛОК: Валидация (такая же, как в create-post) ---
     if len(content) > VALIDATION_LIMITS['post_content']:
         return jsonify({"ok": False, "error": "validation", "details": {"key": "error_post_content_too_long", "limit": VALIDATION_LIMITS['post_content']}}), 400
     
@@ -822,13 +754,15 @@ def update_post():
         
     if len(skill_tags_json) > VALIDATION_LIMITS['post_skills_json']:
         return jsonify({"ok": False, "error": "validation", "details": {"key": "error_post_skills_too_long", "limit": VALIDATION_LIMITS['post_skills_json']}}), 400
-    # --- КОНЕЦ БЛОКА ВАЛИДАЦИИ ---
+        
+    # --- ОБНОВЛЕНО: Валидация опыта ---
+    if experience_years and len(str(experience_years)) > VALIDATION_LIMITS['post_experience']:
+        return jsonify({"ok": False, "error": "validation", "details": {"key": "error_post_experience_too_long", "limit": VALIDATION_LIMITS['post_experience']}}), 400
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Проверяем, что пост принадлежит пользователю (без изменений)
         cursor.execute("SELECT user_id FROM posts WHERE post_id = ?", (post_id,))
         post = cursor.fetchone()
         
@@ -840,22 +774,20 @@ def update_post():
             conn.close()
             return jsonify({"ok": False, "error": "Not authorized"}), 403
         
-        # Обновляем пост (без изменений)
+        # --- ОБНОВЛЕНО: Update experience_years ---
         cursor.execute(
-            "UPDATE posts SET post_type = ?, content = ?, full_description = ?, skill_tags = ? WHERE post_id = ?",
-            (post_type, content, full_description, skill_tags_json, post_id)
+            "UPDATE posts SET post_type = ?, content = ?, full_description = ?, skill_tags = ?, experience_years = ? WHERE post_id = ?",
+            (post_type, content, full_description, skill_tags_json, experience_years, post_id)
         )
         conn.commit()
         conn.close()
         
-        print(f"✅ Пост {post_id} обновлен пользователем {user_id}")
         return jsonify({"ok": True})
     except Exception as e:
         print(f"❌ ОШИБКА /api/update-post: {e}")
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# --- (НОВЫЙ БЛОК) Эндпоинт для сохранения "Стекла" ---
 @app.route("/api/save-glass-preference", methods=["POST"])
 def save_glass_preference():
     data = request.json
@@ -878,16 +810,33 @@ def save_glass_preference():
         )
         conn.commit()
         conn.close()
-        print(f"✅ Настройки 'Стекла' (is_glass_enabled={glass_value}) сохранены для user {user_id}")
         return jsonify({"ok": True})
     except Exception as e:
-        print(f"❌ ОШИБКА /api/save-glass-preference: {e}")
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
-# --- КОНЕЦ НОВОГО БЛОКА ---
 
+@app.route("/api/set-status", methods=["POST"])
+def set_status():
+    data = request.json
+    user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
+    if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
 
-# --- Запуск приложения (без изменений) ---
+    new_status = data.get("status")
+    allowed_statuses = ['networking', 'open_to_work', 'hiring', 'open_to_gigs', 'busy']
+    
+    if new_status not in allowed_statuses:
+        return jsonify({"ok": False, "error": "Invalid status"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE profiles SET status = ? WHERE user_id = ?", (new_status, user_id))
+        conn.commit()
+        conn.close()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 if __name__ == "__main__":
     print("[SECURITY] Security fixes enabled: MAX_CONTENT_LENGTH, file MIME check, table whitelist")
     app.run("0.0.0.0", port=APP_PORT, threaded=True)

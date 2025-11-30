@@ -42,7 +42,23 @@ function App({ mountInto, overlayHost }) {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [showMyPostsOnly, setShowMyPostsOnly] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
+  const [editingOrigin, setEditingOrigin] = useState('posts-feed-container');
   const listContainerRef = useRef(null);
+
+  // Открытие редактора поста из профиля (MyProfileScreen)
+  useEffect(() => {
+  const handleOpenEditFromProfile = (e) => {
+    const post = e.detail?.post;
+    if (!post) return;
+    setEditingOrigin('profile-view-container');
+    setEditingPost(post);
+  };
+
+  document.addEventListener('open-edit-post-from-profile', handleOpenEditFromProfile);
+  return () => {
+    document.removeEventListener('open-edit-post-from-profile', handleOpenEditFromProfile);
+  };
+}, []);
 
   // ✅ Объединенный список для UI (Популярные + Выбранные)
   const visibleQuickTags = useMemo(() => {
@@ -275,12 +291,125 @@ function App({ mountInto, overlayHost }) {
   const handleMenuLayout = useCallback((layout) => { setMenuLayout(layout); }, []);
   const handleRespond = useCallback((post) => { setContextMenuState({ post: null, targetElement: null }); tg.showAlert(t('action_respond_toast')); }, []);
   const handleRepost = useCallback((post) => { setContextMenuState({ post: null, targetElement: null }); setPostToShow(null); const bot = window.__CONFIG?.botUsername; const app = window.__CONFIG?.appSlug; if (!bot || !app) { if (tg) tg.showAlert('Ошибка: Не настроен botUsername'); return; } const startParam = `p_${post.post_id}`; const appLink = `https://t.me/${bot}/${app}?startapp=${startParam}`; const rawContent = post.content || ''; const preview = rawContent.slice(0, 150) + (rawContent.length > 150 ? '...' : ''); const text = `${t('repost_request_title')}\n${preview}\n\n${t('repost_request_cta')}`; const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appLink)}&text=${encodeURIComponent(text)}`; if (tg && tg.openTelegramLink) tg.openTelegramLink(shareUrl); else navigator.clipboard.writeText(appLink); }, []);
-  const handleEditPost = useCallback((post) => { setContextMenuState({ post: null, targetElement: null }); setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); setPostToShow(null); setTimeout(() => { setEditingPost(post); }, 50); }, []);
+  useEffect(() => {
+    const handler = (e) => {
+      const post = e.detail?.post;
+      if (post) {
+        handleRepost(post);
+      }
+    };
+
+    document.addEventListener('repost-post', handler);
+    return () => {
+      document.removeEventListener('repost-post', handler);
+    };
+  }, [handleRepost]);
+  const handleEditPost = useCallback((post) => {
+  setContextMenuState({ post: null, targetElement: null });
+  setMenuLayout({ verticalAdjust: 0, menuHeight: 0 });
+  setPostToShow(null);
+  setTimeout(() => {
+    setEditingOrigin('posts-feed-container');
+    setEditingPost(post);
+  }, 50);
+}, []);
   const handleCloseEditScreen = useCallback(() => {
       setEditingPost(null);
   }, []);
-  const handleDeletePost = useCallback(async (post) => { setContextMenuState({ post: null, targetElement: null }); setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); setTimeout(() => { if (tg?.showConfirm) { tg.showConfirm(t('confirm_delete') || "Удалить?", async (ok) => { if (!ok) return; try { const resp = await postJSON(`${cfg.backendUrl}/api/delete-post`, { initData: tg?.initData, post_id: post.post_id }); if (resp?.ok) { if (tg?.HapticFeedback?.notificationOccurred) tg.HapticFeedback.notificationOccurred('success'); setPostToShow(null); fetchPosts(); } else { tg.showAlert('Ошибка при удалении'); } } catch (e) { tg.showAlert('Ошибка связи с сервером'); } }); } else { if(confirm("Удалить?")) { /*...*/ } } }, 50); }, [cfg, fetchPosts]);
-  const handleSaveEdit = useCallback(async (postData) => { try { const resp = await postJSON(`${cfg.backendUrl}/api/update-post`, { initData: tg?.initData, post_id: editingPost.post_id, post_type: postData.post_type, content: postData.content, full_description: postData.full_description, skill_tags: postData.skill_tags }); if (resp?.ok) { if (tg?.HapticFeedback?.notificationOccurred) tg.HapticFeedback.notificationOccurred('success'); setEditingPost(null); fetchPosts(); } else { tg.showAlert('Ошибка при сохранении'); } } catch (e) { tg.showAlert('Ошибка связи с сервером'); } }, [cfg, editingPost, fetchPosts]);
+  const handleDeletePost = useCallback(
+  async (post) => {
+    setContextMenuState({ post: null, targetElement: null });
+    setMenuLayout({ verticalAdjust: 0, menuHeight: 0 });
+
+    setTimeout(() => {
+      if (tg?.showConfirm) {
+        tg.showConfirm(t('confirm_delete') || 'Удалить?', async (ok) => {
+          if (!ok) return;
+
+          try {
+            const resp = await postJSON(`${cfg.backendUrl}/api/delete-post`, {
+              initData: tg?.initData,
+              post_id: post.post_id,
+            });
+
+            if (resp?.ok) {
+              if (tg?.HapticFeedback?.notificationOccurred) {
+                tg.HapticFeedback.notificationOccurred('success');
+              }
+
+              setPostToShow(null);
+              fetchPosts();
+
+              if (window.UI && typeof window.UI.showToast === 'function') {
+                window.UI.showToast(
+                  t('post_deleted_success') || 'Ваш запрос удалён',
+                  false
+                );
+              }
+            } else {
+              if (tg?.showAlert) tg.showAlert('Ошибка при удалении');
+            }
+          } catch (e) {
+            if (tg?.showAlert) tg.showAlert('Ошибка связи с сервером');
+          }
+        });
+      } else {
+        if (confirm('Удалить?')) {
+          // тут при необходимости можно продублировать запрос
+        }
+      }
+    }, 50);
+  },
+  [cfg, fetchPosts]
+);
+
+  const handleSaveEdit = useCallback(
+  async (postData) => {
+    try {
+      const resp = await postJSON(`${cfg.backendUrl}/api/update-post`, {
+        initData: tg?.initData,
+        post_id: editingPost.post_id,
+        post_type: postData.post_type,
+        content: postData.content,
+        full_description: postData.full_description,
+        skill_tags: postData.skill_tags,
+        experience_years: postData.experience_years,
+      });
+
+      if (resp?.ok) {
+        if (tg?.HapticFeedback?.notificationOccurred) {
+          tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        // Закрываем экран редактирования
+        setEditingPost(null);
+        // Закрываем открытую шторку поста (если была)
+        setPostToShow(null);
+        // Перезагружаем ленту
+        fetchPosts();
+
+        if (window.UI && typeof window.UI.showToast === 'function') {
+          window.UI.showToast(
+            t('post_edited_success') || 'Ваш запрос отредактирован',
+            false
+          );
+        }
+
+        document.dispatchEvent(
+          new CustomEvent('post-saved', {
+            detail: { post_id: editingPost.post_id },
+          })
+        );
+      } else {
+        if (tg?.showAlert) tg.showAlert('Ошибка при сохранении');
+      }
+    } catch (e) {
+      if (tg?.showAlert) tg.showAlert('Ошибка связи с сервером');
+    }
+  },
+  [cfg, editingPost, fetchPosts]
+);
+
   const preventSystemMenu = useCallback((e) => { const targetTag = e.target.tagName; if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') return; e.preventDefault(); e.stopPropagation(); }, []);
 
   const filterKey = JSON.stringify({ s: debouncedSearchQuery, k: selectedSkills.length, t: selectedSkills.join(','), st: statusFilter });
@@ -297,7 +426,14 @@ function App({ mountInto, overlayHost }) {
           profileToShow && h(ProfileSheet, { key: `profile-${profileToShow.user_id}`, user: profileToShow, onClose: handleCloseProfile }),
           postToShow && h(PostDetailSheet, { key: `post-${postToShow.post_id}`, post: postToShow, onClose: handleClosePostSheet, onOpenProfile: handleOpenProfile, isMyPost: showMyPostsOnly, onEdit: handleEditPost, onDelete: handleDeletePost, onRespond: handleRespond, onRepost: handleRepost }),
           contextMenuState.post && h(PostContextMenu, { key: `context-menu-${contextMenuState.post.post_id}`, post: contextMenuState.post, targetElement: contextMenuState.targetElement, onClose: handleCloseContextMenu, onOpenProfile: handleOpenProfile, onRespond: handleRespond, onRepost: handleRepost, onEdit: handleEditPost, onDelete: handleDeletePost, onLayout: handleMenuLayout }),
-          editingPost && h(EditPostScreen, { key: `edit-${editingPost.post_id}`, post: editingPost, onClose: handleCloseEditScreen, onSave: handleSaveEdit })
+          editingPost &&
+            h(EditPostScreen, {
+                key: `edit-${editingPost.post_id}`,
+                post: editingPost,
+                onClose: handleCloseEditScreen,
+                onSave: handleSaveEdit,
+                originId: editingOrigin,
+            })
         )
     ),
     quickFiltersHost && createPortal(h(QuickFilterTags, { skills: visibleQuickTags, selected: selectedSkills, onToggle: onToggleSkill, hasSearchText: searchQuery.trim().length > 0 }), quickFiltersHost)

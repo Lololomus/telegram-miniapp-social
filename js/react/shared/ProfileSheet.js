@@ -1,272 +1,566 @@
 // react/shared/ProfileSheet.js
+// v4.1: Pro Profile + Interactive Statuses + Status Overlay Hint
 
-import React, { useState, useEffect, useRef, useCallback } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
+import React, { useState, useMemo, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { motion, AnimatePresence } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
+
 import { tg, isIOS, t, postJSON, useSheetLogic, SheetControls } from '../shared/react_shared_utils.js';
 
 const h = React.createElement;
 
-export function ProfileSheet({user, onClose}) {
-    const avatar = user.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${user.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
-    
-    const skills = (()=> { try { return user.skills ? (typeof user.skills === 'string' ? JSON.parse(user.skills) : user.skills) : []; } catch { return []; } })();
-    const experience = (()=> { try { return user.experience ? (typeof user.experience === 'string' ? JSON.parse(user.experience) : user.experience) : []; } catch { return []; } })();
-    const education = (()=> { try { return user.education ? (typeof user.education === 'string' ? JSON.parse(user.education) : user.education) : []; } catch { return []; } })();
-    const links = [user.link1, user.link2, user.link3, user.link4, user.link5].filter(Boolean);
+// Конфигурация статусов
+const STATUS_CONFIG = {
+  networking:   { icon: '🤝', colorClass: 'networking',   label: 'status_networking' },
+  open_to_work: { icon: '⚡', colorClass: 'open_to_work', label: 'status_open_to_work' },
+  hiring:       { icon: '💎', colorClass: 'hiring',       label: 'status_hiring' },
+  open_to_gigs: { icon: '🚀', colorClass: 'open_to_gigs', label: 'status_open_to_gigs' },
+  busy:         { icon: '⛔', colorClass: 'busy',         label: 'status_busy' }
+};
 
-    const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
-    const shouldShowFAB = Boolean(window.__CURRENT_USER_ID && user.user_id && String(window.__CURRENT_USER_ID) !== String(user.user_id));
+const getHeadline = (experience) => {
+  if (!experience || experience.length === 0) return null;
+  const latest = experience[0];
+  if (latest.job_title && latest.company) return `${latest.job_title} @ ${latest.company}`;
+  return latest.job_title || latest.company || '';
+};
 
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+export function ProfileSheet({ user, onClose }) {
+  const isMyProfile = String(user.user_id) === String(window.__CURRENT_USER_ID);
+  const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
 
-    const handleScroll = () => { if(isMenuOpen) setIsMenuOpen(false); };
-    const handleContentTouch = () => { if(isMenuOpen) setIsMenuOpen(false); };
+  // Локальный стейт статуса (чтобы менять мгновенно)
+  const [status, setStatus] = useState(user.status || 'networking');
+  const [isStatusPickerOpen, setStatusPickerOpen] = useState(false);
+  const [isStatusHintVisible, setStatusHintVisible] = useState(false);
+  const statusHintTimeoutRef = useRef(null);
 
-    const handleShare = () => {
-        setIsMenuOpen(false);
-        const bot = window.__CONFIG?.botUsername;
-        const app = window.__CONFIG?.appSlug;
-        if (bot && app) {
-            const appLink = `https://t.me/${bot}/${app}?startapp=${user.user_id}`;
-            const text = t('share_profile_text', { name: user.first_name || 'User' });
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appLink)}&text=${encodeURIComponent(text)}`;
-            tg.openTelegramLink(shareUrl);
-        }
-    };
+  const avatar = user.photo_path
+    ? `${window.__CONFIG?.backendUrl || location.origin}/${user.photo_path}`
+    : 'https://t.me/i/userpic/320/null.jpg';
 
-    const handleReport = () => {
-        setIsMenuOpen(false);
-        tg.showAlert(t('report_sent'));
-    };
+  const isLoading = typeof user.experience === 'undefined';
 
-    return h(React.Fragment, null,
-        h(motion.div, {
-            style: { position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end' },
-            initial: { opacity: 0 }, 
-            animate: { opacity: 1 }, 
-            // Мгновенно выключаем клики по контейнеру при начале выхода
-            exit: { opacity: 0, pointerEvents: 'none', transition: { duration: 0.2 } } 
+  const skills = useMemo(() => {
+    try {
+      return user.skills
+        ? (typeof user.skills === 'string' ? JSON.parse(user.skills) : user.skills)
+        : [];
+    } catch {
+      return [];
+    }
+  }, [user.skills]);
+
+  const experience = useMemo(() => {
+    try {
+      return user.experience
+        ? (typeof user.experience === 'string' ? JSON.parse(user.experience) : user.experience)
+        : [];
+    } catch {
+      return [];
+    }
+  }, [user.experience]);
+
+  const education = useMemo(() => {
+    try {
+      return user.education
+        ? (typeof user.education === 'string' ? JSON.parse(user.education) : user.education)
+        : [];
+    } catch {
+      return [];
+    }
+  }, [user.education]);
+
+  const links = [user.link1, user.link2, user.link3, user.link4, user.link5].filter(Boolean);
+
+  const headline =
+    getHeadline(experience) ||
+    (isLoading
+      ? (t('profile_headline_loading') || 'Loading...')
+      : (t('profile_headline_default') || 'Member'));
+
+  const currentStatusConfig = STATUS_CONFIG[status] || STATUS_CONFIG.networking;
+
+  // --- Actions ---
+
+  const handleStatusChange = async (newStatus) => {
+    setStatus(newStatus); // Оптимистичное обновление UI
+    setStatusPickerOpen(false);
+    setStatusHintVisible(false);
+
+    if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
+      tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    try {
+      await postJSON(`${window.__CONFIG.backendUrl}/api/set-status`, {
+        initData: tg.initData,
+        status: newStatus
+      });
+
+      if (window.state && window.state.currentUserProfile) {
+        window.state.currentUserProfile.status = newStatus;
+      }
+    } catch (e) {
+      console.error('Failed to save status', e);
+    }
+  };
+
+  const handleShare = () => {
+    const bot = window.__CONFIG?.botUsername;
+    const app = window.__CONFIG?.appSlug;
+    if (!bot || !app) return;
+
+    const link = `https://t.me/${bot}/${app}?startapp=${user.user_id}`;
+    const text = t('share_profile_text', { name: user.first_name });
+    const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+    tg.openTelegramLink(url);
+  };
+
+  const handleReport = () => {
+    if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
+      tg.HapticFeedback.notificationOccurred('success');
+    }
+    tg.showAlert(t('report_sent') || 'Жалоба отправлена');
+  };
+
+  const handleMessage = async () => {
+    if (isMyProfile) {
+      onClose();
+      return;
+    }
+
+    try {
+      const resp = await postJSON(
+        `${window.__CONFIG.backendUrl}/get-telegram-user-info`,
+        { initData: tg.initData, target_user_id: user.user_id }
+      );
+
+      if (resp.ok && resp.username) {
+        tg.openTelegramLink(`https://t.me/${resp.username}`);
+      } else {
+        tg.showAlert(t('error_open_profile_username'));
+      }
+    } catch (e) {
+      tg.showAlert(t('error_fetch_user_info'));
+    }
+  };
+
+  const handleStatusBadgeClick = () => {
+    // Свой профиль — открываем пикер, как раньше
+    if (isMyProfile) {
+      setStatusPickerOpen(true);
+      return;
+    }
+
+    // Чужой профиль — показываем оверлей
+    setStatusHintVisible(true);
+
+    if (statusHintTimeoutRef.current) {
+      clearTimeout(statusHintTimeoutRef.current);
+    }
+
+    statusHintTimeoutRef.current = setTimeout(() => {
+      setStatusHintVisible(false);
+      statusHintTimeoutRef.current = null;
+    }, 3500);
+
+    if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
+      tg.HapticFeedback.impactOccurred('light');
+    }
+  };
+
+  // --- Render ---
+
+  return createPortal(
+    h(
+      motion.div,
+      {
+        style: {
+          position: 'fixed',
+          inset: 0,
+          zIndex: 5000,
+          display: 'flex',
+          alignItems: 'flex-end'
         },
-            // Затемнение (Backdrop)
-            h(motion.div, {
-                onClick: onClose,
-                style: { position: 'absolute', inset: 0, background: 'rgba(0,0,0,.5)' },
-                initial: { opacity: 0 }, 
-                animate: { opacity: 1, pointerEvents: 'auto' }, 
-                // Убираем затемнение быстро
-                exit: { opacity: 0, pointerEvents: 'none', transition: { duration: 0.2 } }
-            }),
-            
-            h(motion.div, {
-                style: { position: 'relative', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' },
-                ...sheetProps,
-                onClick: (e) => e.stopPropagation(),
-                
-                // ✅ ФИКС ЗАДЕРЖКИ: 
-                // На вход используем красивую пружину.
-                // На выход (exit) используем жесткий 'tween' (таймер) на 0.2 сек.
-                // Как только 0.2 сек пройдет — React размонтирует компонент и ScrollLock снимется.
-                transition: { type: 'spring', damping: 30, stiffness: 300 },
-                exit: { 
-                    y: '100%', 
-                    transition: { type: 'tween', ease: 'easeInOut', duration: 0.2 } 
-                }
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0, pointerEvents: 'none', transition: { duration: 0.2 } }
+      },
+
+      // Backdrop
+      h(
+        motion.div,
+        {
+          onClick: onClose,
+          style: {
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0,0,0,.7)'
+          },
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
+          exit: { opacity: 0, transition: { duration: 0.2 } }
+        }
+      ),
+
+      // Sheet
+      h(
+        motion.div,
+        {
+          style: {
+            position: 'relative',
+            width: '100%',
+            margin: '0 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            pointerEvents: 'auto'
+          },
+          ...sheetProps,
+          transition: { type: 'spring', damping: 30, stiffness: 300 },
+          exit: { y: '100%', transition: { type: 'tween', ease: 'easeInOut', duration: 0.2 } }
+        },
+
+        h(SheetControls, { controlMode, dragControls, onClose }),
+
+        h(
+          'div',
+          {
+            className: `react-sheet-content post-sheet-unified ${isIOS ? 'is-ios' : ''}`,
+            style: {
+              position: 'relative',
+              width: '100%',
+              maxHeight: '85vh',
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              overflow: 'hidden',
+              paddingTop: controlMode === 'swipes' ? '25px' : '10px'
             },
-                h(SheetControls, { controlMode, dragControls, onClose }),
+            onClick: (e) => e.stopPropagation()
+          },
 
-                // Кнопка "..." (ВНЕ контента)
-                h('button', {
-                    onClick: (e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        setIsMenuOpen(!isMenuOpen);
-                    },
-                    onPointerDownCapture: (e) => e.stopPropagation(),
-                    className: `react-sheet-actions-button ${isIOS ? 'is-ios' : ''}`,
-                    'aria-label': 'Действия',
-                    style: {
-                        position: 'absolute',
-                        top: controlMode === 'swipes' ? '20px' : '12px', 
-                        left: '16px', 
-                        zIndex: 200,
-                        cursor: 'pointer',
-                        pointerEvents: 'auto',
-                        background: isMenuOpen ? 'var(--main-button-color)' : undefined,
-                        color: isMenuOpen ? '#fff' : undefined
-                    }
-                }, '⋯'),
-
-                // Кастомное меню
-                h(AnimatePresence, null,
-                    isMenuOpen && h(CustomMenu, { 
-                        onClose: () => setIsMenuOpen(false), 
-                        onShare: handleShare, 
-                        onReport: handleReport,
-                        top: controlMode === 'swipes' ? '70px' : '60px'
-                    })
-                ),
-                
-                h(motion.div, {
-                    className: `react-sheet-content ${isIOS ? 'is-ios' : ''}`,
-                    onScroll: handleScroll,
-                    onPointerDown: handleContentTouch,
-                    style: {
-                        position: 'relative', width: '100%', maxHeight: '70vh',
-                        borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTop: 'none', overflow: 'auto',
-                        padding: controlMode === 'swipes' ? '12px 16px 80px 16px' : '0 16px 80px 16px',
-                        willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden'
-                    },
-                    onClick: (e) => { 
-                        e.stopPropagation();
-                        setIsMenuOpen(false);
-                    }
+          // 1. HEADER
+          h(
+            'div',
+            { className: 'profile-header-row' },
+            h(
+              'div',
+              { className: 'profile-avatar-squircle' },
+              h('img', { src: avatar, alt: '' })
+            ),
+            h(
+              'div',
+              { className: 'profile-info-col' },
+              h('div', { className: 'profile-name' }, user.first_name),
+              h(
+                'div',
+                {
+                  className: `profile-headline ${isLoading ? 'skeleton-text' : ''}`
                 },
-                    // Шапка профиля (зона свайпа)
-                    h('div', { 
-                        onPointerDown: (e) => {
-                            handleContentTouch();
-                            if (controlMode === 'swipes') dragControls.start(e);
-                        },
-                        style: { 
-                            marginTop: '32px', 
-                            paddingBottom: '20px',
-                            cursor: controlMode === 'swipes' ? 'grab' : 'default',
-                            userSelect: 'none',
-                            touchAction: 'none'
-                        } 
-                    },
-                        h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, pointerEvents: 'none' } },
-                            h(motion.div, { 
-                                style: { height: 64, width: 64, borderRadius: '50%', overflow: 'hidden', background: 'var(--main-bg-color)', flexShrink: 0 } 
-                            },
-                                h('img', { src: avatar, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover' } })
-                            ),
-                            h('div', { style: { minWidth: 0, flex: 1 } },
-                                h(motion.div, { style: { fontSize: 20, fontWeight: 700, marginBottom: 4 } }, user.first_name || 'User'),
-                                h('div', { style: { opacity: 0.7, fontSize: 14 } }, user.bio || t('bio_placeholder'))
-                            )
+                headline
+              ),
+              h(
+                'div',
+                { className: 'profile-mini-stats' },
+                `${user.followers_count || 0} ${t('followers') || 'subs'} • ${
+                  user.following_count || 0
+                } ${t('following') || 'following'}`
+              )
+            ),
+            h(
+              'div',
+              {
+                className: `profile-status-badge ${currentStatusConfig.colorClass}`,
+                onClick: handleStatusBadgeClick
+              },
+              h('span', { style: { fontSize: '22px' } }, currentStatusConfig.icon)
+            )
+          ),
+
+          // 2. CONTENT
+          h(
+            'div',
+            { className: 'post-sheet-scroll-area' },
+            h(
+              'div',
+              { className: 'post-content-inset' },
+              user.bio &&
+                h(
+                  'p',
+                  { className: 'post-text-body', style: { marginBottom: 16 } },
+                  user.bio
+                ),
+
+              (isLoading || skills.length > 0) &&
+                h(
+                  'div',
+                  {
+                    className: 'post-tags-cloud',
+                    style: { marginBottom: 24, marginTop: 0 }
+                  },
+                  isLoading
+                    ? [1, 2, 3].map((i) =>
+                        h('div', { key: i, className: 'skill-tag skeleton-tag' })
+                      )
+                    : skills.map((s) =>
+                        h('span', { key: s, className: 'skill-tag skill-tag--display' }, s)
+                      )
+                ),
+
+              h('div', { className: 'content-divider' }),
+
+              h(
+                'div',
+                { className: 'profile-block' },
+                h(
+                  'h3',
+                  { className: 'content-title' },
+                  t('experience') || 'EXPERIENCE'
+                ),
+                isLoading
+                  ? h(SkeletonTimeline)
+                  : (experience.length > 0
+                      ? experience.map((exp, i) =>
+                          h(ExperienceCard, { key: i, item: exp, type: 'work' })
                         )
-                    ),
-                    
-                    skills.length > 0 && h('div', { className: 'profile-section', style: { display: 'block', marginTop: '5px' } },
-                        h('h3', { className: 'profile-section-title' }, t('skills')),
-                        h('div', { className: 'skills-container', style: { display: 'flex', flexWrap: 'wrap', gap: '8px', maxHeight: 'none', marginTop: 0, justifyContent: 'center' } },
-                            ...skills.map(s => h('span', { key: s, className: 'skill-tag skill-tag--display' }, s))
+                      : h(
+                          'div',
+                          { className: 'empty-section' },
+                          t('profile_no_experience') || 'No experience added'
                         )
-                    ),
-                    
-                    experience.length > 0 && h(SectionBlock, { 
-                        title: t('experience'), items: experience, 
-                        renderItem: (exp, isLast) => h('div', { className: 'profile-item', key: exp.id || Math.random(), style: { paddingBottom: 15, marginBottom: 15 } },
-                            h('p', { className: 'item-title' }, exp.job_title || '—'), 
-                            h('p', { className: 'item-subtitle' }, exp.company || ''),
-                            h('p', { className: 'item-period' }, [exp.start_date, exp.is_current == 1 ? t('present_time') : exp.end_date].filter(Boolean).join(' — ')),
-                            exp.description && h('p', { className: 'item-description' }, exp.description)
-                        )
-                    }),
-                    
-                    education.length > 0 && h(SectionBlock, { 
-                        title: t('education'), items: education, 
-                        renderItem: (edu, isLast) => h('div', { className: 'profile-item', key: edu.id || Math.random(), style: { paddingBottom: 15, marginBottom: 15 } },
-                            h('p', { className: 'item-title' }, edu.institution || '—'), 
-                            h('p', { className: 'item-subtitle' }, [edu.degree, edu.field_of_study].filter(Boolean).join(', ')),
-                            h('p', { className: 'item-period' }, [edu.start_date, edu.end_date].filter(Boolean).join(' — '))
-                        )
-                    }),
-                    
-                    links.length > 0 && h(LinksCard, { links })
+                    )
+              ),
+
+              !isLoading &&
+                education.length > 0 &&
+                h(
+                  'div',
+                  { className: 'profile-block', style: { marginTop: 24 } },
+                  h(
+                    'h3',
+                    { className: 'content-title' },
+                    t('education') || 'EDUCATION'
+                  ),
+                  education.map((edu, i) =>
+                    h(ExperienceCard, { key: i, item: edu, type: 'edu' })
+                  )
+                ),
+
+              links.length > 0 &&
+                h(
+                  'div',
+                  { className: 'profile-links-grid' },
+                  links.map((link, i) =>
+                    h(
+                      'a',
+                      { key: i, href: link, target: '_blank', className: 'profile-link-chip' },
+                      h('span', null, '🔗'),
+                      link.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]
+                    )
+                  )
                 )
             )
-        ),
-        
-        shouldShowFAB && createPortal(
-            h(motion.div, {
-                initial: { opacity: 0, scale: 0.8 },
-                animate: { opacity: 1, scale: 1 },
-                // FAB тоже убираем быстро
-                exit: { opacity: 0, scale: 0.8, pointerEvents: 'none', transition: { duration: 0.15 } },
-                transition: { type: 'spring', stiffness: 400, damping: 30 }
-            }, h(FABContainer, { user })),
-            document.body
+          ),
+
+          // 3. FOOTER
+          h(
+            'div',
+            { className: `sheet-sticky-footer ${isIOS ? 'is-ios' : ''}` },
+            !isMyProfile &&
+              h(
+                'button',
+                { className: 'icon-action-btn destructive', onClick: handleReport },
+                h(
+                  'svg',
+                  {
+                    width: 24,
+                    height: 24,
+                    viewBox: '0 0 24 24',
+                    fill: 'none',
+                    stroke: 'currentColor',
+                    strokeWidth: 2
+                  },
+                  h('path', {
+                    d: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'
+                  }),
+                  h('line', { x1: 4, y1: 22, x2: 4, y2: 15 })
+                )
+              ),
+
+            h(
+              'button',
+              { className: 'icon-action-btn', onClick: handleShare },
+              h(
+                'svg',
+                {
+                  width: 24,
+                  height: 24,
+                  viewBox: '0 0 24 24',
+                  fill: 'none',
+                  stroke: 'currentColor',
+                  strokeWidth: 2
+                },
+                h('circle', { cx: 18, cy: 5, r: 3 }),
+                h('circle', { cx: 6, cy: 12, r: 3 }),
+                h('circle', { cx: 18, cy: 19, r: 3 }),
+                h('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
+                h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
+              )
+            ),
+
+            h(
+              'button',
+              {
+                className: `main-action-btn ${isMyProfile ? 'secondary' : 'primary'}`,
+                onClick: handleMessage
+              },
+              isMyProfile
+                ? (t('action_close') || 'Закрыть')
+                : (t('action_message') || 'Message')
+            )
+          ),
+
+          // 4. STATUS HINT OVERLAY (поверх всего)
+          !isMyProfile &&
+            isStatusHintVisible &&
+            h(
+              motion.div,
+              {
+                className: 'status-hint-overlay',
+                initial: { opacity: 0, y: -8, scale: 0.97 },
+                animate: { opacity: 1, y: 0, scale: 1 },
+                exit: { opacity: 0, y: -8, scale: 0.97 },
+                transition: { duration: 0.2 }
+              },
+              h(
+                'div',
+                { className: 'status-hint-bubble' },
+                h('span', { className: 'status-hint-label' }, currentStatusConfig.icon),
+                h(
+                  'span',
+                  null,
+                  t(`status_desc_${status}`) || t(currentStatusConfig.label) || ''
+                )
+              )
+            )
         )
-    );
+      )
+    ),
+    document.body
+  );
 }
 
-// ... (Вспомогательные функции CustomMenu, SectionBlock, LinksCard, FABContainer оставляем) ...
-function CustomMenu({ onClose, onShare, onReport, top }) {
-    return h(React.Fragment, null,
-        h('div', { onClick: (e) => { e.stopPropagation(); onClose(); }, style: { position: 'fixed', inset: 0, zIndex: 199 } }),
-        h(motion.div, {
-            initial: { opacity: 0, scale: 0.9, y: -10 },
-            animate: { opacity: 1, scale: 1, y: 0 },
-            exit: { opacity: 0, scale: 0.9, y: -10 },
-            transition: { duration: 0.15 },
-            style: {
-                position: 'absolute', top: top, left: '16px', width: '200px',
-                background: 'var(--main-bg-color)', borderRadius: '12px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.3)', zIndex: 200, overflow: 'hidden',
-                border: '1px solid var(--secondary-bg-color)', display: 'flex', flexDirection: 'column'
-            }
-        },
-            h('button', { onClick: (e) => { e.stopPropagation(); onShare(); }, className: 'post-context-menu-button', style: { borderRadius: 0 } }, `🔗 ${t('action_share_profile')}`),
-            h('button', { onClick: (e) => { e.stopPropagation(); onReport(); }, className: 'post-context-menu-button destructive', style: { borderRadius: 0, borderTop: '1px solid var(--secondary-bg-color)' } }, `🚩 ${t('action_report')}`)
+// Компонент выбора статуса
+function StatusPicker({ currentStatus, onSelect, onClose }) {
+  return h(
+    motion.div,
+    {
+      className: 'status-picker-overlay',
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 },
+      onClick: onClose
+    },
+    h(
+      motion.div,
+      {
+        className: 'status-picker-sheet',
+        initial: { y: '100%' },
+        animate: { y: 0 },
+        exit: { y: '100%' },
+        transition: { type: 'spring', damping: 25, stiffness: 300 },
+        onClick: (e) => e.stopPropagation()
+      },
+      h(
+        'div',
+        { className: 'status-picker-title' },
+        t('choose_status_title') || 'Your Status'
+      ),
+      h(
+        'div',
+        { className: 'status-grid' },
+        Object.entries(STATUS_CONFIG).map(([key, conf]) =>
+          h(
+            'div',
+            {
+              key,
+              className: `status-option ${conf.colorClass} ${
+                currentStatus === key ? 'selected' : ''
+              }`,
+              onClick: () => onSelect(key)
+            },
+            h('div', { className: 'status-icon' }, conf.icon),
+            h('div', { className: 'status-label' }, t(conf.label) || conf.label)
+          )
         )
-    );
+      )
+    )
+  );
 }
 
-function SectionBlock({title, items, renderItem}) {
-    return h('div', { className: 'profile-section', style: { display: 'block', marginTop: '15px', borderTop: 'none' } }, 
-        h('h3', { className: 'profile-section-title' }, title), 
-        h('div', { style: { display: 'grid', gap: 0 } }, ...items.map((item, index) => renderItem(item, index === items.length - 1)))
-    );
+// Experience / skeleton как были в оригинале
+function ExperienceCard({ item, type }) {
+  const title = type === 'work' ? item.job_title : item.institution;
+  const subtitle = type === 'work' ? item.company : item.degree;
+  const date = [
+    item.start_date,
+    (item.is_current || !item.end_date) ? (t('present') || 'Present') : item.end_date
+  ].filter(Boolean).join(' — ');
+
+  const icon =
+    type === 'work'
+      ? h(
+          'svg',
+          { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+          h('rect', { x: 2, y: 7, width: 20, height: 14, rx: 2, ry: 2 }),
+          h('path', { d: 'M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16' })
+        )
+      : h(
+          'svg',
+          { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+          h('path', { d: 'M22 10v6M2 10l10-5 10 5-10 5z' }),
+          h('path', { d: 'M6 12v5c3 3 9 3 12 0v-5' })
+        );
+
+  return h(
+    'div',
+    { className: 'experience-card' },
+    h('div', { className: 'exp-icon-box' }, icon),
+    h(
+      'div',
+      { className: 'exp-info' },
+      h('div', { className: 'exp-title' }, title),
+      subtitle && h('div', { className: 'exp-subtitle' }, subtitle),
+      h('div', { className: 'exp-date' }, date),
+      item.description && h('div', { className: 'exp-desc' }, item.description)
+    )
+  );
 }
 
-function LinksCard({links}) {
-    return h('div', { className: 'profile-section', style: { display: 'block', marginTop: '15px', borderTop: 'none' } }, 
-        h('div', { style: { display: 'grid', gap: 10, width: '100%' } }, 
-            ...links.map((link, i) => h('a', { key: i, href: link, target: '_blank', rel: 'noopener noreferrer', className: 'profile-link-button' }, 
-                h('span', { className: 'link-icon' }, '🔗'), h('span', { className: 'link-text' }, link)
-            ))
+function SkeletonTimeline() {
+  return h(
+    'div',
+    { className: 'skeleton-timeline-container' },
+    [1, 2].map((i) =>
+      h(
+        'div',
+        { key: i, className: 'experience-card skeleton' },
+        h('div', { className: 'exp-icon-box skeleton-box' }),
+        h(
+          'div',
+          { className: 'exp-info' },
+          h('div', {
+            className: 'skeleton-line',
+            style: { width: '60%', marginBottom: 8 }
+          }),
+          h('div', {
+            className: 'skeleton-line',
+            style: { width: '40%' }
+          })
         )
-    );
-}
-
-function FABContainer({user}) {
-    const [isFollowed, setIsFollowed] = useState(user.is_followed_by_viewer || false);
-    useEffect(() => { setIsFollowed(user.is_followed_by_viewer || false); }, [user.is_followed_by_viewer]);
-    
-    const handleContact = useCallback(async () => {
-        if (!tg || !window.__CONFIG) return;
-        try {
-            const resp = await postJSON(`${window.__CONFIG.backendUrl}/get-telegram-user-info`, { initData: tg.initData, target_user_id: user.user_id });
-            if (resp.ok && resp.username) { tg.openTelegramLink(`https://t.me/${resp.username}`); } 
-            else { tg.showAlert(t('error_open_profile_username')); }
-        } catch(e) { if(tg) tg.showAlert(t('error_fetch_user_info')); }
-    }, [user.user_id]);
-    
-    const handleFollow = useCallback(async () => {
-        if (!tg || !window.__CONFIG) return;
-        const newState = !isFollowed;
-        setIsFollowed(newState);
-        try {
-            const endpoint = newState ? '/follow' : '/unfollow';
-            const resp = await postJSON(`${window.__CONFIG.backendUrl}${endpoint}`, { initData: tg.initData, target_user_id: user.user_id });
-            if (!resp.ok) { setIsFollowed(!newState); tg.showAlert(t('error_generic_action')); } 
-            else if (tg?.HapticFeedback?.impactOccurred) { tg.HapticFeedback.impactOccurred('light'); }
-        } catch(e) { setIsFollowed(!newState); if(tg) tg.showAlert(t('error_fetch_user_info')); }
-    }, [isFollowed, user.user_id]);
-    
-    return h('div', { className: 'fab-container', style: { bottom: `calc(30px + env(safe-area-inset-bottom, 0px))` } },
-        h('button', { onClick: handleContact, title: t('contact_user'), className: 'fab-button fab-secondary' }, 
-            h('svg', { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }, h('path', { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }))
-        ),
-        h('button', { onClick: handleFollow, title: isFollowed ? t('unfollow_button') : t('follow_button'), className: `fab-button fab-primary ${isFollowed ? 'is-unfollow' : ''}` }, 
-            isFollowed 
-                ? h('svg', { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }, h('polyline', { points: "20 6 9 17 4 12" }))
-                : h('svg', { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }, h('line', { x1: "12", y1: "5", x2: "12", y2: "19" }), h('line', { x1: "5", y1: "12", x2: "19", y2: "12" }))
-        )
-    );
+      )
+    )
+  );
 }
 
 export default ProfileSheet;
