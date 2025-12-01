@@ -419,67 +419,81 @@ export function renderSkillSelectionForm(container, selectedSkills, categories, 
     });
 }
 
-export function renderStatusFilters(container, currentStatus, t, onToggle) {
-    if (!container) return;
-    container.innerHTML = '';
-    
-    // Заголовок группы (опционально, если нужно, но мы его уже добавили в CSS)
-    // const title = document.createElement('h3'); ...
-    // container.appendChild(title);
+export function renderStatusFilters(container, currentStatus, t, onToggle, variant = 'posts') {
+  if (!container) return;
+  container.innerHTML = '';
 
-    const list = document.createElement('div');
-    list.className = 'status-filter-list';
-    
-    const statuses = [
-        { key: 'looking', text: t('post_type_looking') || "Looking for" },
-        { key: 'offering', text: t('post_type_offering') || "Offering" },
-        { key: 'showcase', text: t('post_type_showcase') || "Showcase" }
+  // Заголовок группы статусов
+  const title = document.createElement('h3');
+  title.className = 'skill-category-title';
+  // Ключ можно добавить в i18n как "filter_status_label"
+  title.textContent = t('filter_status_label') || 'Status';
+  container.appendChild(title);
+
+  const list = document.createElement('div');
+  list.className = 'status-filter-list';
+
+  // Набор статусов в зависимости от варианта
+  let statuses;
+  if (variant === 'profiles') {
+    // Статусы ЛЮДЕЙ (лента People) — без "busy"
+    statuses = [
+      { key: 'networking',   text: t('status_networking')    || 'Networking',    icon: '🤝' },
+      { key: 'open_to_work', text: t('status_open_to_work') || 'Open to work',  icon: '⚡' },
+      { key: 'hiring',       text: t('status_hiring')        || 'Hiring',        icon: '💎' },
+      { key: 'open_to_gigs', text: t('status_open_to_gigs') || 'Open to gigs',  icon: '🚀' },
     ];
+  } else {
+    // Статусы ТИПОВ ПОСТОВ (лента запросов)
+    statuses = [
+      { key: 'looking',  text: t('post_type_looking')  || 'Looking for', icon: '🤝' },
+      { key: 'offering', text: t('post_type_offering') || 'Offering',    icon: '💼' },
+      { key: 'showcase', text: t('post_type_showcase') || 'Showcase',    icon: '🚀' },
+    ];
+  }
 
-    statuses.forEach(st => {
-        const btn = document.createElement('button');
-        btn.className = 'status-tag';
-        
-        // Добавляем data-атрибут для стилизации в CSS
-        btn.setAttribute('data-status', st.key);
-        
-        if (st.key === currentStatus) btn.classList.add('active');
-        
-        // Иконка для кнопки
-        const icon = st.key === 'looking' ? '🤝' : (st.key === 'offering' ? '💼' : '🚀');
-        
-        // ✅ FIX: Удаляем любые эмодзи из начала текста, если они там есть (в json)
-        // Регулярка удаляет любые символы, не являющиеся буквами/цифрами/знаками препинания в начале
-        let cleanText = st.text;
-        try {
-            // Простая очистка: убираем первые 2 символа, если это эмодзи (обычно они занимают 2 чара)
-            // Или более надежно: если в JSON "🤝 Looking", убираем "🤝 "
-            cleanText = cleanText.replace(/(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/, '').trim();
-        } catch (e) {}
+  statuses.forEach((st) => {
+    const btn = document.createElement('button');
+    btn.className = 'status-tag';
+    btn.setAttribute('data-status', st.key);
 
-        btn.innerHTML = `<span style="margin-right:6px; font-size: 1.2em;">${icon}</span>${cleanText}`;
-        
-        btn.onclick = (e) => {
-            e.preventDefault(); // Чтобы не сабмитило форму, если вдруг
-            
-            // Проверяем, был ли он уже активен
-            const wasActive = btn.classList.contains('active');
-            
-            // Сбрасываем все кнопки
-            Array.from(container.querySelectorAll('.status-tag')).forEach(el => el.classList.remove('active'));
-            
-            if (wasActive) {
-                // Если был активен -> Снимаем выбор (null)
-                onToggle(null);
-            } else {
-                // Если не был -> Активируем
-                btn.classList.add('active');
-                onToggle(st.key);
-            }
-        };
-        list.appendChild(btn);
-    });
-    container.appendChild(list);
+    if (st.key === currentStatus) btn.classList.add('active');
+
+    // Чистим текст от возможных эмодзи из JSON
+    let cleanText = st.text;
+    try {
+      cleanText = cleanText
+        .replace(
+          /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/,
+          ''
+        )
+        .trim();
+    } catch (e) {}
+
+    btn.innerHTML = `${st.icon} ${cleanText}`;
+
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const wasActive = btn.classList.contains('active');
+
+      // Сбрасываем выделение на всех кнопках
+      Array.from(container.querySelectorAll('.status-tag')).forEach((el) =>
+        el.classList.remove('active')
+      );
+
+      if (wasActive) {
+        // Повторный клик по активной — снимаем фильтр
+        onToggle(null);
+      } else {
+        btn.classList.add('active');
+        onToggle(st.key);
+      }
+    };
+
+    list.appendChild(btn);
+  });
+
+  container.appendChild(list);
 }
 
 /**

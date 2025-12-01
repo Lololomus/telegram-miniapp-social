@@ -32,6 +32,7 @@ function App({ mountInto, overlayHost }) {
   // Стейты
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSkills, setSelectedSkills] = useState([]);
+  const [statusFilter, setStatusFilter] = useState(null);
   
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const listContainerRef = useRef(null);
@@ -130,24 +131,36 @@ function App({ mountInto, overlayHost }) {
   // --- ВНЕШНИЕ СОБЫТИЯ ---
   useEffect(() => {
     const handleSetMode = (event) => {
-      if (event.detail && Array.isArray(event.detail.skills)) {
-        setSelectedSkills(event.detail.skills);
-        syncInputs(event.detail.skills.join(', '));
-      }
-    };
+        if (!event.detail) return;
+
+        if (Array.isArray(event.detail.skills)) {
+            setSelectedSkills(event.detail.skills);
+            syncInputs(event.detail.skills.join(', '));
+        }
+
+        if (typeof event.detail.status !== 'undefined') {
+            setStatusFilter(event.detail.status);
+        }
+        };
 
     const handleGlobalFilter = async (e) => {
         if (e.detail && e.detail.source === 'feed') {
             if (!window.SkillsManager) return;
-            const result = await window.SkillsManager.select(selectedSkills, { 
-                showStatus: false, returnTo: 'feed-container'
+
+            const result = await window.SkillsManager.select(selectedSkills, {
+            showStatus: true,
+            initialStatus: statusFilter,
+            statusVariant: 'profiles',
+            returnTo: 'feed-container',
             });
+
             if (result) {
-                setSelectedSkills(result.skills);
-                syncInputs(result.skills.join(', '));
+            setStatusFilter(result.status || null);
+            setSelectedSkills(result.skills);
+            syncInputs(result.skills.join(', '));
             }
         }
-    };
+        };
 
     document.addEventListener('set-feed-mode', handleSetMode);
     document.addEventListener('openSkillsModal', handleGlobalFilter);
@@ -155,47 +168,67 @@ function App({ mountInto, overlayHost }) {
         document.removeEventListener('set-feed-mode', handleSetMode);
         document.removeEventListener('openSkillsModal', handleGlobalFilter);
     };
-  }, [selectedSkills, syncInputs]);
+  }, [selectedSkills, syncInputs, statusFilter]);
 
 
   // --- ФИЛЬТРАЦИЯ ---
   useEffect(() => {
-    const qLower = debouncedSearchQuery.trim().toLowerCase();
-    if (!qLower && selectedSkills.length === 0) {
-      setFiltered(profiles);
-      return;
+  const qLower = debouncedSearchQuery.trim().toLowerCase();
+  const hasSearch = !!qLower;
+  const hasSkills = selectedSkills.length > 0;
+  const hasStatus = !!statusFilter;
+
+  if (!hasSearch && !hasSkills && !hasStatus) {
+    setFiltered(profiles);
+    return;
+  }
+
+  const next = profiles.filter((p) => {
+    // 1) Фильтр по статусу профиля
+    if (hasStatus && p.status !== statusFilter) {
+      return false;
     }
 
-    const next = profiles.filter((p) => {
-      let skillsArray = [];
-      try { skillsArray = JSON.parse(p.skills || '[]'); } catch (e) {}
-      if (!Array.isArray(skillsArray)) skillsArray = [];
+    // 2) Навыки
+    let skillsArray = [];
+    try { skillsArray = JSON.parse(p.skills || '[]'); } catch (e) {}
+    if (!Array.isArray(skillsArray)) skillsArray = [];
 
-      if (selectedSkills.length > 0) {
-          const matchesSkills = selectedSkills.every(s => 
-              skillsArray.some(userSkill => userSkill.toLowerCase() === s.toLowerCase())
-          );
-          if (!matchesSkills) return false;
-      }
-      
-      if (qLower) {
-          const isSearchMatchingSkills = selectedSkills.length > 0 && selectedSkills.join(', ').toLowerCase() === qLower;
-          if (isSearchMatchingSkills) return true;
+    if (hasSkills) {
+      const matchesSkills = selectedSkills.every((s) =>
+        skillsArray.some((userSkill) => userSkill.toLowerCase() === s.toLowerCase())
+      );
+      if (!matchesSkills) return false;
+    }
 
-          const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
-          const about = (p.bio || '').toLowerCase();
-          const skillsText = skillsArray.join(' ').toLowerCase();
-          const terms = qLower.replace(/,/g, ' ').split(' ').map(s => s.trim()).filter(Boolean);
+    // 3) Поиск по тексту
+    if (hasSearch) {
+      const isSearchMatchingSkills =
+        hasSkills && selectedSkills.join(', ').toLowerCase() === qLower;
+      if (isSearchMatchingSkills) return true;
 
-          return terms.every(term => 
-              fullName.includes(term) || about.includes(term) || skillsText.includes(term)
-          );
-      }
-      return true;
-    });
+      const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
+      const about = (p.bio || '').toLowerCase();
+      const skillsText = skillsArray.join(' ').toLowerCase();
+      const terms = qLower
+        .replace(/,/g, ' ')
+        .split(' ')
+        .map((s) => s.trim())
+        .filter(Boolean);
 
-    setFiltered(next);
-  }, [profiles, debouncedSearchQuery, selectedSkills]);
+      return terms.every(
+        (term) =>
+          fullName.includes(term) ||
+          about.includes(term) ||
+          skillsText.includes(term)
+      );
+    }
+
+    return true;
+  });
+
+  setFiltered(next);
+}, [profiles, debouncedSearchQuery, selectedSkills, statusFilter]);
 
 
   // --- UI Хэндлеры ---
@@ -230,9 +263,10 @@ function App({ mountInto, overlayHost }) {
   const onClose = useCallback(() => setSelected(null), []);
   
   const handleResetFilters = () => {
-      setSelectedSkills([]);
-      syncInputs('');
-  };
+    setSelectedSkills([]);
+    setStatusFilter(null);
+    syncInputs('');
+    };
 
   const filterKey = JSON.stringify({ s: debouncedSearchQuery, k: selectedSkills.length });
 

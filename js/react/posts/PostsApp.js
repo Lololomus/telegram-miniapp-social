@@ -167,8 +167,11 @@ function App({ mountInto, overlayHost }) {
       const handleGlobalFilter = async (e) => {
           if (e.detail && e.detail.source === 'postsFeed') {
               if (!window.SkillsManager) return;
-              const result = await window.SkillsManager.select(selectedSkills, { 
-                  showStatus: true, initialStatus: statusFilter, returnTo: 'posts-feed-container'
+              const result = await window.SkillsManager.select(selectedSkills, {
+                showStatus: true,
+                initialStatus: statusFilter,
+                statusVariant: 'posts',
+                returnTo: 'posts-feed-container'
               });
               if (result) {
                   setStatusFilter(result.status);

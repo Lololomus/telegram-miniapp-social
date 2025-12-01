@@ -202,7 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedStatus: null,
             resolvePromise: null, 
             renderStatus: false,
-            returnToId: null
+            returnToId: null,
+            statusVariant: 'posts',
         },
 
         init() {
@@ -232,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.state.selectedStatus = options.initialStatus || null;
                 this.state.renderStatus = !!options.showStatus;
                 this.state.returnToId = options.returnTo || null;
+                this.state.statusVariant = options.statusVariant || 'posts';
 
                 this.render();
 
@@ -267,8 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         this.elements.statusContainer,
                         this.state.selectedStatus,
                         t,
-                        (status) => { this.state.selectedStatus = status; }
-                    );
+                        (status) => { this.state.selectedStatus = status; },
+                        this.state.statusVariant
+                        );
                 } else {
                     this.elements.statusContainer.style.display = 'none';
                 }
