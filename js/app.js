@@ -1241,16 +1241,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 2. Режим управления (Control Mode)
+        const CONTROL_MODE_KEY = 'control_mode';
+
         const updateControlModeUI = () => {
-            // Читаем из localStorage (по умолчанию 'swipes')
-            const mode = localStorage.getItem('controlmode') || 'swipes';
-            
-            if (elements.settings.controlBtnTaps) {
-                elements.settings.controlBtnTaps.classList.toggle('active', mode === 'taps');
-            }
-            if (elements.settings.controlBtnSwipes) {
-                elements.settings.controlBtnSwipes.classList.toggle('active', mode === 'swipes');
-            }
+        const mode = localStorage.getItem(CONTROL_MODE_KEY) || 'swipes';
+        if (elements.settings.controlBtnTaps) {
+            elements.settings.controlBtnTaps.classList.toggle('active', mode === 'taps');
+        }
+        if (elements.settings.controlBtnSwipes) {
+            elements.settings.controlBtnSwipes.classList.toggle('active', mode === 'swipes');
+        }
         };
 
         // Инициализируем UI при загрузке
@@ -1258,9 +1258,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (elements.settings.controlBtnTaps) {
             elements.settings.controlBtnTaps.addEventListener('click', () => {
-                localStorage.setItem('controlmode', 'taps');
-                // Важно: сообщаем React-компонентам об изменении
-                window.dispatchEvent(new Event('control-mode-changed')); 
+                localStorage.setItem(CONTROL_MODE_KEY, 'taps');
+                window.dispatchEvent(new Event('control-mode-changed'));
                 updateControlModeUI();
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
             });
@@ -1268,7 +1267,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (elements.settings.controlBtnSwipes) {
             elements.settings.controlBtnSwipes.addEventListener('click', () => {
-                localStorage.setItem('controlmode', 'swipes');
+                localStorage.setItem(CONTROL_MODE_KEY, 'swipes');
                 window.dispatchEvent(new Event('control-mode-changed'));
                 updateControlModeUI();
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
