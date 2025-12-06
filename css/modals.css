@@ -2,8 +2,17 @@
 
 /* --- СТИЛИ: МОДАЛЬНОЕ ОКНО QR-КОДА --- */
 .modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6);
-    display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999 !important;  /* ← ЭТУ СТРОКУ */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
 }
 .modal-content {
     background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
@@ -253,7 +262,7 @@ body.theme-glass-overlay .modal-content {
   right: 0;
   bottom: 0;
   height: 100dvh;
-  z-index: 5001 !important;
+  z-index: 8000 !important;
   padding-top: 0;
   background-color: var(--main-bg-color);
   transition: background 0.3s;
@@ -266,7 +275,7 @@ body.theme-glass-overlay .modal-content {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   height: 100dvh;
-  z-index: 6000 !important; /* Уровень 2 (Поверх всего) */
+  z-index: 9000 !important; /* Уровень 2 (Поверх всего) */
   padding-top: 0;
   background-color: var(--main-bg-color);
   transition: background 0.3s;
@@ -354,6 +363,18 @@ body.theme-glass-overlay #skills-modal {
     background-attachment: fixed;
     
     /* УБРАЛИ display: block !important, чтобы не ломать flex из JS */
+}
+
+body.theme-glass-overlay .modal-overlay {
+  background-color: rgba(0,0,0,0.75) !important;
+  backdrop-filter: blur(8px);
+}
+
+body.theme-glass-overlay .modal-content {
+  background-color: var(--glass-bg) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border: var(--glass-border) !important;
 }
 
 /* Хедер в режиме Стекла */
@@ -784,4 +805,45 @@ body.theme-glass-overlay .edit-post-header {
 body.theme-glass-overlay .edit-post-header h2 {
     color: #ffffff !important;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* ФИКС: Убираем разделители в модалках */
+.modal-divider,
+.section-divider,
+.skill-category-divider {
+  display: none !important;
+}
+
+.modal-section {
+  border-bottom: none !important;
+  border-top: none !important;
+}
+
+.skill-category {
+  border-bottom: none !important;
+}
+
+/* === ФИКС: СПЛОШНОЙ ФОН МОДАЛОК БЕЗ СТЕКЛА === */
+
+/* Модалка навыков */
+body.theme-dark:not(.theme-glass-overlay) #skills-modal {
+  background: #0f0f11 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Модалка создания поста */
+body.theme-dark:not(.theme-glass-overlay) #create-post-modal {
+  background: #0f0f11 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Хедеры модалок */
+body.theme-dark:not(.theme-glass-overlay) #skills-modal .form-header,
+body.theme-dark:not(.theme-glass-overlay) #create-post-modal .form-header {
+  background: #0f0f11 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }

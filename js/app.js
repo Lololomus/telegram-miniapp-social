@@ -150,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('theme-btn-auto'),
                 document.getElementById('theme-btn-light'),
                 document.getElementById('theme-btn-dark'),
-                document.getElementById('theme-btn-custom')
             ],
             customThemeGroup: document.getElementById('custom-theme-group'),
             colorInputBg: document.getElementById('color-input-bg'),
@@ -185,6 +184,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (elements.postModal.modal && elements.postModal.modal.parentNode !== document.body) {
         document.body.appendChild(elements.postModal.modal);
+    }
+
+    const GLASS_KEY = 'glass-enabled';
+
+    if (elements.settings.glassToggle) {
+    // начальное состояние
+    const savedGlass = localStorage.getItem(GLASS_KEY);
+    const isGlassOn = savedGlass === '1';
+    elements.settings.glassToggle.checked = isGlassOn;
+    applyGlass(isGlassOn);
+
+    elements.settings.glassToggle.addEventListener('change', () => {
+        const enabled = elements.settings.glassToggle.checked;
+        applyGlass(enabled);
+        localStorage.setItem(GLASS_KEY, enabled ? '1' : '0');
+    });
     }
 
     // ==========================================================
@@ -1277,17 +1292,42 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        elements.settings.themeButtons.forEach(button => {
-            if (button) {
-                button.addEventListener('click', async () => {
-                    const selectedTheme = button.dataset.theme;
-                    if (!selectedTheme) return;
-                    applyTheme(tg, t, elements.settings, state.currentUserProfile, selectedTheme, state.currentUserProfile.custom_theme);
-                    state.currentUserProfile.theme = selectedTheme;
-                    try { await api.saveThemeSelection(tg.initData, selectedTheme, state.currentLang); } catch (error) {}
-                });
+        const THEME_KEY = 'userTheme';
+
+        elements.settings.themeButtons.forEach((button) => {
+        if (!button) return;
+
+        button.addEventListener('click', async () => {
+            const selectedTheme = button.dataset.theme;
+            if (!selectedTheme) return;
+
+            // применяем тему
+            applyTheme(
+            tg,
+            t,
+            elements.settings,
+            state.currentUserProfile,
+            selectedTheme,
+            null // кастомной темы больше нет
+            );
+
+            // сохраняем выбор
+            if (state.currentUserProfile) {
+            state.currentUserProfile.theme = selectedTheme;
+            }
+            localStorage.setItem(THEME_KEY, selectedTheme);
+
+            try {
+            await api.saveThemeSelection(
+                tg.initData,
+                selectedTheme,
+                state.currentLang
+            );
+            } catch (error) {
+            // тихо игнорируем ошибку
             }
         });
+    });
         
         if (elements.detail.fabContactButton) {
             elements.detail.fabContactButton.addEventListener('click', async () => {
@@ -1439,6 +1479,29 @@ document.addEventListener('DOMContentLoaded', () => {
             
             await loadProfileData();
             
+            // применяем стартовую тему (из профиля или из localStorage)
+            const savedThemeLocal = localStorage.getItem('userTheme');
+            const initialTheme =
+            (state.currentUserProfile && state.currentUserProfile.theme) ||
+            savedThemeLocal ||
+            'auto';
+
+            applyTheme(
+            tg,
+            t,
+            elements.settings,
+            state.currentUserProfile,
+            initialTheme,
+            null
+            );
+
+            // восстанавливаем стекло
+            const savedGlass = localStorage.getItem('glass-enabled') === '1';
+            applyGlass(savedGlass);
+            if (elements.settings.settings && elements.settings.glassToggle) {
+            elements.settings.glassToggle.checked = savedGlass;
+            }
+
             // --- ЛОГИКА СТАРТА ПРИЛОЖЕНИЯ (ПОЛНАЯ ВЕРСИЯ) ---
             const startParam = tg.initDataUnsafe?.start_param;
             

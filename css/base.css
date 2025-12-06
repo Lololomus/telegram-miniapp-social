@@ -1,216 +1,278 @@
 /* css/base.css */
+
 /* ОБНОВЛЕНО: Добавлены стили для "Тост"-уведомлений */
 /* ОБНОВЛЕНО (Glass): Добавлены стили для фона и сброса .screen */
 /* УДАЛЕНО: Стили .status-indicator */
-/* ✅ ИСПРАВЛЕНИЕ (Проблема 1): Добавлены стили для <select> */
+/* ✅ ИСПРАВЛЕНИЕ (Проблема 1): Добавлены стили для */
 
 /* --- ГЛОБАЛЬНЫЕ СТИЛИ --- */
-* { box-sizing: border-box; }
+
+* {
+  box-sizing: border-box;
+}
+
 /* ✅ Safe Area для fullscreen режима */
+
 :root {
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-
   --header-offset: 12px;
   --modal-header-offset: 6px;
-
   --screen-padding-x: 20px;
 
   /* Универсальные отступы для модалки навыков */
-  --skills-section-gap-y: 18px;   /* расстояние между блоками категорий */
-  --skills-tags-gap: 10px;        /* gap между тегами и строками тегов */
+  --skills-section-gap-y: 18px; /* расстояние между блоками категорий */
+  --skills-tags-gap: 10px; /* gap между тегами и строками тегов */
 }
 
 body {
-    /* ДОБАВЬ padding-top для безопасной зоны */
-    padding-top: var(--safe-area-inset-top);
-    padding-bottom: var(--safe-area-inset-bottom);
-    
-    /* Остальные стили body (уже есть) */
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    margin: 0;
-    padding: 0; /* ← ЗАМЕНИ ЭТО НА padding-top/bottom выше */
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    transition: background-color 0.3s, color 0.3s;
-    overflow-y: auto;
-    position: relative;
+  /* ДОБАВЬ padding-top для безопасной зоны */
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+
+  /* Остальные стили body (уже есть) */
+  background-color: var(--main-bg-color);
+  color: var(--main-text-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  transition: background-color 0.3s, color 0.3s;
+  overflow-y: auto;
+  position: relative;
 }
 
-h1 { font-size: 24px; font-weight: 600; margin-bottom: 15px; text-align: center; }
-h2 { font-size: 20px; font-weight: 600; margin: 0 0 15px 0; text-align: center; }
-.screen {
+h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-align: center;
+}
 
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  text-align: center;
+}
+
+.screen {
   width: 100%;
   display: none;
-
   /* Сверху — единый отступ до заголовка, по бокам как раньше */
   padding: var(--header-offset) var(--screen-padding-x) 20px;
-
   max-width: 600px;
 }
 
 /* Экран приветствия */
+
 #welcome-container.screen {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    min-height: 80vh;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
 }
+
 #welcome-container.screen[style*="display: block"],
 #welcome-container.screen[style*="display: flex"] {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
+
 .welcome-card {
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    border-radius: 12px; padding: 30px; text-align: center; max-width: 400px; width: 100%;
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
 }
-.welcome-card h2 { margin-top: 0; font-size: 22px; }
+
+.welcome-card h2 {
+  margin-top: 0;
+  font-size: 22px;
+}
+
 .welcome-card p {
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    margin-top: 8px; line-height: 1.5; opacity: var(--main-hint-opacity, 1);
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  margin-top: 8px;
+  line-height: 1.5;
+  opacity: var(--main-hint-opacity, 1);
 }
 
 /* --- ЭКРАНЫ С ЗАГОЛОВКОМ --- */
-.feed-header, .form-header {
-    display: flex; 
-    justify-content: center; /* ИЗМЕНЕНИЕ: space-between -> center */
-    align-items: center;
-    width: 100%; 
-    margin-bottom: 20px;
+
+.feed-header,
+.form-header {
+  display: flex;
+  justify-content: center; /* ИЗМЕНЕНИЕ: space-between -> center */
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
 }
-.feed-header h1, .form-header h1 { 
-    margin: 0; 
-    text-align: center; /* ИЗМЕНЕНИЕ: left -> center */
+
+.feed-header h1,
+.form-header h1 {
+  margin: 0;
+  text-align: center; /* ИЗМЕНЕНИЕ: left -> center */
 }
 
 /* --- ЭКРАНЫ С ЗАГОЛОВКОМ (Кнопки Назад/Мой Профиль) --- */
+
 .header-button {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 8px;
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #e9e9eb));
-    color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    /* УБРАНЫ flex и gap, т.к. иконки удалены */
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #e9e9eb));
+  color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  /* УБРАНЫ flex и gap, т.к. иконки удалены */
 }
 
 .header-button:active {
-    transform: scale(0.98);
+  transform: scale(0.98);
 }
+
 /* Стили для SVG и :hover svg УДАЛЕНЫ */
 
-
 /* --- Стили для хедера чужого профиля (новый дизайн) --- */
+
 .detail-header {
-    padding-bottom: 0;
-    /* --- ИЗМЕНЕНИЕ: Добавляем display: flex, т.к. кнопка "Назад" удалена --- */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 20px;
+  padding-bottom: 0;
+  /* --- ИЗМЕНЕНИЕ: Добавляем display: flex, т.к. кнопка "Назад" удалена --- */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
 }
+
 .detail-header h1 {
-    flex-grow: 1;
-    text-align: center;
-    font-size: 16px;
-    padding: 0 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    opacity: var(--main-hint-opacity, 1);
-    font-weight: 500;
-    
-    /* --- ИЗМЕНЕНИЕ: Убираем flex: 1 и margin: 0, т.к. родитель теперь flex --- */
-    margin: 0; 
+  flex-grow: 1;
+  text-align: center;
+  font-size: 16px;
+  padding: 0 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  opacity: var(--main-hint-opacity, 1);
+  font-weight: 500;
+  /* --- ИЗМЕНЕНИЕ: Убираем flex: 1 и margin: 0, т.к. родитель теперь flex --- */
+  margin: 0;
 }
 
 /* --- Кнопки-иконки в хедере (стиль под Telegram) --- */
+
 .header-icon-button {
-    flex-shrink: 0;
-    width: 44px;
-    height: 44px;
-    padding: 0; border: none;
-    border-radius: 50%;
-    background-color: transparent;
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-    font-size: 26px;
-    font-weight: 400;
-    line-height: 1;
-    text-align: center;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    
-    /* --- ИЗМЕНЕНИЕ: Добавляем absolute, т.к. заголовок теперь по центру --- */
-    position: absolute;
-    right: 10px; /* Отступ от края экрана .screen (у которого padding 20px, но мы ставим 10px) */
-    top: 18px; /* Примерный отступ сверху */
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  /* --- ИЗМЕНЕНИЕ: Добавляем absolute, т.к. заголовок теперь по центру --- */
+  position: absolute;
+  right: 10px; /* Отступ от края экрана .screen (у которого padding 20px, но мы ставим 10px) */
+  top: 18px; /* Примерный отступ сверху */
 }
+
 /* --- ИЗМЕНЕНИЕ: Позиционируем кнопку "Назад" (если она будет) слева --- */
+
 .header-icon-button.back {
-    left: 10px;
-    right: auto;
+  left: 10px;
+  right: auto;
 }
 
-.header-icon-button:active { transform: scale(0.95); }
-.header-icon-button svg { width: 20px; height: 20px; }
+.header-icon-button:active {
+  transform: scale(0.95);
+}
+
+.header-icon-button svg {
+  width: 20px;
+  height: 20px;
+}
+
 body.theme-dark .header-icon-button {
-    background-color: transparent;
-    color: var(--main-text-color);
-}
-body.theme-custom .header-icon-button {
-    background-color: transparent;
-    color: var(--main-text-color);
+  background-color: transparent;
+  color: var(--main-text-color);
 }
 
+/* ВЕТКА theme-custom ДЛЯ header-icon-button УДАЛЕНА */
 
 /* --- ОБЩИЕ КНОПКИ --- */
+
 .action-button {
-    width: 100%; padding: 14px; border: none; border-radius: 8px;
-    background-color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
-    color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
-    font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s ease;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
+  color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
-.action-button:active { transform: scale(0.98); }
+
+.action-button:active {
+  transform: scale(0.98);
+}
+
 .action-button.secondary {
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #e9e9eb));
-    color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
+  background-color: var(--secondary-bg-color, #2a2a2a);
+  color: var(--main-text-color, #e5e7eb);
+  border: 1px solid rgba(107, 114, 128, 0.6);
 }
 
 .sr-only { /* Для доступности */
-    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; white-space: nowrap;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  white-space: nowrap;
 }
 
 /* --- 4. ПЛАВНОЕ "ПРОЯВЛЕНИЕ" АВАТАРОК --- */
+
 img[data-avatar] {
-    opacity: 0;
-    transition: opacity 0.3s ease-out;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
 }
+
 img[data-avatar="loaded"] {
-    opacity: 1;
+  opacity: 1;
 }
 
 /* CSS для FAB-кнопки "Создать пост" */
+
 .fab-create-post-container {
-    position: fixed;
-    bottom: 30px;
-    right: 20px;
-    z-index: 100;
+  position: fixed;
+  bottom: 30px;
+  right: 20px;
+  z-index: 100;
 }
 
 /* Стилизуем select (выбор типа поста) как обычный инпут */
@@ -218,123 +280,108 @@ img[data-avatar="loaded"] {
 /* select { ... } */
 
 /*
-   Этот дублирующийся блок .select УДАЛЕН.
-   Стили для .fab-create-post-container УДАЛЕНЫ (они уже есть выше).
+Этот дублирующийся блок .select УДАЛЕН.
+Стили для .fab-create-post-container УДАЛЕНЫ (они уже есть выше).
 */
 
 /* --- НОВЫЙ БЛОК: "Тост"-Уведомления --- */
+
 #toast-container {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
-    z-index: 2000; /* Выше всего */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    pointer-events: none; /* Контейнер не должен мешать кликам */
-    /* Для корректного позиционирования внутри .screen */
-    max-width: 560px; /* 600px - 40px padding */
-    margin: 0 auto;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 2000; /* Выше всего */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none; /* Контейнер не должен мешать кликам */
+  /* Для корректного позиционирования внутри .screen */
+  max-width: 560px; /* 600px - 40px padding */
+  margin: 0 auto;
 }
 
 .toast-item {
-    background-color: var(--main-button-color, #0A84FF);
-    color: #ffffff;
-    padding: 14px 20px;
-    border-radius: 18px;
-    font-size: 16px;
-    font-weight: 600;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
-    animation: toast-in 0.3s ease-out forwards;
-    pointer-events: auto;
-    max-width: min(480px, calc(100% - 40px));
+  background-color: var(--main-button-color, #0A84FF);
+  color: #ffffff;
+  padding: 14px 20px;
+  border-radius: 18px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+  animation: toast-in 0.3s ease-out forwards;
+  pointer-events: auto;
+  max-width: min(480px, calc(100% - 40px));
 }
 
 /* Состояние скрытия оставляем тем же */
 .toast-item.is-hiding {
-    animation: toast-out 0.25s ease-in forwards;
+  animation: toast-out 0.25s ease-in forwards;
 }
 
 /* Ошибки — ярко-красные */
 .toast-item.error {
-    background-color: #FF3B30;
-    color: #ffffff;
-}
-
-/* Светлая тема: делаем тоже заметным, но читаемым */
-body.theme-light .toast-item {
-    background-color: var(--main-button-color, #0A84FF);
-    color: #ffffff;
-}
-body.theme-light .toast-item.error {
-    background-color: #FF3B30;
-    color: #ffffff;
-}
-
-/* Кастомная тема: опираемся на основную кнопку / текст */
-body.theme-custom .toast-item {
-    background-color: var(--main-button-color, #0A84FF);
-    color: var(--main-button-text-color, #ffffff);
-}
-body.theme-custom .toast-item.error {
-    background-color: #FF3B30;
-    color: #ffffff;
+  background-color: #FF3B30;
+  color: #ffffff;
 }
 
 @keyframes toast-in {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-@keyframes toast-out {
-    from {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(10px) scale(0.95);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+}
 
 /* 1. Фон-градиент */
+
 .glass-background {
-    display: none; /* Скрыт по умолчанию */
-    position: fixed;
-    inset: 0;
-    z-index: -1; /* Лежит под всем контентом */
-    /* Красивый градиент (можно настроить) */
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    background-size: 400% 400%;
-    animation: gradient-animation 20s ease infinite;
-    opacity: 0.8;
+  display: none; /* Скрыт по умолчанию */
+  position: fixed;
+  inset: 0;
+  z-index: -1; /* Лежит под всем контентом */
+  /* Красивый градиент (можно настроить) */
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient-animation 20s ease infinite;
+  opacity: 0.8;
 }
+
 /* 2. Включаем фон, когда активен класс */
+
 body.has-glass-background .glass-background {
-    display: block;
+  display: block;
 }
 
 /* 3. Сбрасываем фон экранов, когда "Стекло" включено */
 /* !important нужен, чтобы перебить inline-стиль display: block */
+
 body.theme-glass-overlay .screen {
-    background-color: transparent !important;
+  background-color: transparent !important;
 }
 
 /* 4. Стили для кнопок-иконок в режиме "Стекло" */
+
 body.theme-glass-overlay .icon-button {
-    background: var(--glass-bg-secondary);
-    border: var(--glass-border);
-    backdrop-filter: blur(10px);
-    color: var(--main-text-color);
+  background: var(--glass-bg-secondary);
+  border: var(--glass-border);
+  backdrop-filter: blur(10px);
+  color: var(--main-text-color);
 }
-/* --- КОНЕЦ НОВОГО БЛОКА --- */

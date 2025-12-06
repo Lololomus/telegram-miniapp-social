@@ -97,10 +97,10 @@ body.theme-glass-overlay .react-feed-card:active {
   transition: all 0.2s;
 }
 .exp-pill.selected {
-    border-color: var(--main-button-color) !important;
-    background-color: var(--main-button-color) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+  border-color: #4b5563 !important;
+  background-color: #1f2933 !important;
+  color: #f9fafb !important;
+  box-shadow: none;
 }
 body.theme-glass-overlay .exp-pill {
     background-color: rgba(255, 255, 255, 0.05) !important;

@@ -10,386 +10,532 @@
 @import url('animations.css');
 
 :root {
-    /* --- ЦВЕТА (Deep Dark) --- */
-    --main-bg-color: #09090b; /* Статичный темный фон (Zinc-950) */
-    --secondary-bg-color: #18181b; /* Zinc-900 */
-    --main-text-color: #f3f4f6;
-    
-    /* --- ГРАДИЕНТНЫЙ ФОН (DEEP GLASS) --- */
-    /* Выносим в переменную, чтобы использовать и в body, и в модалках */
-    --deep-glass-background: 
-        radial-gradient(circle at 10% 20%, rgba(69, 10, 245, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 90% 50%, rgba(100, 50, 255, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
-        linear-gradient(180deg, #0f172a 0%, #000000 100%); /* Slate-900 to Black base */
-
-    /* Настройки Стекла */
-    --glass-bg: rgba(255, 255, 255, 0.03); /* Очень прозрачный белый (3%) */
-    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    
-    --header-base-height: 60px; 
-    --tabbar-height: 80px; 
+  /* === БАЗОВЫЕ ТОКЕНЫ (для светлой темы и auto) === */
+  --main-bg-color: #ffffff;
+  --secondary-bg-color: #f9fafb;
+  --main-text-color: #111827;
+  --main-hint-color: #6b7280;
+  --main-button-color: #6366f1;
+  --main-button-text-color: #ffffff;
+  
+  /* === ДЛЯ GLASS-РЕЖИМА === */
+  --deep-glass-background:
+    radial-gradient(circle at 10% 20%, rgba(69, 10, 245, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 50%, rgba(100, 50, 255, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, #0f172a 0%, #000000 100%);
+  
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  
+  --header-base-height: 60px;
+  --tabbar-height: 80px;
 }
 
 body {
-    /* ПО УМОЛЧАНИЮ: Статичный серый фон (когда стекло ВЫКЛ) */
-    background: var(--main-bg-color);
-    color: var(--main-text-color);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    overflow: hidden; 
-    transition: background 0.3s ease;
+  /* ПО УМОЛЧАНИЮ: фон из текущей темы (когда стекло ВЫКЛ) */
+  background: var(--main-bg-color);
+  color: var(--main-text-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+  transition: background 0.3s ease;
 }
 
 /* --- РЕЖИМ СТЕКЛА (ВКЛ) --- */
 body.theme-glass-overlay {
-    /* Применяем наш красивый градиент */
-    background: var(--deep-glass-background);
-    background-attachment: fixed; /* Фиксируем, чтобы не дергался при скролле */
+  /* Применяем наш красивый градиент */
+  background: var(--deep-glass-background);
+  background-attachment: fixed; /* Фиксируем, чтобы не дергался при скролле */
 }
 
 /* Убираем старый блок .glass-background, он больше не нужен, так как мы красим body напрямую */
-.glass-background { display: none !important; }
+.glass-background {
+  display: none !important;
+}
 
 /* --- 1. ХЕДЕР (ПОИСК) --- */
+
 .app-header {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 50;
-    
-    /* Автоматическая высота, но с контролем */
-    height: auto;
-    
-    /* Отступ сверху: Safe Area + 10px */
-    padding-top: calc(env(safe-area-inset-top, 40px) + 10px);
-    
-    /* Отступ снизу: 12px */
-    padding-bottom: 12px;
-    padding-left: 16px;
-    padding-right: 16px;
-    
-    display: flex;
-    flex-direction: column; /* Вертикальная колонка */
-    align-items: center; /* Выравнивание по центру */
-    justify-content: flex-end;
-    gap: 12px;
-    
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: var(--glass-border);
-    box-sizing: border-box;
-    transition: all 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+
+  /* Автоматическая высота, но с контролем */
+  height: auto;
+
+  /* Отступ сверху: Safe Area + 10px */
+  padding-top: calc(env(safe-area-inset-top, 40px) + 10px);
+  /* Отступ снизу: 12px */
+  padding-bottom: 12px;
+  padding-left: 16px;
+  padding-right: 16px;
+
+  display: flex;
+  flex-direction: column; /* Вертикальная колонка */
+  align-items: center; /* Выравнивание по центру */
+  justify-content: flex-end;
+  gap: 12px;
+
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: var(--glass-border);
+  box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
 /* Заголовок в хедере (Hub, People, Settings) */
 .header-title {
-    font-size: 17px; 
-    font-weight: 700;
-    letter-spacing: -0.4px;
-    margin: 0;
-    padding: 0;
-    color: var(--main-text-color);
-    text-align: center;
-    width: 100%;
-}
-
-body.theme-dark .header-title {
-    color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin: 0;
+  padding: 0;
+  color: var(--main-text-color);
+  text-align: center;
+  width: 100%;
 }
 
 /* Ряд поиска (Инпут + Кнопка фильтра) */
 .header-search-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
 }
 
 /* Контейнер поиска */
 .header-search-wrapper {
-    flex: 1;
-    position: relative;
-    height: 40px; 
-    display: flex;
-    align-items: center;
+  flex: 1;
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
 }
 
 /* Поле ввода */
 .header-search-input {
-    width: 100%;
-    height: 100%;
-    background-color: rgba(118, 118, 128, 0.24) !important;
-    border: none;
-    border-radius: 10px;
-    padding: 0 36px !important; /* Место под иконку и крестик */
-    font-size: 16px;
-    color: #ffffff !important;
-    outline: none;
-    -webkit-appearance: none;
-    appearance: none;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(118, 118, 128, 0.24) !important;
+  border: none;
+  border-radius: 10px;
+  padding: 0 36px !important; /* Место под иконку и крестик */
+  font-size: 16px;
+  color: #ffffff !important;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* Иконка лупы */
 .header-search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: rgba(235, 235, 245, 0.6);
-    pointer-events: none;
-    z-index: 5;
-    width: 16px;
-    height: 16px;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(235, 235, 245, 0.6);
+  pointer-events: none;
+  z-index: 5;
+  width: 16px;
+  height: 16px;
 }
 
 /* Кнопка очистки (Крестик) */
 .header-search-clear {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background-color: rgba(142, 142, 147, 0.5); 
-    border: none;
-    padding: 0;
-    display: none; 
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 10;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: rgba(142, 142, 147, 0.5);
+  border: none;
+  padding: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
 }
 
 /* Показываем крестик, когда есть класс has-text */
 .header-search-wrapper.has-text .header-search-clear {
-    display: flex;
+  display: flex;
 }
 
 .header-search-clear svg {
-    width: 12px;
-    height: 12px;
-    color: #000; 
-    stroke-width: 3;
+  width: 12px;
+  height: 12px;
+  color: #000;
+  stroke-width: 3;
 }
 
 /* Кнопка фильтра */
 .header-filter-btn {
-    width: 40px; 
-    height: 40px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--main-hint-color);
-    cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--main-hint-color);
+  cursor: pointer;
 }
 
 /* --- РЕЖИМ "ПРОСТО ОГЛАВЛЕНИЕ" (Для Настроек) --- */
+
 .app-header.simple-mode .header-search-row {
-    display: none;
+  display: none;
 }
+
 .app-header.simple-mode {
-    padding-bottom: 12px;
-    /* Сбрасываем высоту для компактности */
-    min-height: auto;
+  padding-bottom: 12px;
+  /* Сбрасываем высоту для компактности */
+  min-height: auto;
 }
 
 /* --- ЗАГОЛОВОК ВНУТРИ ПРОФИЛЯ --- */
+
 .profile-internal-title {
-    font-size: 22px;
-    font-weight: 700;
-    margin: 20px 0 25px 0 !important;
-    text-align: center;
-    color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 20px 0 25px 0 !important;
+  text-align: center;
+  color: var(--main-text-color);
 }
 
 /* --- 2. КОНТЕНТ (ЛЕНТА) --- */
-.main-content-scrollbox {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-top: 120px; /* Базовый паддинг, JS пересчитает */
-    padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 20px) + 20px);
-    padding-left: 16px;
-    padding-right: 16px;
-}
-.main-content-scrollbox::-webkit-scrollbar { width: 0; height: 0; }
 
+.main-content-scrollbox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-top: 120px; /* Базовый паддинг, JS пересчитает */
+  padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 20px) + 20px);
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.main-content-scrollbox::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
 
 /* --- 3. НИЖНИЙ ТАББАР --- */
+
 .bottom-tabbar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 50;
-    height: auto;
-    padding-top: 12px;
-    padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 5px);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: var(--glass-border);
-    box-sizing: border-box;
-    transition: transform 0.3s ease;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: auto;
+  padding-top: 12px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 5px);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: var(--glass-border);
+  box-sizing: border-box;
+  transition: transform 0.3s ease;
 }
 
 .bottom-tabbar.hide-on-keyboard {
-    transform: translateY(100%);
+  transform: translateY(100%);
 }
 
 .tab-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    width: 60px;
-    background: none;
-    border: none;
-    color: var(--main-hint-color);
-    cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 60px;
+  background: none;
+  border: none;
+  color: var(--main-hint-color);
+  cursor: pointer;
 }
-.tab-item.active { color: #60a5fa; }
-.tab-label { font-size: 10px; font-weight: 600; }
+
+.tab-item.active {
+  color: #e5e7eb; /* тот же, что основной текст */
+}
+
+.tab-label {
+  font-size: 10px;
+  font-weight: 600;
+}
 
 /* FAB КНОПКА */
+
 .tab-fab-wrapper {
-    position: relative;
-    /* Поднимаем кнопку выше (было -28px) */
-    top: -35px; 
-    display: flex;
-    justify-content: center;
-    width: 60px;
-    z-index: 60;
-    height: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none; 
+  position: relative;
+  /* Поднимаем кнопку выше (было -28px) */
+  top: -35px;
+  display: flex;
+  justify-content: center;
+  width: 60px;
+  z-index: 60;
+  height: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .tab-fab-button {
-    pointer-events: auto;
-    width: 56px; height: 56px;
-    border-radius: 18px; /* Squircle форма */
-    
-    /* Яркий синий цвет всегда */
-    background: #007AFF; 
-    border: none;
-    
-    /* Яркая тень */
-    box-shadow: 0 10px 25px rgba(0, 122, 255, 0.5);
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px; /* Squircle форма */
+  /* Яркий синий цвет всегда */
+  background: #007aff;
+  border: none;
+  /* Яркая тень */
+  box-shadow: 0 10px 25px rgba(0, 122, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Фикс для режима стекла: принудительно оставляем синим */
 body.theme-glass-overlay .tab-fab-button {
-    background: #007AFF !important;
-    box-shadow: 0 10px 25px rgba(0, 122, 255, 0.5) !important;
-    border: none !important;
-    color: white !important;
+  background: #007aff !important;
+  box-shadow: 0 10px 25px rgba(0, 122, 255, 0.5) !important;
+  border: none !important;
+  color: white !important;
 }
 
 .tab-fab-button:active {
-    transform: scale(0.9);
+  transform: scale(0.9);
 }
 
 /* --- ПРОЧЕЕ --- */
-.screen { background: transparent !important; min-height: auto; padding: 0; }
-.spinner { border-color: rgba(255,255,255, 0.1); border-top-color: var(--main-button-color); }
+
+.screen {
+  background: transparent !important;
+  min-height: auto;
+  padding: 0;
+}
+
+.spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: var(--main-button-color);
+}
 
 /* Меню FAB */
+
 .fab-menu-popout {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
-    display: flex; flex-direction: column; gap: 8px; z-index: 96; width: 220px;
-    opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 96;
+  width: 220px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
 }
-.fab-menu-popout.open { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
-.fab-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 95; }
+
+.fab-menu-popout.open {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.fab-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 95;
+}
+
 .fab-menu-item {
-    display: flex; align-items: center; gap: 12px;
-    background: rgba(30, 30, 35, 0.95); backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 16px; border-radius: 16px;
-    color: white; font-size: 14px; font-weight: 500; cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(30, 30, 35, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  border-radius: 16px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
 }
-.fab-icon-bg { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-.fab-icon-bg.blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-.fab-icon-bg.green { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-.fab-icon-bg.orange { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-.fab-icon-bg.red { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
-.fab-rotate-active svg { transform: rotate(45deg); transition: transform 0.3s; }
-.fab-rotate-reset svg { transform: rotate(0deg); transition: transform 0.3s; }
+
+.fab-icon-bg {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fab-icon-bg.blue {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.fab-icon-bg.green {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.fab-icon-bg.orange {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.fab-icon-bg.red {
+  background: rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+}
+
+.fab-rotate-active svg {
+  transform: rotate(45deg);
+  transition: transform 0.3s;
+}
+
+.fab-rotate-reset svg {
+  transform: rotate(0deg);
+  transition: transform 0.3s;
+}
 
 /* --- СТИЛИ ДЛЯ ПОЛЯ ТЕГОВ И КНОПКИ (РОВНЫЕ) --- */
+
 .skills-input-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  position: relative;
 }
+
 .skills-input-group input {
-    flex: 1; 
-    min-width: 0;
-    height: 44px !important; 
-    padding: 0 12px;
-    border-radius: 12px;
-    box-sizing: border-box; 
+  flex: 1;
+  min-width: 0;
+  height: 44px !important;
+  padding: 0 12px;
+  border-radius: 12px;
+  box-sizing: border-box;
 }
+
 .skills-input-button {
-    width: 44px !important; 
-    height: 44px !important;
-    border-radius: 12px !important;
-    background: rgba(255, 255, 255, 0.07) !important;
-    border: var(--glass-border) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 !important;
-    margin: 0 !important;
-    color: var(--main-hint-color);
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background-color 0.2s;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: var(--glass-border) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: var(--main-hint-color);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
 }
+
 .skills-input-button:active {
-    background: rgba(255, 255, 255, 0.15) !important;
-    transform: scale(0.96);
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(0.96);
 }
+
 .skills-input-button svg {
-    width: 20px;
-    height: 20px;
-    stroke: currentColor;
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
 }
 
 /* --- ТИПОГРАФИКА: ЕДИНЫЙ СТАНДАРТ ЗАГОЛОВКОВ (20px Bold) --- */
+
 .header-title,
 .form-header h1,
 .feed-header h1,
 #skills-modal .form-header h1,
 #create-post-modal .form-header h1,
 .edit-post-header h2 {
-    font-size: 20px !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.4px !important;
-    line-height: 1.2 !important;
-    margin: 0 !important;
-    text-align: center !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.4px !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  text-align: center !important;
+}
+
+/* === WARM SLATE ТЁМНАЯ ТЕМА (БЕЗ СТЕКЛА) === */
+body.theme-dark:not(.theme-glass-overlay) {
+  /* Переменные */
+  --main-bg-color: #0f0f11;
+  --secondary-bg-color: #1a1a1d;
+  --main-text-color: #efefef;
+  --main-hint-color: #a1a1aa;
+  --main-button-color: #6366f1;
+  --main-button-text-color: #ffffff;
+}
+
+/* Карточки в ленте (БЕЗ СТЕКЛА) */
+body.theme-dark:not(.theme-glass-overlay) .react-feed-card,
+body.theme-dark:not(.theme-glass-overlay) .feed-card {
+  background: #1a1a1d !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+}
+
+/* Карточки в ленте:active (БЕЗ СТЕКЛА) */
+body.theme-dark:not(.theme-glass-overlay) .react-feed-card:active {
+  background: #242429 !important;
+  transform: scale(0.98);
+}
+
+/* === ФИКС: СПЛОШНОЙ ФОН БЕЗ СТЕКЛА === */
+body.theme-dark:not(.theme-glass-overlay) .app-header {
+  background: #0f0f11 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+body.theme-dark:not(.theme-glass-overlay) .bottom-tabbar {
+  background: #0f0f11 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+body.theme-dark:not(.theme-glass-overlay) .tab-item {
+  color: #64748b;
+}
+
+body.theme-dark:not(.theme-glass-overlay) .tab-item.active {
+  color: #6366f1; /* ← индиго вместо синего */
 }

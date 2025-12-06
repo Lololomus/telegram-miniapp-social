@@ -1,161 +1,217 @@
 // js/theme.js
-// ОБНОВЛЕНО (Glass): Добавлена функция applyGlass
+// ОБНОВЛЕНО (Glass + tokens): applyTheme теперь обновляет CSS‑переменные
+
 import { getLuminance, shadeColor } from './vanilla_utils.js';
 
 /**
  * Применяет выбранную тему к UI
  * @param {object} tg - Telegram WebApp object
  * @param {function} t - Translation function
- * @param {object} settingsElements - Object containing settings DOM elements (like elements.settings from app.js)
- * @param {object} profile - User profile object
- * @param {string} theme - Theme name ('auto', 'light', 'dark', 'custom')
- * @param {string|null} custom_theme_json - JSON string of custom colors
+ * @param {object|null} settingsElements - elements.settings из app.js (может быть null)
+ * @param {object|null} profile - объект профиля пользователя
+ * @param {string} theme - 'auto' | 'light' | 'dark' | 'custom'
+ * @param {string|null} custom_theme_json - JSON с кастомными цветами
  */
-export function applyTheme(tg, t, settingsElements, profile, theme, custom_theme_json = null) {
-    const root = document.documentElement;
-    // Всегда очищаем предыдущие классы темы
-    // (НОВОЕ) Также очищаем классы "Стекла", т.к. applyTheme - это полный сброс
-    document.body.classList.remove(
-        'theme-light', 
-        'theme-dark', 
-        'theme-custom',
-        'theme-glass-overlay', // <--- НОВЫЙ КЛАСС
-        'has-glass-background' // <--- НОВЫЙ КЛАСС
+export function applyTheme(
+  tg,
+  t,
+  settingsElements,
+  profile,
+  theme,
+  custom_theme_json = null
+) {
+  const root = document.documentElement;
+
+  // Фоллбэк
+  if (!theme) theme = 'auto';
+
+  // Сбрасываем классы тем (стекло переключается отдельно через applyGlass)
+  document.body.classList.remove('theme-light', 'theme-dark', 'theme-custom');
+
+  // Если настроек нет (очень ранний вызов) — принудительно auto
+  if (!settingsElements) {
+    console.warn(
+      "applyTheme вызван без объекта elements.settings, принудительно 'auto'"
     );
+    theme = 'auto';
+  }
 
-    // Проверка на settingsElements
-    if (!settingsElements) {
-        console.warn("applyTheme вызван без объекта elements.settings! Применяется тема 'auto'.");
-        theme = 'auto'; // Фоллбэк на авто
+  let currentThemeClass = null; // класс для body
+  let bgColor; // основной фон
+  let buttonColor; // цвет кнопок
+  let buttonTextColor; // цвет текста на кнопках
+
+  // ---- 1. Разбираем кастомную тему (если есть) ----
+  let currentCustomTheme = {};
+  try {
+    if (custom_theme_json) {
+      currentCustomTheme = JSON.parse(custom_theme_json);
+    } else if (profile && profile.custom_theme) {
+      currentCustomTheme = JSON.parse(profile.custom_theme);
+    } else {
+      // Фоллбэк кастомки по умолчанию
+      if (tg?.colorScheme === 'dark') {
+        currentCustomTheme = {
+          bg: '#1c1c1d',
+          button: '#0a84ff',
+          text: '#ffffff',
+        };
+      } else {
+        currentCustomTheme = {
+          bg: '#ffffff',
+          button: '#007aff',
+          text: '#000000',
+        };
+      }
     }
+  } catch (e) {
+    currentCustomTheme = { bg: '#1c1c1d', button: '#0a84ff', text: '#ffffff' };
+  }
 
-    let currentThemeClass = null; // Класс для body (может быть null для 'auto')
-    let bgColor, buttonColor, buttonTextColor; // Цвета для API Telegram
-    let currentCustomTheme = {};
+  // Гарантируем наличие полей
+  currentCustomTheme.bg ||= '#1c1c1d';
+  currentCustomTheme.button ||= '#0a84ff';
+  currentCustomTheme.text ||= '#ffffff';
 
-    // --- Определяем цвета для кастомной темы (если она есть) ---
-    try {
-        if (custom_theme_json) { 
-            currentCustomTheme = JSON.parse(custom_theme_json); 
-        } else if (profile && profile.custom_theme) { 
-            currentCustomTheme = JSON.parse(profile.custom_theme); 
-        } else { 
-            // Фоллбэк, если кастомные не сохранены
-            if (tg.colorScheme === 'dark') { 
-                currentCustomTheme = {bg: '#1c1c1d', button: '#0a84ff', text: '#ffffff'}; 
-            } else { 
-                currentCustomTheme = {bg: '#ffffff', button: '#007aff', text: '#000000'}; 
-            }
-        }
-    } catch(e) { 
-        currentCustomTheme = {bg: '#1c1c1d', button: '#0a84ff', text: '#ffffff'}; 
+  // ---- 2. Определяем цвета по выбранной теме ----
+  if (theme === 'light') {
+    currentThemeClass = 'theme-light';
+    bgColor = '#ffffff';
+    buttonColor = '#007aff';
+    buttonTextColor = '#ffffff';
+  } else if (theme === 'dark') {
+    currentThemeClass = 'theme-dark';
+    // Глубокий тёмно‑серый фон
+    bgColor = '#050505';
+    buttonColor = '#0a84ff';       // оставляем синий ТОЛЬКО как цвет action‑кнопок
+    buttonTextColor = '#ffffff';
+  } else if (theme === 'custom') {
+    currentThemeClass = 'theme-custom';
+
+    const colors = currentCustomTheme;
+
+    // Подбираем вторичный фон и цвет текста на кнопке по яркости
+    const bgLum = getLuminance(colors.bg);
+    const secondaryBg =
+      bgLum > 0.5
+        ? shadeColor(colors.bg, -0.05)
+        : shadeColor(colors.bg, 0.1);
+
+    const btnLum = getLuminance(colors.button);
+    const computedBtnTextColor = btnLum > 0.5 ? '#000000' : '#ffffff';
+
+    // Заполняем кастомные переменные
+    root.style.setProperty('--custom-bg-color', colors.bg);
+    root.style.setProperty('--custom-secondary-bg-color', secondaryBg);
+    root.style.setProperty('--custom-text-color', colors.text);
+    root.style.setProperty('--custom-button-color', colors.button);
+    root.style.setProperty('--custom-button-text-color', computedBtnTextColor);
+
+    // Базовые цвета для Telegram API / основных токенов
+    bgColor = colors.bg;
+    buttonColor = colors.button;
+    buttonTextColor = computedBtnTextColor;
+
+    // Обновляем color‑input'ы, если они есть
+    if (settingsElements?.colorInputBg) {
+      settingsElements.colorInputBg.value = colors.bg;
     }
-    currentCustomTheme.bg = currentCustomTheme.bg || '#1c1c1d';
-    currentCustomTheme.button = currentCustomTheme.button || '#0a84ff';
-    currentCustomTheme.text = currentCustomTheme.text || '#ffffff';
+    if (settingsElements?.colorInputButton) {
+      settingsElements.colorInputButton.value = colors.button;
+    }
+    if (settingsElements?.colorInputText) {
+      settingsElements.colorInputText.value = colors.text;
+    }
+    } else { // theme === 'auto'
+    // Определяем, что хочет Telegram: светлую или тёмную
+    const tp = tg?.themeParams || {};
+    const systemScheme =
+        tg?.colorScheme ||
+        (tp.bg_color && getLuminance(tp.bg_color) < 0.5 ? 'dark' : 'light');
 
-    // --- Логика определения темы и цветов ---
-    if (theme === 'light') {
+    if (systemScheme === 'dark') {
+        // Авто + тёмная = МОЯ тёмная тема
+        currentThemeClass = 'theme-dark';
+        bgColor = '#09090b';      // как в :root в style.css
+        buttonColor = '#0a84ff';
+        buttonTextColor = '#ffffff';
+    } else {
+        // Авто + светлая = МОЯ светлая тема
         currentThemeClass = 'theme-light';
-        // Используем жестко заданные светлые цвета
         bgColor = '#ffffff';
         buttonColor = '#007aff';
         buttonTextColor = '#ffffff';
+    }
+    }
+
+  // Вешаем класс темы на body (кроме auto)
+  if (currentThemeClass) {
+    document.body.classList.add(currentThemeClass);
+  }
+
+  // ---- 3. Синхронизируем CSS‑переменные токенов ----
+  // Эти токены использует твой CSS (profile.css, feed.css, settings.css и т.д.)
+  const baseBg = bgColor || '#ffffff';
+
+  // Вторичный фон: либо из Telegram, либо вычисляем от основного
+  let secondaryBg;
+  try {
+    const tp = tg?.themeParams || {};
+    if (tp.secondary_bg_color) {
+      secondaryBg = tp.secondary_bg_color;
     } else if (theme === 'dark') {
-        currentThemeClass = 'theme-dark';
-        // Используем жестко заданные темные цвета
-        bgColor = '#1c1c1d';
-        buttonColor = '#0a84ff';
-        buttonTextColor = '#ffffff';
-    } else if (theme === 'custom') {
-        currentThemeClass = 'theme-custom';
-        const colors = currentCustomTheme;
-        const bgLuminance = getLuminance(colors.bg);
-        const secondaryBg = bgLuminance > 0.5 ? shadeColor(colors.bg, -0.05) : shadeColor(colors.bg, 0.1);
-        const buttonLuminance = getLuminance(colors.button);
-        const btnTextColor = buttonLuminance > 0.5 ? '#000000' : '#FFFFFF';
-        // Устанавливаем CSS переменные для кастомной темы
-        root.style.setProperty('--custom-bg-color', colors.bg);
-        root.style.setProperty('--custom-button-color', colors.button);
-        root.style.setProperty('--custom-secondary-bg-color', secondaryBg);
-        root.style.setProperty('--custom-text-color', colors.text);
-        root.style.setProperty('--custom-button-text-color', btnTextColor);
-        // Задаем цвета для API Telegram
-        bgColor = colors.bg;
-        buttonColor = colors.button;
-        buttonTextColor = btnTextColor;
-        // Обновляем поля выбора цвета
-        if (settingsElements?.colorInputBg) {
-            settingsElements.colorInputBg.value = colors.bg;
-            settingsElements.colorInputButton.value = colors.button;
-            settingsElements.colorInputText.value = colors.text;
-        }
-    } else { // theme === 'auto'
-        // *** НЕ добавляем класс на body ***
-        currentThemeClass = null; // Класс не нужен, будем использовать переменные TG
-        // *** Используем цвета ИЗ Telegram themeParams ***
-        bgColor = tg.themeParams.bg_color || '#ffffff'; // Фоллбэк на белый
-        buttonColor = tg.themeParams.button_color || '#007aff'; // Фоллбэк на синий
-        buttonTextColor = tg.themeParams.button_text_color || '#ffffff'; // Фоллбэк на белый
+    currentThemeClass = 'theme-dark';
+    // ✅ НОВЫЕ ЦВЕТА
+    bgColor = '#0f0f11';         
+    buttonColor = '#6366f1'; 
+    buttonTextColor = '#ffffff';
+  } else {
+      const lum = getLuminance(baseBg);
+      secondaryBg = shadeColor(baseBg, lum > 0.5 ? -0.06 : 0.1);
     }
+  } catch (e) {
+    secondaryBg = theme === 'dark' ? '#161616' : '#18181b';
+  }
 
-    // Добавляем класс на body (если он определен)
-    if (currentThemeClass) {
-        document.body.classList.add(currentThemeClass);
-    }
-    // Если класс НЕ определен (режим 'auto'), стили должны подхватываться
-    // из CSS, где используются фоллбэки на переменные Telegram:
-    // var(--main-bg-color, var(--tg-theme-bg-color, #ffffff))
+  const tp = tg?.themeParams || {};
 
-    // --- Применяем цвета через API Telegram ---
-    try {
-        tg.setHeaderColor(bgColor);
-        tg.setBackgroundColor(bgColor);
-        tg.MainButton.setParams({
-            color: buttonColor,
-            text_color: buttonTextColor,
-            text: t('save_button')
-        });
-    } catch (e) {
-        console.error("Ошибка установки цветов интерфейса Telegram:", e);
-    }
+  const textColor =
+    tp.text_color ||
+    (theme === 'light'
+      ? '#111827'
+      : theme === 'dark'
+      ? '#f3f4f6'
+      : '#f3f4f6');
 
-    // Обновляем состояние кнопок выбора темы в UI (если они есть)
-    if (settingsElements?.themeButtons && settingsElements?.customThemeGroup) {
-        updateThemeButtons(settingsElements.themeButtons, settingsElements.customThemeGroup, theme);
-    }
-}
+  const hintColor =
+    tp.hint_color ||
+    (theme === 'light' ? '#6b7280' : '#9ca3af');
 
-/**
- * Обновляет состояние кнопок выбора темы
- */
-export function updateThemeButtons(themeButtons, customThemeGroup, activeTheme) {
-    if (!Array.isArray(themeButtons)) return;
+  const linkColor =
+    tp.link_color || buttonColor || '#007aff';
 
-    themeButtons.forEach(button => {
-        if (button) {
-            // Сравниваем текущую тему с data-theme кнопки
-            const isActive = button.dataset.theme === activeTheme;
-            button.classList.toggle('active', isActive);
-        }
+    const safeSet = (name, value) => {
+    if (value != null) root.style.setProperty(name, String(value));
+    };
+
+    safeSet('--main-bg-color', baseBg);
+    safeSet('--secondary-bg-color', secondaryBg);
+    safeSet('--main-text-color', textColor);
+    safeSet('--main-hint-color', hintColor);
+    safeSet('--main-hint-opacity', '1');
+    safeSet('--main-button-color', buttonColor || '#007aff');
+    safeSet('--main-button-text-color', buttonTextColor || '#ffffff');
+
+    // 4. Подсветка выбранной темы
+    if (settingsElements?.themeButtons) {
+    settingsElements.themeButtons.forEach((button) => {
+        if (!button) return;
+        const isActive = button.dataset.theme === theme;
+        button.classList.toggle('active', isActive);
     });
-
-    // 🔥 FIX: Проверяем существование группы перед обращением к style
-    if (customThemeGroup) {
-        customThemeGroup.style.display = (activeTheme === 'custom') ? 'block' : 'none';
     }
 }
-
-/**
- * (НОВАЯ ФУНКЦИЯ) Применяет или убирает эффект "Стекла"
- * @param {boolean} isEnabled - Включить или выключить эффект
- */
 export function applyGlass(isEnabled) {
-    // Этот класс 'theme-glass-overlay' будет основным триггером
-    // для всех CSS-стилей "стекла".
-    document.body.classList.toggle('theme-glass-overlay', isEnabled);
-    
-    // Этот класс 'has-glass-background' включает градиентный фон,
-    // который "стекло" будет размывать.
-    document.body.classList.toggle('has-glass-background', isEnabled);
+  document.body.classList.toggle('theme-glass-overlay', !!isEnabled);
+  document.body.classList.toggle('has-glass-background', !!isEnabled);
 }

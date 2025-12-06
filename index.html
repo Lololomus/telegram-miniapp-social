@@ -190,18 +190,18 @@
             <div class="settings-group">
                 <label data-i18n-key="theme_label">Тема</label>
                 <div class="theme-options">
-                    <button id="theme-btn-auto" class="theme-option-button">Авто</button>
-                    <button id="theme-btn-light" class="theme-option-button">Светлая</button>
-                    <button id="theme-btn-dark" class="theme-option-button">Темная</button>
-                    <button id="theme-btn-custom" class="theme-option-button">Своя</button>
-                </div>
-            </div>
-            <div id="glass-toggle-wrapper" class="settings-group glass-toggle-group">
-                <label data-i18n-key="glass_mode_label">Стекло (Beta)</label>
-                <div class="toggle-switch">
-                    <input type="checkbox" id="glass-toggle-switch" class="toggle-switch-checkbox">
-                    <label for="glass-toggle-switch" class="toggle-switch-label"></label>
-                </div>
+                    <button id="theme-btn-auto"  class="theme-option-button" data-theme="auto">Авто</button>
+                    <button id="theme-btn-light" class="theme-option-button" data-theme="light">Светлая</button>
+                    <button id="theme-btn-dark"  class="theme-option-button" data-theme="dark">Тёмная</button>
+                    </div>
+
+                    <div id="glass-toggle-wrapper" class="glass-toggle-group">
+                    <label>Стекло</label>
+                    <label class="toggle-switch">
+                        <input id="glass-toggle-switch" class="toggle-switch-checkbox" type="checkbox" />
+                        <span class="toggle-switch-label"></span>
+                    </label>
+                    </div>
             </div>
             <div id="custom-theme-group" class="settings-group" style="display: none;">
                 <label data-i18n-key="custom_theme_label">Цвета</label>

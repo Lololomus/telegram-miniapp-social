@@ -117,7 +117,6 @@
     margin-top: 15px;
 }
 body.theme-dark .profile-section { border-top-color: var(--secondary-bg-color); }
-body.theme-custom .profile-section { border-top-color: var(--main-bg-color); }
 .profile-section-title {
     font-size: 18px; font-weight: 600; color: var(--main-text-color);
     margin: 0 0 15px 0; opacity: 0.9;
@@ -128,7 +127,6 @@ body.theme-custom .profile-section { border-top-color: var(--main-bg-color); }
 }
 .profile-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
 body.theme-dark .profile-item { border-bottom-color: var(--secondary-bg-color); }
-body.theme-custom .profile-item { border-bottom-color: var(--main-bg-color); }
 .profile-item p { margin: 0; padding: 0; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
 .item-title { font-size: 16px; font-weight: 600; color: var(--main-text-color); margin-bottom: 2px; }
 .item-subtitle { font-size: 15px; font-weight: 400; color: var(--main-text-color); opacity: 0.8; margin-bottom: 4px; }
@@ -160,27 +158,31 @@ body.theme-custom .profile-item { border-bottom-color: var(--main-bg-color); }
 }
 body.theme-dark #profile-links,
 body.theme-dark #detail-links { border-top-color: var(--secondary-bg-color); }
-body.theme-custom #profile-links,
-body.theme-custom #detail-links { border-top-color: var(--main-bg-color); }
 
 /* ✅ ИСПРАВЛЕНИЕ (Item 5): Стили для кнопок-ссылок */
 .profile-link-button {
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #fff));
-    padding: 12px 16px; border-radius: 10px; text-decoration: none;
-    color: var(--main-link-color, var(--tg-theme-link-color, #007aff));
-    font-weight: 500; font-size: 15px; display: flex;
-    align-items: center; gap: 10px; text-align: left; 
-    transition: transform 0.2s ease, background-color 0.3s, border-color 0.3s;
-    border: 1px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff)); /* Для темной/кастомной темы */
-    
-    /* --- ИСПРАВЛЕНИЕ 1 (НОВОЕ) --- */
-    min-width: 0; /* Позволяем самой кнопке сжиматься */
+  background-color: var(--secondary-bg-color, #161616);
+  padding: 12px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #e5e7eb; /* вместо main-link-color */
+  font-weight: 500;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  transition: transform 0.2s ease, background-color 0.3s, border-color 0.3s;
 }
+
+body.theme-dark .profile-link-button {
+  background-color: #161616;
+  color: #e5e7eb;
+  border-color: rgba(55, 65, 81, 0.9);
+}
+
 /* Переопределения для тем */
 body.theme-dark .profile-link-button,
-body.theme-custom .profile-link-button {
-    border-color: var(--secondary-bg-color);
-}
 .profile-link-button:active { 
     transform: scale(0.98); 
 }
@@ -200,7 +202,6 @@ body.theme-custom .profile-link-button {
     border-top: 1.5px solid var(--main-bg-color, #fff); padding-top: 15px;
 }
 body.theme-dark .profile-actions { border-top-color: var(--secondary-bg-color); }
-body.theme-custom .profile-actions { border-top-color: var(--main-bg-color); }
 .profile-actions .action-button:last-child { grid-column: 1 / -1; }
 .contact-button { margin-top: 20px; width: 100%; }
 
@@ -218,10 +219,6 @@ body.theme-custom .profile-actions { border-top-color: var(--main-bg-color); }
 body.theme-dark .profile-stats-container {
      border-top-color: var(--secondary-bg-color);
      border-bottom-color: var(--secondary-bg-color);
-}
-body.theme-custom .profile-stats-container {
-     border-top-color: var(--main-bg-color);
-     border-bottom-color: var(--main-bg-color);
 }
 .profile-card p#profile-bio:empty + .profile-stats-container,
 .profile-card p#detail-bio:empty + .profile-stats-container {
@@ -251,7 +248,6 @@ body.theme-custom .profile-stats-container {
     opacity: var(--main-hint-opacity, 1);
 }
 body.theme-dark .stat-item { border-right-color: var(--secondary-bg-color); }
-body.theme-custom .stat-item { border-right-color: var(--main-bg-color); }
 
 /* --- Контейнер навыков --- */
 .skills-container {
@@ -370,12 +366,6 @@ body.theme-dark .fab-button.fab-primary.is-unfollow {
     background-color: #2c2c2e;
     color: #ffffff;
 }
-body.theme-custom .fab-button.fab-secondary,
-body.theme-custom .fab-button.fab-primary.is-unfollow {
-     background-color: var(--secondary-bg-color);
-     color: var(--main-text-color);
-}
-
 
 /* === УЛУЧШЕНИЯ ДИЗАЙНА (ТЕМНАЯ ТЕМА) - Карточки в карточке === */
 body.theme-dark .profile-card p#profile-bio,
@@ -496,9 +486,6 @@ body.theme-glass-overlay .profile-stats-container {
 }
 body.theme-glass-overlay .stat-item {
     border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-body.theme-glass-overlay.theme-light .stat-item {
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 body.theme-glass-overlay .stat-item:last-child {
     border-right: none;
@@ -1041,4 +1028,22 @@ body.theme-glass-overlay .hero-icon-btn {
 /* Немного ужимаем карточку, чтобы ряд смотрелся плотнее */
 .my-post-card-wrapper .react-feed-card-wrapper {
   margin: 0;
+}
+
+/* Профиль: нормальная тёмная карточка, когда стекло выключено */
+body.theme-dark:not(.theme-glass-overlay) .profile-card {
+  background: #020617;                 /* матовый фон */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid #111827;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* Вложенные секции в профиле — чуть светлее блока */
+body.theme-dark:not(.theme-glass-overlay) .profile-section,
+body.theme-dark:not(.theme-glass-overlay) #profile-links,
+body.theme-dark:not(.theme-glass-overlay) #detail-links {
+  background-color: #0b1120;
+  border-radius: 14px;
+  border: none;
 }

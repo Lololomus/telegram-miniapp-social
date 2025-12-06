@@ -1,653 +1,735 @@
 /* css/form.css */
-/* ОБНОВЛЕНО (Glass): Добавлены "стеклянные" стили для полей */
-/* --- ИЗМЕНЕНИЕ: Полностью удалены стили TomSelect --- */
-/* --- ИЗМЕНЕНИЕ: Добавлены стили для нативного <select> --- */
-/* --- ИЗМЕНЕНИЕ: Добавлены стили для <option> --- */
-/* --- ИЗМЕНЕНИЕ: Добавлены стили для .char-counter --- */
-/* --- ИЗМЕНЕНИЕ: Исправлен баг с чекбоксом --- */
 
-/* --- ФОРМА РЕДАКТИРОВАНИЯ --- */
-/* ... (Основные стили без изменений) ... */
-#form-container { display: flex; flex-direction: column; }
-.form-group { margin-bottom: 12px; }
+/* ОБНОВЛЕНО (Glass): Стекло вынесено в единый слой без theme-light/theme-dark */
+/* ОБНОВЛЕНО: TomSelect удалён, используются нативные select */
+/* ОБНОВЛЕНО: Чекбоксы, динамические секции, счётчик символов */
+
+/* --- ФОРМА РЕДАКТИРОВАНИЯ (БАЗОВОЕ ОФОРМЛЕНИЕ) --- */
+
+#form-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
 .form-group label {
-    display: block; font-size: 14px;
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    margin-bottom: 6px; opacity: var(--main-hint-opacity, 1);
-    transition: color 0.3s;
+  display: block;
+  font-size: 14px;
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  margin-bottom: 6px;
+  opacity: var(--main-hint-opacity, 1);
+  transition: color 0.3s, opacity 0.3s;
 }
 
-/* --- ИЗМЕНЕНИЕ: Добавляем 'select' в этот список --- */
-input, textarea, select {
-    width: 100%; padding: 14px; border-radius: 10px; font-size: 16px;
-    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-    font-family: inherit; transition: border-color 0.2s ease, background-color 0.3s, color 0.3s;
-    resize: vertical;
-}
+/* Базовые поля: input / textarea / select */
 
-/* --- НОВЫЙ БЛОК: Стилизация <select> --- */
+input,
+textarea,
 select {
-    /* Убираем стандартную стрелку */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    
-    /* Добавляем свою стрелку (для светлой темы) */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999999' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 16px 16px;
-    padding-right: 40px; /* Место для стрелки */
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+  color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+  font-family: inherit;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.3s,
+    color 0.3s,
+    box-shadow 0.2s;
+  resize: vertical;
 }
-/* --- НОВЫЙ БЛОК: Стилизация <option> (опций) --- */
+
+/* --- Стилизация select --- */
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999999' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px 16px;
+  padding-right: 40px;
+}
+
 select option {
-    background: var(--main-bg-color, #ffffff);
-    color: var(--main-text-color, #000000);
-    padding: 8px; /* Этот стиль может не работать, но мы пытаемся */
+  background: var(--main-bg-color, #ffffff);
+  color: var(--main-text-color, #000000);
+  padding: 8px;
 }
-/* --- КОНЕЦ НОВОГО БЛОКА --- */
 
-/* Стрелка для темной темы */
+/* Стрелка для тёмной темы (fallback под старую модель) */
 body.theme-dark select {
-     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2398989e' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2398989e' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
 }
-/* --- КОНЕЦ НОВОГО БЛОКА --- */
 
+/* Placeholder */
 
-input::placeholder, textarea::placeholder {
-    color: var(--main-hint-color, #999999);
-    opacity: 0.7;
+input::placeholder,
+textarea::placeholder {
+  color: var(--main-hint-color, #999999);
+  opacity: 0.7;
 }
-/* --- ИЗМЕНЕНИЕ: Добавляем 'select:focus' --- */
-input:focus, textarea:focus, select:focus {
-    outline: none; border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+
+/* Фокус */
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
 }
-textarea { min-height: 80px; }
 
+/* Высота textarea */
 
-/* --- ИЗМЕНЕНИЕ: Весь блок стилей TomSelect (около 60 строк) УДАЛЕН --- */
+textarea {
+  min-height: 80px;
+}
 
+/* --- ЗАГРУЗКА АВАТАРА --- */
 
-/* --- ЗАГРУЗКА ФОТО --- */
-.avatar-upload { position: relative; margin: 0 auto 20px auto; width: 100px; height: 100px; }
-#avatar-preview { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff)); box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: border-color 0.3s; }
-.upload-overlay { position: absolute; bottom: 0; right: 0; }
-.upload-button { background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)); color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff)); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; justify-content: center; align-items: center; border: 2px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff)); box-shadow: 0 1px 4px rgba(0,0,0,0.15); transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+.avatar-upload {
+  position: relative;
+  margin: 0 auto 20px auto;
+  width: 100px;
+  height: 100px;
+}
+
+#avatar-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.3s;
+}
+
+.upload-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.upload-button {
+  background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+  color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
 
 /* --- Инпут навыков --- */
-.skills-input-group { display: flex; gap: 10px; }
-.skills-input-group input { flex-grow: 1; }
-/* ✅ ИСПРАВЛЕНИЕ (Задача 3): Добавляем cursor: pointer для readOnly инпута */
+
+.skills-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.skills-input-group input {
+  flex-grow: 1;
+}
+
+/* Readonly инпут навыков кликабелен */
+
 .skills-input-group input[readonly] {
-    cursor: pointer;
-    /* Имитируем :hover поведение */
-    transition: border-color 0.2s ease, background-color 0.3s, color 0.3s, opacity 0.2s;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.3s,
+    color 0.3s,
+    opacity 0.2s;
 }
+
 .skills-input-group:hover input[readonly] {
-    opacity: 0.8;
+  opacity: 0.8;
 }
-/* --- КОНЕЦ --- */
 
-.skills-input-button { flex-shrink: 0; width: 50px; padding: 14px; background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff)); border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)); color: var(--main-hint-color, var(--tg-theme-hint-color, #999999)); font-size: 16px; font-weight: 600; border-radius: 10px; cursor: pointer; transition: background-color 0.3s, color 0.3s, border-color 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; line-height: 0; }
-.skills-input-button:active { transform: scale(0.98); }
-.skills-input-button svg { width: 18px; height: 18px; }
-.skills-input-group input:focus + .skills-input-button { border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)); }
+.skills-input-button {
+  flex-shrink: 0;
+  width: 50px;
+  padding: 14px;
+  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+  border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    border-color 0.3s,
+    transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 0;
+}
 
+.skills-input-button:active {
+  transform: scale(0.98);
+}
 
-/* === Стили Динамических Секций === */
+.skills-input-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.skills-input-group input:focus + .skills-input-button {
+  border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+}
+
+/* === ДИНАМИЧЕСКИЕ СЕКЦИИ === */
+
 .form-section {
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    transition: border-color 0.3s;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  transition: border-color 0.3s;
 }
+
 .form-section:first-of-type {
-    border-top: none;
-    margin-top: 15px;
-    padding-top: 0;
+  border-top: none;
+  margin-top: 15px;
+  padding-top: 0;
 }
 
 .form-section h2 {
-    font-size: 18px;
-    text-align: left;
-    margin: 0 0 15px 0;
-    color: var(--main-text-color, var(--tg-theme-text-color, #000));
-    font-weight: 600;
-    transition: color 0.3s;
+  font-size: 18px;
+  text-align: left;
+  margin: 0 0 15px 0;
+  color: var(--main-text-color, var(--tg-theme-text-color, #000));
+  font-weight: 600;
+  transition: color 0.3s;
 }
 
-/* Контейнеры для динамических элементов */
 #links-container,
 #experience-container,
 #education-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-/* Блок одного элемента (ссылка, опыт, образование) */
+/* Карточка динамического элемента */
+
 .dynamic-item {
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    border-radius: 10px;
-    padding: 15px;
-    padding-top: 25px;
-    position: relative;
-    
-    /* --- (ИЗМЕНЕНИЕ) --- */
-    /* Убираем 'all'. Анимируем ТОЛЬКО performant-свойства. */
-    /* 'max-height', 'padding' и 'margin' будут меняться МГНОВЕННО. */
-    transition: opacity 0.3s ease-out, 
-                transform 0.3s ease-out,
-                background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
-    /* 'overflow: hidden' больше не нужен для анимации, но пусть будет */
-    overflow: hidden; 
+  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+  border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  border-radius: 10px;
+  padding: 15px;
+  padding-top: 25px;
+  position: relative;
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out,
+    background-color 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s;
+  overflow: hidden;
 }
 
-/* Лейблы внутри динамических блоков - ИСПРАВЛЕНИЕ: убрали явную opacity: 0.8 */
+/* Лейблы внутри динамических блоков */
+
 .dynamic-item .form-group label {
-    font-size: 13px;
-    margin-bottom: 4px;
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    opacity: var(--main-hint-opacity, 1); /* Теперь используем переменную, как в основных лейблах */
-    transition: color 0.3s, opacity 0.3s;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  opacity: var(--main-hint-opacity, 1);
+  transition: color 0.3s, opacity 0.3s;
 }
 
-/* Поля ввода внутри динамических блоков */
-.dynamic-item input, .dynamic-item textarea {
-    padding: 12px;
-    font-size: 15px;
-    /* Наследуют стили из общих input/textarea */
+/* Поля внутри динамических блоков */
+
+.dynamic-item input,
+.dynamic-item textarea {
+  padding: 12px;
+  font-size: 15px;
 }
 
-/* Placeholder должен быть hint-цветом */
+/* Placeholder внутри динамических блоков */
+
 .dynamic-item input::placeholder,
 .dynamic-item textarea::placeholder {
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    opacity: 0.7;
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  opacity: 0.7;
 }
 
-/* Focus состояние */
+/* Фокус внутри динамических блоков */
+
 .dynamic-item input:focus,
 .dynamic-item textarea:focus {
-    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important;
+  border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important;
 }
 
 /* Кнопка удаления */
+
 .delete-item-button {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    border: none;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    font-size: 18px;
-    line-height: 28px;
-    text-align: center;
-    cursor: pointer;
-    font-weight: bold;
-    opacity: 0.7;
-    transition: opacity 0.2s, background-color 0.3s, transform 0.1s ease, color 0.3s;
-    z-index: 1;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 28px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: bold;
+  opacity: 0.7;
+  transition:
+    opacity 0.2s,
+    background-color 0.3s,
+    transform 0.1s ease,
+    color 0.3s;
+  z-index: 1;
 }
-.delete-item-button:hover { opacity: 1; }
-.delete-item-button:active { transform: scale(0.90); }
+
+.delete-item-button:hover {
+  opacity: 1;
+}
+
+.delete-item-button:active {
+  transform: scale(0.9);
+}
 
 /* Кнопка "Добавить" */
-.add-item-button {
-    display: block;
-    width: 100%;
-    margin-top: 15px;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #e9e9eb));
-    color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.3s, color 0.3s;
-    text-align: center;
-}
-.add-item-button:active { transform: scale(0.98); }
 
-/* Специфичные стили для полей */
+.add-item-button {
+  display: block;
+  width: 100%;
+  margin-top: 15px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #e9e9eb));
+  color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    background-color 0.3s,
+    color 0.3s;
+  text-align: center;
+}
+
+.add-item-button:active {
+  transform: scale(0.98);
+}
 
 /* Поле ссылки */
+
 .link-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-right: 40px;
-    padding-top: 0;
-    padding-bottom: 0;
-    background: none !important;
-    border: none !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 40px;
+  padding-top: 0;
+  padding-bottom: 0;
+  background: none !important;
+  border: none !important;
 }
-.link-item input { flex-grow: 1; }
 
-/* Группа полей дат */
-.date-input-group { margin-bottom: 10px; }
-.date-input-group:last-child { margin-bottom: 0; }
+.link-item input {
+  flex-grow: 1;
+}
 
-/* --- ✅ ИЗМЕНЕНИЕ №1 --- */
+/* Группа дат */
+
+.date-input-group {
+  margin-bottom: 10px;
+}
+
+.date-input-group:last-child {
+  margin-bottom: 0;
+}
+
 .date-group {
-    /* 1. Делаем блок с инпутом "inline", чтобы чекбокс мог встать с ним в один ряд. */
-    display: inline-block;
-    vertical-align: middle;
-    margin-bottom: 0; /* Убираем отступ, т.к. он теперь inline */
+  display: inline-block;
+  vertical-align: middle;
+  margin-bottom: 0;
 }
-/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */
 
-.date-group label { margin-bottom: 4px; display: block; }
-.date-group input[type="text"] { max-width: 180px; display: inline-block; vertical-align: middle; }
-.date-input-group:last-child > input[type="text"] { margin-right: 10px; }
+.date-group label {
+  margin-bottom: 4px;
+  display: block;
+}
 
-/* --- ✅ ИЗМЕНЕНИЕ №2 --- */
-/* Чекбокс "по наст. врем" */
+.date-group input[type="text"] {
+  max-width: 180px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.date-input-group:last-child > input[type="text"] {
+  margin-right: 10px;
+}
+
+/* Чекбокс "по наст. время" */
+
 .checkbox-label {
-    display: inline-flex; 
-    align-items: center;  
-    vertical-align: middle; /* 2. Выравниваем по центру с инпутом */
-    
-    margin-top: 0; /* Убираем старый отступ */
-    margin-left: 10px; /* 3. "левее". Добавляем отступ от инпута */
-    
-    font-size: 13px; 
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999)); 
-    cursor: pointer; 
-    white-space: nowrap; 
-    line-height: 1;
-    transition: color 0.3s;
-}
-/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */
-
-/* 1. Стили самого <input> (круглая кнопка) */
-.checkbox-label input[type="checkbox"] { 
-    appearance: none !important; 
-    -webkit-appearance: none !important; 
-    
-    width: 18px;  
-    height: 18px;
-    border: 1.5px solid var(--main-hint-color, var(--tg-theme-hint-color, #999999)); 
-    border-radius: 50%; /* Делаем круглым */
-    position: relative; /* <-- ВАЖНО: для позиционирования галочки (::after) */
-    cursor: pointer; 
-    outline: none;
-    
-    display: inline-block !important; /* Больше не flex-контейнер */
-    
-    margin: 0;
-    margin-right: 6px; 
-    flex-shrink: 0; 
-    
-    /* === ПРИНУДИТЕЛЬНЫЙ СБРОС "ПАЛОЧКИ" === */
-    background: transparent !important;
-    background-image: none !important;
-    -webkit-mask: none !important;
-    mask: none !important; 
-    
-    transition: background-color 0.2s, border-color 0.3s;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-top: 0;
+  margin-left: 10px;
+  font-size: 13px;
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1;
+  transition: color 0.3s;
 }
 
-/* 2. Состояние :checked для <input> */
-.checkbox-label input[type="checkbox"]:checked { 
-    background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important; 
-    border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important; 
+/* Кастомный чекбокс */
+
+.checkbox-label input[type="checkbox"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  display: inline-block !important;
+  margin: 0;
+  margin-right: 6px;
+  flex-shrink: 0;
+  background: transparent !important;
+  background-image: none !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  transition: background-color 0.2s, border-color 0.3s;
 }
 
-/* 3. Псевдо-элемент ::before (ПРИНУДИТЕЛЬНО ПРЯЧЕМ) */
-.checkbox-label input[type="checkbox"]::before { 
-    content: '' !important; 
-    display: none !important; 
-    background: transparent !important;
-    background-image: none !important;
-    -webkit-mask: none !important; 
-    mask: none !important; 
+.checkbox-label input[type="checkbox"]:checked {
+  background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important;
+  border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important;
 }
 
-/* 4. Псевдо-элемент ::after (ИСПОЛЬЗУЕМ ДЛЯ ГАЛОЧКИ) */
-.checkbox-label input[type="checkbox"]::after { 
-    /* === СБРОС СТИЛЕЙ "ПАЛОЧКИ" === */
-    content: '' !important;
-    display: none !important; /* Прячем по умолчанию */
-    background: transparent !important;
-    background-image: none !important;
-    -webkit-mask: none !important;
-    mask: none !important; 
+/* Полный сброс ::before */
 
-    width: auto; height: auto; border: none;
-    
-    /* Сбрасываем позиционирование (будет задано в :checked::after) */
-    position: static;
-    transform: none;
+.checkbox-label input[type="checkbox"]::before {
+  content: '' !important;
+  display: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  -webkit-mask: none !important;
+  mask: none !important;
 }
 
-/* 5. Отображение ГАЛОЧКИ при :checked (через ::after) */
-.checkbox-label input[type="checkbox"]:checked::after { 
-    display: block !important; /* Показываем */
-    
-    /* === 3. РИСУЕМ ГАЛОЧКУ (Border-метод) === */
-    width: 5px; 
-    height: 10px; 
-    
-    border: solid var(--main-button-text-color, #fff) !important; 
-    border-width: 0 2.5px 2.5px 0 !important; /* L-форма */
-    
-    /* === 4. ЦЕНТРИРУЕМ ГАЛОЧКУ === */
-    position: absolute !important;
-    top: 50%;
-    left: 50%;
-    
-    transform: translate(-50%, -60%) rotate(45deg) !important; 
-    
-    /* Сдвигаем чуть вверх (из-за -60% по Y) */
-    margin: 0;
+/* Сброс ::after по умолчанию */
+
+.checkbox-label input[type="checkbox"]::after {
+  content: '' !important;
+  display: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  width: auto;
+  height: auto;
+  border: none;
+  position: static;
+  transform: none;
 }
 
-/* --- ✅ ИЗМЕНЕНИЕ №3 --- */
-.checkbox-label span { 
-    opacity: 0.9; 
-    /* vertical-align: middle; */ /* <-- УДАЛЕНО: Не нужно, т.к. родитель - flex */
-    /* margin-top: 1px; */ /* <-- УДАЛЕНО: Больше не нужно */
+/* Галочка при :checked */
+
+.checkbox-label input[type="checkbox"]:checked::after {
+  display: block !important;
+  width: 5px;
+  height: 10px;
+  border: solid var(--main-button-text-color, #fff) !important;
+  border-width: 0 2.5px 2.5px 0 !important;
+  position: absolute !important;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%) rotate(45deg) !important;
+  margin: 0;
 }
-/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */
+
+.checkbox-label span {
+  opacity: 0.9;
+}
+
+/* Disabled текстовые поля */
 
 input[type="text"]:disabled {
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) !important; 
-    opacity: 0.6; cursor: not-allowed;
-    border-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) !important;
-    transition: background-color 0.3s, border-color 0.3s;
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) !important;
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) !important;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
-/* Уменьшаем высоту textarea в динамических блоках */
-.dynamic-item textarea { min-height: 60px; }
+/* Уменьшенная высота textarea в динамических блоках */
 
-/* --- (ИЗМЕНЕНИЕ) --- */
-/* Анимация 'is-adding': блок будет плавно появляться и "выдвигаться" сверху */
+.dynamic-item textarea {
+  min-height: 60px;
+}
+
+/* Анимация добавления/удаления динамических блоков */
+
 .dynamic-item.is-adding {
-    opacity: 0;
-    transform: translateY(-20px); /* Начальное положение (сдвинут вверх) */
-    
-    /* Эти свойства применяются МГНОВЕННО, схлопывая блок */
-    max-height: 0 !important;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-width: 0;
-    margin-bottom: 0;
+  opacity: 0;
+  transform: translateY(-20px);
+  max-height: 0 !important;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  margin-bottom: 0;
 }
 
-/* Анимация 'is-removing': блок будет плавно исчезать и "уменьшаться" */
 .dynamic-item.is-removing {
-    opacity: 0;
-    transform: scale(0.95); /* Начальное положение (чуть уменьшен) */
-
-    /* Эти свойства применяются МГНОВЕННО, схлопывая блок */
-    max-height: 0 !important;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-width: 0;
-    margin-bottom: 0;
+  opacity: 0;
+  transform: scale(0.95);
+  max-height: 0 !important;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  margin-bottom: 0;
 }
-/* === КОНЕЦ СТИЛЕЙ ДЛЯ ДИНАМИЧЕСКИХ СЕКЦИЙ === */
 
+/* --- Счётчик символов --- */
 
-/* --- НОВЫЙ БЛОК: Счетчик символов --- */
 .char-counter {
-    display: block; /* Убедимся, что это блочный элемент */
-    font-size: 12px;
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    opacity: var(--main-hint-opacity, 1);
-    text-align: right;
-    margin-top: 4px;
-    margin-right: 2px;
-    height: 15px; /* Резервируем место, чтобы форма не прыгала */
-    transition: color 0.3s, opacity 0.3s;
+  display: block;
+  font-size: 12px;
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  opacity: var(--main-hint-opacity, 1);
+  text-align: right;
+  margin-top: 4px;
+  margin-right: 2px;
+  height: 15px;
+  transition: color 0.3s, opacity 0.3s;
 }
 
-/* Применяем ко всем .form-group, содержащим textarea */
-/* (Это сработает и для React, и для ванильной модалки, если у нее есть .form-group) */
 .form-group textarea + .char-counter {
-    margin-top: -8px; /* Поднимаем счетчик ближе к textarea */
-    margin-bottom: 12px; /* Восстанавливаем отступ .form-group */
-}
-/* --- КОНЕЦ НОВОГО БЛОКА --- */
-
-
-/* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
-/* --- ИЗМЕНЕНИЕ: TomSelect удален, правила для <select> добавлены --- */
-body.theme-dark.theme-glass-overlay input,
-body.theme-dark.theme-glass-overlay textarea,
-body.theme-dark.theme-glass-overlay select,
-body.theme-light.theme-glass-overlay input,
-body.theme-light.theme-glass-overlay textarea,
-body.theme-light.theme-glass-overlay select {
-    background-color: var(--glass-bg-input) !important;
-    border: var(--glass-border) !important;
-    color: var(--main-text-color);
-    border-radius: 12px;
-}
-body.theme-dark.theme-glass-overlay input:focus,
-body.theme-dark.theme-glass-overlay textarea:focus,
-body.theme-dark.theme-glass-overlay select:focus,
-body.theme-light.theme-glass-overlay input:focus,
-body.theme-light.theme-glass-overlay textarea:focus,
-body.theme-light.theme-glass-overlay select:focus {
-    background-color: transparent;
-    border-color: var(--main-button-color);
-}
-body.theme-dark.theme-glass-overlay input::placeholder,
-body.theme-dark.theme-glass-overlay textarea::placeholder,
-body.theme-light.theme-glass-overlay input::placeholder,
-body.theme-light.theme-glass-overlay textarea::placeholder {
-    color: var(--main-text-color);
-    opacity: 0.7;
+  margin-top: -8px;
+  margin-bottom: 12px;
 }
 
-/* --- ИЗМЕНЕНИЕ: Стили для стрелки <select> в режиме "Стекло" --- */
-body.theme-light.theme-glass-overlay select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill-opacity='0.7' fill='%23000000' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-}
-body.theme-dark.theme-glass-overlay select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill-opacity='0.7' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-}
-/* --- КОНЕЦ ИЗМЕНЕНИЯ --- */
+/* --- СТЕКЛО: ЕДИНЫЙ СЛОЙ ДЛЯ ВСЕХ ТЕМ --- */
 
+/* Поля ввода в стекле */
 
-/* --- ИЗМЕНЕНИЕ: Все блоки TomSelect (около 150 строк) УДАЛЕНЫ --- */
-
-
-/* Кнопка "Навыки" */
-body.theme-glass-overlay .skills-input-button {
-    background-color: var(--glass-bg-input) !important;
-    border: var(--glass-border) !important;
-    color: var(--main-text-color);
-    opacity: 0.8;
-}
-
-/* Динамические секции */
-body.theme-glass-overlay .form-section {
-    border-top: none;
-    /* Сделаем их "вложенными" карточками */
-    background-color: var(--glass-bg-secondary);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: var(--glass-border);
-    border-radius: var(--glass-radius-nested);
-    padding: 20px;
-}
-body.theme-glass-overlay .dynamic-item {
-    background-color: var(--glass-bg-input);
-    border: var(--glass-border);
-    border-radius: 12px;
-}
-body.theme-glass-overlay .delete-item-button {
-    background-color: var(--glass-bg-input);
-    border: var(--glass-border);
-    color: var(--main-text-color);
-    opacity: 0.7;
-}
-body.theme-glass-overlay .add-item-button {
-    background-color: var(--glass-bg-secondary);
-    border: var(--glass-border);
-    color: var(--main-text-color);
-    opacity: 0.9;
-    border-radius: 12px;
-}
-body.theme-glass-overlay .link-item {
-    background: none !important;
-    border: none !important;
-    padding: 0;
-}
-body.theme-glass-overlay .checkbox-label {
-    color: var(--main-text-color);
-    opacity: 0.9;
-}
-body.theme-glass-overlay .checkbox-label input[type="checkbox"] {
-    border-color: var(--main-text-color);
-    opacity: 0.7;
-}
-body.theme-glass-overlay input[type="text"]:disabled {
-    background-color: var(--glass-bg-input) !important;
-    border-color: var(--glass-border) !important;
-    opacity: 0.5;
-}
-
-/* --- GLASS MODE TEXT FIXES (Читаемость форм в стекле) --- */
-
-/* 1. Лейблы полей */
-body.theme-dark.theme-glass-overlay .form-group label {
-    color: #ffffff !important;
-    opacity: 0.9 !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    font-weight: 500;
-}
-
-/* 2. Заголовки секций */
-body.theme-dark.theme-glass-overlay .form-section h2 {
-    color: #ffffff !important;
-    opacity: 1 !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-/* 3. Чекбоксы и счетчики */
-body.theme-dark.theme-glass-overlay .checkbox-label,
-body.theme-dark.theme-glass-overlay .char-counter {
-    color: rgba(255, 255, 255, 0.85) !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* --- ЭКРАН РЕДАКТИРОВАНИЯ (React Full Screen) --- */
-
-.edit-post-screen {
-    background-color: var(--main-bg-color) !important;
-    border-radius: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    box-shadow: none !important;
-    
-    /* Z-Index ниже, чем у навыков (5001 vs 6000) */
-    z-index: 5001 !important; 
-}
-
-/* Хедер редактирования (Edit Request) - БАЗА */
-.edit-post-header {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    z-index: 10;
-    
-    /* Высота */
-    height: calc(env(safe-area-inset-top, 40px) + 60px);
-    
-    /* ✅ ВАЖНО: Паддинг сверху для Safe Area */
-    padding-top: env(safe-area-inset-top, 40px);
-    
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    
-    /* ✅ СДВИГАЕМ ЗАГОЛОВОК ВВЕРХ: */
-    /* Добавляем padding-bottom, чтобы визуальный центр сместился выше */
-    padding-bottom: 8px !important; 
-    
-    background-color: var(--main-bg-color);
-    border-bottom: 1px solid var(--secondary-bg-color);
-}
-
-/* Скролл-контент внутри редактирования */
-.edit-post-scroll-content {
-    /* Отступ сверху (120px) */
-    padding-top: 120px !important;
-    margin-top: 0 !important;
-    
-    padding-left: 20px;
-    padding-right: 20px;
-    
-    /* ✅ УМЕНЬШИЛИ ОТСТУП СНИЗУ (было 100px, стало 80px) */
-    /* Кнопка занимает ~60-70px, 80px даст аккуратный зазор */
-    padding-bottom: 80px !important;
-    
-    overflow-y: auto;
-    height: 100%;
-}
-
-/* СТИЛЬ ДЛЯ РЕЖИМА СТЕКЛА (ВКЛ) */
-body.theme-glass-overlay .edit-post-screen {
-    background: var(--deep-glass-background) !important;
-    background-attachment: fixed;
-}
-
-/* Хедер в стекле */
-body.theme-glass-overlay .edit-post-header {
-    background: transparent !important;
-    backdrop-filter: none;
-    border-bottom: none !important;
-    box-shadow: none;
-    pointer-events: none;
-}
-
-body.theme-glass-overlay .edit-post-header h2 {
-    color: #ffffff !important;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-}
-
-/* FAB Контейнер (Восстанавливаем стили, удаленные из JS) */
-.fab-modal-save-container {
-    position: fixed;
-    bottom: 25px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 40px);
-    max-width: 560px;
-    z-index: 5002;
-    pointer-events: auto; /* На всякий случай */
-}
-
-/* Инпуты */
 body.theme-glass-overlay input,
 body.theme-glass-overlay textarea,
 body.theme-glass-overlay select {
-    background-color: rgba(0, 0, 0, 0.2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    color: #ffffff !important;
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
+  background-color: var(--glass-bg-input) !important;
+  border: var(--glass-border) !important;
+  color: var(--main-text-color) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 body.theme-glass-overlay input:focus,
 body.theme-glass-overlay textarea:focus,
 body.theme-glass-overlay select:focus {
-    background-color: rgba(0, 0, 0, 0.4) !important;
-    border-color: #007AFF !important;
-    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+  border-color: rgba(255,255,255,0.3) !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 body.theme-glass-overlay input::placeholder,
 body.theme-glass-overlay textarea::placeholder {
-    color: rgba(255, 255, 255, 0.5) !important;
+  color: var(--main-text-color);
+  opacity: 0.7;
+}
+
+/* Стрелка select в режиме стекла (нейтральная светлая) */
+
+body.theme-glass-overlay select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill-opacity='0.7' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+}
+
+/* Кнопка "Навыки" в стекле */
+
+body.theme-glass-overlay .skills-input-button {
+  background-color: var(--glass-bg-input) !important;
+  border: var(--glass-border) !important;
+  color: var(--main-text-color);
+  opacity: 0.8;
+}
+
+/* Динамические секции в стекле */
+
+body.theme-glass-overlay .form-section {
+  border-top: none;
+  background-color: var(--glass-bg-secondary);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: var(--glass-border);
+  border-radius: var(--glass-radius-nested);
+  padding: 20px;
+}
+
+body.theme-glass-overlay .dynamic-item {
+  background-color: var(--glass-bg-input);
+  border: var(--glass-border);
+  border-radius: 12px;
+}
+
+body.theme-glass-overlay .delete-item-button {
+  background-color: var(--glass-bg-input);
+  border: var(--glass-border);
+  color: var(--main-text-color);
+  opacity: 0.7;
+}
+
+body.theme-glass-overlay .add-item-button {
+  background-color: var(--glass-bg-secondary);
+  border: var(--glass-border);
+  color: var(--main-text-color);
+  opacity: 0.9;
+  border-radius: 12px;
+}
+
+body.theme-glass-overlay .link-item {
+  background: none !important;
+  border: none !important;
+  padding: 0;
+}
+
+body.theme-glass-overlay .checkbox-label {
+  color: var(--main-text-color);
+  opacity: 0.9;
+}
+
+body.theme-glass-overlay .checkbox-label input[type="checkbox"] {
+  border-color: var(--main-text-color);
+  opacity: 0.7;
+}
+
+body.theme-glass-overlay input[type="text"]:disabled {
+  background-color: var(--glass-bg-input) !important;
+  border-color: var(--glass-border) !important;
+  opacity: 0.5;
+}
+
+/* GLASS MODE TEXT FIXES для тёмного стекла */
+
+body.theme-dark.theme-glass-overlay .form-group label {
+  color: #ffffff !important;
+  opacity: 0.9 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-weight: 500;
+}
+
+body.theme-dark.theme-glass-overlay .form-section h2 {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+body.theme-dark.theme-glass-overlay .checkbox-label,
+body.theme-dark.theme-glass-overlay .char-counter {
+  color: rgba(255, 255, 255, 0.85) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* --- ЭКРАН РЕДАКТИРОВАНИЯ (React Full Screen) --- */
+
+.edit-post-screen {
+  background-color: var(--main-bg-color) !important;
+  border-radius: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-shadow: none !important;
+  z-index: 5001 !important; /* ниже, чем навыки (6000) */
+}
+
+.edit-post-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  height: calc(env(safe-area-inset-top, 40px) + 60px);
+  padding-top: env(safe-area-inset-top, 40px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 8px !important;
+  background-color: var(--main-bg-color);
+  border-bottom: 1px solid var(--secondary-bg-color);
+}
+
+.edit-post-scroll-content {
+  padding-top: 120px !important;
+  margin-top: 0 !important;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 80px !important;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* Режим стекла для экрана редактирования */
+
+body.theme-glass-overlay .edit-post-screen {
+  background: var(--deep-glass-background) !important;
+  background-attachment: fixed;
+}
+
+body.theme-glass-overlay .edit-post-header {
+  background: transparent !important;
+  backdrop-filter: none;
+  border-bottom: none !important;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+body.theme-glass-overlay .edit-post-header h2 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* FAB контейнер сохранения в модалке */
+
+.fab-modal-save-container {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 560px;
+  z-index: 5002;
+  pointer-events: auto;
+}
+
+/* === ЭКРАН РЕДАКТИРОВАНИЯ БЕЗ СТЕКЛА === */
+body.theme-dark:not(.theme-glass-overlay) .edit-post-screen {
+  background: #0f0f11 !important; /* сплошной фон */
+  backdrop-filter: none !important;
+}
+
+body.theme-dark:not(.theme-glass-overlay) .edit-post-header {
+  background: #0f0f11 !important;
+  backdrop-filter: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
