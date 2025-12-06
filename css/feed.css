@@ -48,11 +48,21 @@
 }
 
 body.theme-glass-overlay .react-feed-card {
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: var(--glass-border) !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--glass-border) !important;
+  
+  /* Заменяем border-radius на clip-path */
+  border-radius: none !important;
+  clip-path: inset(0 round 24px);
+
+  /* Тень + внутренняя "обводка" */
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.1), /* "Обводка" */
+    0 4px 20px rgba(0, 0, 0, 0.2);      /* Тень */
+  
+  transform: translate3d(0, 0, 0);
 }
 .react-feed-card:active { transform: scale(0.98); }
 body.theme-glass-overlay .react-feed-card:active {

@@ -83,11 +83,15 @@ body.theme-glass-overlay {
   gap: 12px;
 
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: var(--glass-border);
   box-sizing: border-box;
   transition: all 0.3s ease;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+  isolation: isolate;
 }
 
 /* Заголовок в хедере (Hub, People, Settings) */
@@ -251,11 +255,15 @@ body.theme-glass-overlay {
   justify-content: space-around;
   align-items: center;
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px); /* ← БЫЛО 20px */
+  -webkit-backdrop-filter: blur(10px); /* ← БЫЛО 20px */
   border-top: var(--glass-border);
   box-sizing: border-box;
   transition: transform 0.3s ease;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+  isolation: isolate;
 }
 
 .bottom-tabbar.hide-on-keyboard {
@@ -273,10 +281,23 @@ body.theme-glass-overlay {
   border: none;
   color: var(--main-hint-color);
   cursor: pointer;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* ✅ Фикс для иконок в табах */
+.tab-item svg,
+.tab-item img {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* ✅ Фикс для active состояния */
 .tab-item.active {
-  color: #e5e7eb; /* тот же, что основной текст */
+  color: #e5e7eb;
+  transform: translate3d(0, 0, 0);
 }
 
 .tab-label {
@@ -368,17 +389,20 @@ body.theme-glass-overlay .tab-fab-button {
 .fab-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.6); /* ← Увеличил с 0.4 до 0.6 */
   z-index: 95;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 .fab-menu-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(30, 30, 35, 0.95);
-  backdrop-filter: blur(16px);
+  background: rgba(30, 30, 35, 0.98);
+  backdrop-filter: blur(8px); /* ← БЫЛО 16px */
+  -webkit-backdrop-filter: blur(8px); /* ← БЫЛО 16px */
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 12px 16px;
   border-radius: 16px;
@@ -386,6 +410,9 @@ body.theme-glass-overlay .tab-fab-button {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  isolation: isolate;
 }
 
 .fab-icon-bg {

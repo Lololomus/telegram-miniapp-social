@@ -10,9 +10,9 @@ const tg = window.Telegram?.WebApp;
 const ProfileSheet = React.lazy(() => import('../shared/ProfileSheet.js').then(module => ({ default: module.ProfileSheet })));
 
 import {
-    t, postJSON, useDebounce, 
-    POPULAR_SKILLS, ALL_RECOGNIZED_SKILLS, // 🔥 Импорт обоих списков
-    isIOS, QuickFilterTags, ProfileFallback, PhoneShell, EmptyState,
+  t, postJSON, useDebounce,
+  POPULAR_SKILLS, ALL_RECOGNIZED_SKILLS,
+  isIOS, isMobile, QuickFilterTags, ProfileFallback, PhoneShell, EmptyState,
 } from './posts_utils.js';
 
 import { SkeletonList } from './Skeleton.js';
@@ -43,6 +43,8 @@ function App({ mountInto, overlayHost }) {
   const [showMyPostsOnly, setShowMyPostsOnly] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [editingOrigin, setEditingOrigin] = useState('posts-feed-container');
+  const [showEmptyState, setShowEmptyState] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
   const listContainerRef = useRef(null);
 
   // Открытие редактора поста из профиля (MyProfileScreen)
@@ -68,17 +70,17 @@ function App({ mountInto, overlayHost }) {
 
   // --- ХЕЛПЕР: Безопасное обновление инпутов ---
   const syncInputs = useCallback((value) => {
-      setSearchQuery(value);
-      const inputs = [
-          document.getElementById('posts-search-input'),
-          document.getElementById('global-search-input')
-      ];
-      inputs.forEach(input => {
-          if (input && input.value !== value) {
-              input.value = value;
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-      });
+    setSearchQuery(value);
+    const inputs = [
+      document.getElementById('posts-search-input'),
+      document.getElementById('global-search-input')
+    ];
+    inputs.forEach(input => {
+      if (input && input.value !== value) {
+        input.value = value;
+        // ✅ НЕ вызываем dispatchEvent - синхронизируем только значение
+      }
+    });
   }, []);
   
   // --- ЗАГРУЗКА ---
@@ -203,46 +205,89 @@ function App({ mountInto, overlayHost }) {
       return () => document.removeEventListener('open-deep-link-post', handleDeepLink);
   }, []);
 
+  const effectiveQuery = isMobile ? searchQuery : debouncedSearchQuery;
+
   // --- ФИЛЬТРАЦИЯ ---
   const filtered = useMemo(() => {
-    const qLower = (debouncedSearchQuery || '').toLowerCase().trim();
-    const hasSearch = qLower.length > 0;
-    const hasSkills = selectedSkills && selectedSkills.length > 0;
-    const hasStatus = !!statusFilter;
-
-    if (!hasSearch && !hasSkills && !hasStatus) return posts;
-    if (!posts || posts.length === 0) return [];
-
-    const terms = hasSearch ? qLower.replace(/,/g, ' ').split(' ').map((s) => s.trim()).filter(Boolean) : [];
+  const qLower = effectiveQuery  // ← ИЗМЕНЕНО
+    .toLowerCase()
+    .trim();
+  const hasSearch = qLower.length > 0;
+  const hasSkills = selectedSkills && selectedSkills.length > 0;
+  const hasStatus = !!statusFilter;
+  
+  if (!hasSearch && !hasSkills && !hasStatus) return posts;
+  if (!posts || posts.length === 0) return [];
+  
+  const terms = hasSearch
+    ? qLower
+        .replace(/,/g, ' ')
+        .split(' ')
+        .map(s => s.trim())
+        .filter(Boolean)
+    : [];
+  
+  return posts.filter(p => {
+    // 1. Фильтр по статусу
+    if (hasStatus && p.post_type !== statusFilter) return false;
     
-    return posts.filter((p) => {
-        if (hasStatus && p.post_type !== statusFilter) return false;
-        const postSkillsLower = (p.skill_tags || []).map((s) => s.toLowerCase());
+    // 2. Фильтр по навыкам (ТОЧНОЕ совпадение)
+    const postSkillsLower = p.skill_tags.map(s => s.toLowerCase());
+    if (hasSkills) {
+      const matchesAllSkills = selectedSkills.every(selSkill =>
+        postSkillsLower.some(postSkill => postSkill === selSkill.toLowerCase())
+      );
+      if (!matchesAllSkills) return false;
+    }
+    
+    // 3. Текстовый поиск
+    if (hasSearch) {
+      const searchSkillsSet = new Set(
+        qLower.split(',').map(s => s.trim()).filter(Boolean)
+      );
+      const selectedSkillsSet = new Set(
+        selectedSkills.map(s => s.toLowerCase())
+      );
+      
+      const setsEqual =
+        searchSkillsSet.size === selectedSkillsSet.size &&
+        [...searchSkillsSet].every(s => selectedSkillsSet.has(s));
+      
+      if (setsEqual) return true;
+      
+      const authorNameLower = (p.author?.first_name || '').toLowerCase();
+      const contentLower = (p.content || '').toLowerCase();
+      
+      const matchesTerms = terms.every(
+        term =>
+          authorNameLower.includes(term) ||
+          contentLower.includes(term)
+      );
+      if (!matchesTerms) return false;
+    }
+    
+    return true;
+  });
+}, [posts, effectiveQuery, selectedSkills, statusFilter]);
 
-        if (hasSkills) {
-            const matchesAllSkills = selectedSkills.every((selSkill) => 
-                postSkillsLower.includes(selSkill.toLowerCase())
-            );
-            if (!matchesAllSkills) return false;
-        }
-        
-        if (hasSearch) {
-            // Если поиск = навыкам, пропускаем текстовый фильтр
-            const isSearchMatchingSkills = selectedSkills.length > 0 && selectedSkills.join(', ').toLowerCase() === qLower;
-            if (isSearchMatchingSkills) return true;
-
-            const authorNameLower = (p.author?.first_name || '').toLowerCase();
-            const contentLower = (p.content || '').toLowerCase();
-            const matchesTerms = terms.every((term) => 
-                authorNameLower.includes(term) || 
-                contentLower.includes(term) || 
-                postSkillsLower.some((skill) => skill.includes(term))
-            );
-            if (!matchesTerms) return false;
-        }
-        return true;
-    });
-  }, [posts, debouncedSearchQuery, selectedSkills, statusFilter]);
+  // --- УПРАВЛЕНИЕ ПОКАЗОМ EmptyState ---
+  useEffect(() => {
+    if (isLoading) {
+      setShowEmptyState(false);
+      setIsFiltering(false);
+      return;
+    }
+    
+    if (filtered.length > 0) {
+      setShowEmptyState(false);
+      setIsFiltering(false);
+      return;
+    }
+    
+    // Нет результатов - показываем EmptyState
+    setIsFiltering(false);
+    setShowEmptyState(true);
+  }, [isLoading, filtered.length]);
 
   useEffect(() => {
     if (!overlayHost) return;
@@ -285,15 +330,97 @@ function App({ mountInto, overlayHost }) {
   }, [selectedSkills, syncInputs]);
 
   // --- Handlers ---
-  const handleOpenProfile = useCallback(async (author) => { if (!author || !author.user_id) return; if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('light'); setPostToShow(null); setContextMenuState({ post: null, targetElement: null }); setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); setProfileToShow(author); try { const resp = await postJSON(`${cfg.backendUrl}/get-user-by-id`, { initData: tg?.initData, target_user_id: author.user_id }); if (resp?.ok && resp.profile) { setProfileToShow(prev => { if (prev && prev.user_id === author.user_id) return resp.profile; return prev; }); } } catch(e) {} }, [cfg]);
-  const handleCloseProfile = useCallback(() => { setProfileToShow(null); }, []);
-  const handleOpenPostSheet = useCallback((post) => { if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('medium'); setPostToShow(post); }, []);
-  const handleClosePostSheet = useCallback(() => { setPostToShow(null); }, []);
-  const handleOpenContextMenu = useCallback((post, element) => { if (tg?.HapticFeedback?.impactOccurred) tg.HapticFeedback.impactOccurred('heavy'); setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); setContextMenuState({ post: post, targetElement: element }); }, []);
-  const handleCloseContextMenu = useCallback(() => { setContextMenuState({ post: null, targetElement: null }); setMenuLayout({ verticalAdjust: 0, menuHeight: 0 }); }, []);
-  const handleMenuLayout = useCallback((layout) => { setMenuLayout(layout); }, []);
-  const handleRespond = useCallback((post) => { setContextMenuState({ post: null, targetElement: null }); tg.showAlert(t('action_respond_toast')); }, []);
-  const handleRepost = useCallback((post) => { setContextMenuState({ post: null, targetElement: null }); setPostToShow(null); const bot = window.__CONFIG?.botUsername; const app = window.__CONFIG?.appSlug; if (!bot || !app) { if (tg) tg.showAlert('Ошибка: Не настроен botUsername'); return; } const startParam = `p_${post.post_id}`; const appLink = `https://t.me/${bot}/${app}?startapp=${startParam}`; const rawContent = post.content || ''; const preview = rawContent.slice(0, 150) + (rawContent.length > 150 ? '...' : ''); const text = `${t('repost_request_title')}\n${preview}\n\n${t('repost_request_cta')}`; const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appLink)}&text=${encodeURIComponent(text)}`; if (tg && tg.openTelegramLink) tg.openTelegramLink(shareUrl); else navigator.clipboard.writeText(appLink); }, []);
+  const handleOpenProfile = useCallback(async (author) => {
+  if (!author || !author.user_id) return;
+  
+  if (tg?.HapticFeedback?.impactOccurred) {
+    tg.HapticFeedback.impactOccurred('light');
+  }
+  
+  setPostToShow(null);
+  setContextMenuState({ post: null, targetElement: null });
+  setMenuLayout({ verticalAdjust: 0, menuHeight: 0 });
+  setProfileToShow(author);
+  
+  try {
+    const resp = await postJSON(`${cfg.backendUrl}/get-user-by-id`, {
+      initData: tg?.initData,
+      target_user_id: author.user_id
+    });
+    
+    if (resp?.ok && resp.profile) {
+      setProfileToShow(prev => {
+        if (prev && prev.user_id === author.user_id) return resp.profile;
+        return prev;
+      });
+    }
+  } catch(e) {}
+}, [cfg]);
+
+  const handleCloseProfile = useCallback(() => {
+    setProfileToShow(null);
+  }, []);
+
+  const handleOpenPostSheet = useCallback((post) => {
+    if (tg?.HapticFeedback?.impactOccurred) {
+      tg.HapticFeedback.impactOccurred('medium');
+    }
+    setPostToShow(post);
+  }, []);
+
+  const handleClosePostSheet = useCallback(() => {
+    setPostToShow(null);
+  }, []);
+
+  const handleOpenContextMenu = useCallback((post, element) => {
+    if (tg?.HapticFeedback?.impactOccurred) {
+      tg.HapticFeedback.impactOccurred('heavy');
+    }
+    
+    setMenuLayout({ verticalAdjust: 0, menuHeight: 0 });
+    setContextMenuState({ post: post, targetElement: element });
+  }, []);
+
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenuState({ post: null, targetElement: null });
+    setMenuLayout({ verticalAdjust: 0, menuHeight: 0 });
+  }, []);
+
+  const handleMenuLayout = useCallback((layout) => {
+    setMenuLayout(layout);
+  }, []);
+
+  const handleRespond = useCallback((post) => {
+    setContextMenuState({ post: null, targetElement: null });
+    tg.showAlert(t('action_respond_toast'));
+  }, []);
+
+  const handleRepost = useCallback((post) => {
+    setContextMenuState({ post: null, targetElement: null });
+    setPostToShow(null);
+    
+    const bot = window.__CONFIG?.botUsername;
+    const app = window.__CONFIG?.appSlug;
+    
+    if (!bot || !app) {
+      if (tg) tg.showAlert('Ошибка: Не настроен botUsername');
+      return;
+    }
+    
+    const startParam = `p_${post.post_id}`;
+    const appLink = `https://t.me/${bot}/${app}?startapp=${startParam}`;
+    const rawContent = post.content || '';
+    const preview = rawContent.slice(0, 150) + (rawContent.length > 150 ? '...' : '');
+    const text = `${t('repost_request_title')}\n${preview}\n\n${t('repost_request_cta')}`;
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(appLink)}&text=${encodeURIComponent(text)}`;
+    
+    if (tg && tg.openTelegramLink) {
+      tg.openTelegramLink(shareUrl);
+    } else {
+      navigator.clipboard.writeText(appLink);
+    }
+  }, []);
+
   useEffect(() => {
     const handler = (e) => {
       const post = e.detail?.post;
@@ -415,31 +542,122 @@ function App({ mountInto, overlayHost }) {
 
   const preventSystemMenu = useCallback((e) => { const targetTag = e.target.tagName; if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') return; e.preventDefault(); e.stopPropagation(); }, []);
 
-  const filterKey = JSON.stringify({ s: debouncedSearchQuery, k: selectedSkills.length, t: selectedSkills.join(','), st: statusFilter });
+  const filterKey = isMobile 
+  ? 'mobile-static'
+  : JSON.stringify({ 
+      k: selectedSkills.length, 
+      t: selectedSkills.join(','), 
+      st: statusFilter 
+    });
 
   return h('div', { onContextMenu: preventSystemMenu, style: { padding: '0 12px 12px', position: 'relative', minHeight: '200px' } },
-      h(AnimatePresence, { mode: 'wait' }, 
-          (isLoading) 
-              ? h(motion.div, { key: 'skeleton', initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, style: { position: 'absolute', top: 0, left: '12px', width: 'calc(100% - 24px)', zIndex: 10, pointerEvents: 'none'} }, h(SkeletonList, null))
-              : h(PostsList, { key: `list-${filterKey}`, posts: filtered, onOpenProfile: handleOpenProfile, onOpenPostSheet: handleOpenPostSheet, onOpenContextMenu: handleOpenContextMenu, onTagClick: onToggleSkill, isMyPosts: showMyPostsOnly, onEditPost: handleEditPost, onDeletePost: handleDeletePost, containerRef: listContainerRef, contextMenuPost: contextMenuState.post, menuLayout: menuLayout })
-      ),
-      h(EmptyState, { text: t('feed_empty'), visible: !isLoading && filtered.length === 0, onReset: handleResetFilters }),
-      h(Suspense, { fallback: h(ProfileFallback) },
-        h(AnimatePresence, { mode: "sync" }, 
-          profileToShow && h(ProfileSheet, { key: `profile-${profileToShow.user_id}`, user: profileToShow, onClose: handleCloseProfile }),
-          postToShow && h(PostDetailSheet, { key: `post-${postToShow.post_id}`, post: postToShow, onClose: handleClosePostSheet, onOpenProfile: handleOpenProfile, isMyPost: showMyPostsOnly, onEdit: handleEditPost, onDelete: handleDeletePost, onRespond: handleRespond, onRepost: handleRepost }),
-          contextMenuState.post && h(PostContextMenu, { key: `context-menu-${contextMenuState.post.post_id}`, post: contextMenuState.post, targetElement: contextMenuState.targetElement, onClose: handleCloseContextMenu, onOpenProfile: handleOpenProfile, onRespond: handleRespond, onRepost: handleRepost, onEdit: handleEditPost, onDelete: handleDeletePost, onLayout: handleMenuLayout }),
-          editingPost &&
-            h(EditPostScreen, {
-                key: `edit-${editingPost.post_id}`,
-                post: editingPost,
-                onClose: handleCloseEditScreen,
-                onSave: handleSaveEdit,
-                originId: editingOrigin,
-            })
-        )
+    
+  h(AnimatePresence, { mode: isMobile ? null : 'wait' },
+  isLoading
+    ? h(motion.div, {
+        key: 'skeleton',
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: isMobile ? { duration: 0 } : { duration: 0.3 },
+        style: {
+          position: 'absolute',
+          top: 0,
+          left: '12px',
+          width: 'calc(100% - 24px)',
+          zIndex: 10,
+          pointerEvents: 'none'
+        }
+      }, h(SkeletonList, null))
+    : filtered.length > 0
+      ? h(PostsList, {
+          key: `list-${filterKey}`,
+          posts: filtered,
+          onOpenProfile: handleOpenProfile,
+          onOpenPostSheet: handleOpenPostSheet,
+          onOpenContextMenu: handleOpenContextMenu,
+          onTagClick: onToggleSkill,
+          isMyPosts: showMyPostsOnly,
+          onEditPost: handleEditPost,
+          onDeletePost: handleDeletePost,
+          containerRef: listContainerRef,
+          contextMenuPost: contextMenuState.post,
+          menuLayout: menuLayout
+        })
+        : h(motion.div, {
+          key: 'empty-state',
+          initial: isMobile ? false : { opacity: 0 },
+          animate: isMobile ? false : { opacity: 1 },
+          exit: isMobile ? false : { opacity: 0 },
+          transition: isMobile ? { duration: 0 } : { duration: 0.2 },
+          style: isMobile ? {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            pointerEvents: 'none'
+          } : {}
+        },
+        h(EmptyState, {
+          text: t('feed_empty'),
+          visible: true,
+          onReset: handleResetFilters
+        })
+      )
     ),
-    quickFiltersHost && createPortal(h(QuickFilterTags, { skills: visibleQuickTags, selected: selectedSkills, onToggle: onToggleSkill, hasSearchText: searchQuery.trim().length > 0 }), quickFiltersHost)
+
+    h(Suspense, { fallback: h(ProfileFallback) },
+      h(AnimatePresence, { mode: "sync" },
+        profileToShow && h(ProfileSheet, { 
+          key: `profile-${profileToShow.user_id}`, 
+          user: profileToShow, 
+          onClose: handleCloseProfile 
+        }),
+        
+        postToShow && h(PostDetailSheet, { 
+          key: `post-${postToShow.post_id}`, 
+          post: postToShow, 
+          onClose: handleClosePostSheet, 
+          onOpenProfile: handleOpenProfile, 
+          isMyPost: showMyPostsOnly, 
+          onEdit: handleEditPost, 
+          onDelete: handleDeletePost, 
+          onRespond: handleRespond, 
+          onRepost: handleRepost 
+        }),
+        
+        contextMenuState.post && h(PostContextMenu, { 
+          key: `context-menu-${contextMenuState.post.post_id}`, 
+          post: contextMenuState.post, 
+          targetElement: contextMenuState.targetElement, 
+          onClose: handleCloseContextMenu, 
+          onOpenProfile: handleOpenProfile, 
+          onRespond: handleRespond, 
+          onRepost: handleRepost, 
+          onEdit: handleEditPost, 
+          onDelete: handleDeletePost, 
+          onLayout: handleMenuLayout 
+        }),
+        
+        editingPost && h(EditPostScreen, {
+          key: `edit-${editingPost.post_id}`,
+          post: editingPost,
+          onClose: handleCloseEditScreen,
+          onSave: handleSaveEdit,
+          originId: editingOrigin,
+        })
+      )
+    ),
+
+    quickFiltersHost && createPortal(
+      h(QuickFilterTags, { 
+        skills: visibleQuickTags, 
+        selected: selectedSkills, 
+        onToggle: onToggleSkill, 
+        hasSearchText: searchQuery.trim().length > 0 
+      }), 
+      quickFiltersHost
+    )
   );
 }
 
