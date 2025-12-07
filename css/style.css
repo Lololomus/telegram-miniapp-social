@@ -65,29 +65,26 @@ body.theme-glass-overlay {
   left: 0;
   right: 0;
   z-index: 50;
-
-  /* Автоматическая высота, но с контролем */
   height: auto;
-
-  /* Отступ сверху: Safe Area + 10px */
   padding-top: calc(env(safe-area-inset-top, 40px) + 10px);
-  /* Отступ снизу: 12px */
   padding-bottom: 12px;
   padding-left: 16px;
   padding-right: 16px;
-
   display: flex;
-  flex-direction: column; /* Вертикальная колонка */
-  align-items: center; /* Выравнивание по центру */
+  flex-direction: column;
+  align-items: center;
   justify-content: flex-end;
   gap: 12px;
-
+  
   background: var(--glass-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: var(--glass-border);
   box-sizing: border-box;
-  transition: all 0.3s ease;
+  
+  /* ✅ Оптимизированный transition БЕЗ backdrop-filter */
+  transition: transform 0.3s ease, opacity 0.2s ease;
+  
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   will-change: transform;
@@ -254,12 +251,16 @@ body.theme-glass-overlay {
   display: flex;
   justify-content: space-around;
   align-items: center;
+  
   background: var(--glass-bg);
-  backdrop-filter: blur(10px); /* ← БЫЛО 20px */
-  -webkit-backdrop-filter: blur(10px); /* ← БЫЛО 20px */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: var(--glass-border);
   box-sizing: border-box;
-  transition: transform 0.3s ease;
+  
+  /* ✅ Оптимизированный transition БЕЗ backdrop-filter */
+  transition: transform 0.3s ease, opacity 0.2s ease;
+  
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   will-change: transform;
@@ -389,7 +390,7 @@ body.theme-glass-overlay .tab-fab-button {
 .fab-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6); /* ← Увеличил с 0.4 до 0.6 */
+  background: rgba(0, 0, 0, 0.65);
   z-index: 95;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
@@ -401,8 +402,6 @@ body.theme-glass-overlay .tab-fab-button {
   align-items: center;
   gap: 12px;
   background: rgba(30, 30, 35, 0.98);
-  backdrop-filter: blur(8px); /* ← БЫЛО 16px */
-  -webkit-backdrop-filter: blur(8px); /* ← БЫЛО 16px */
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 12px 16px;
   border-radius: 16px;
@@ -412,7 +411,6 @@ body.theme-glass-overlay .tab-fab-button {
   cursor: pointer;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
-  isolation: isolate;
 }
 
 .fab-icon-bg {
@@ -565,4 +563,40 @@ body.theme-dark:not(.theme-glass-overlay) .tab-item {
 
 body.theme-dark:not(.theme-glass-overlay) .tab-item.active {
   color: #6366f1; /* ← индиго вместо синего */
+}
+
+/* ==========================================
+   FAB OPEN STATE - backdrop-filter
+   ========================================== */
+
+/* ❌ При открытии FAB - отключаем backdrop-filter */
+body.fab-is-open .app-header {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(15, 15, 17, 0.95) !important;
+  transition: none !important;
+}
+
+body.fab-is-open .bottom-tabbar {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(15, 15, 17, 0.95) !important;
+  transition: none !important;
+}
+
+/* ✅ При закрытии FAB - ЯВНО ВОЗВРАЩАЕМ backdrop-filter */
+body.fab-closing .app-header {
+  backdrop-filter: blur(10px) !important; /* ← ДОБАВИЛИ */
+  -webkit-backdrop-filter: blur(10px) !important; /* ← ДОБАВИЛИ */
+  background: var(--glass-bg) !important; /* ← ДОБАВИЛИ */
+  border-bottom: var(--glass-border) !important; /* ← ДОБАВИЛИ */
+  transition: background 0.2s ease, backdrop-filter 0.2s ease !important;
+}
+
+body.fab-closing .bottom-tabbar {
+  backdrop-filter: blur(10px) !important; /* ← ДОБАВИЛИ */
+  -webkit-backdrop-filter: blur(10px) !important; /* ← ДОБАВИЛИ */
+  background: var(--glass-bg) !important; /* ← ДОБАВИЛИ */
+  border-top: var(--glass-border) !important; /* ← ДОБАВИЛИ */
+  transition: background 0.2s ease, backdrop-filter 0.2s ease !important;
 }

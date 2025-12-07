@@ -1596,5 +1596,100 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ==========================================
+    // FAB GPU FIX - Отключаем backdrop-filter при открытии FAB
+    // ==========================================
+    (function() {
+    const fabButton = document.querySelector('.tab-fab-button');
+    
+    if (!fabButton) return;
+    
+    let isFabOpen = false;
+    let closingTimeout = null;
+    
+    // Функция для ПОЛНОЙ очистки состояния FAB
+    const cleanupFabState = () => {
+        if (closingTimeout) clearTimeout(closingTimeout);
+        document.body.classList.remove('fab-is-open');
+        document.body.classList.remove('fab-closing');
+        isFabOpen = false;
+        console.log('✅ FAB state cleaned up');
+    };
+    
+    // Отслеживаем открытие/закрытие FAB
+    const updateFabState = () => {
+        const fabMenu = document.querySelector('.fab-menu-popout');
+        const isOpen = fabMenu && fabMenu.classList.contains('open');
+        
+        if (isOpen && !isFabOpen) {
+        // FAB ОТКРЫЛСЯ
+        if (closingTimeout) clearTimeout(closingTimeout);
+        document.body.classList.remove('fab-closing');
+        document.body.classList.add('fab-is-open');
+        isFabOpen = true;
+        console.log('✅ FAB opened');
+        
+        } else if (!isOpen && isFabOpen) {
+        // FAB ЗАКРЫЛСЯ
+        document.body.classList.remove('fab-is-open');
+        document.body.classList.add('fab-closing');
+        isFabOpen = false;
+        
+        // Убираем класс fab-closing через 150ms
+        closingTimeout = setTimeout(() => {
+            document.body.classList.remove('fab-closing');
+            console.log('✅ FAB closed - transition complete');
+        }, 150);
+        
+        console.log('✅ FAB closing');
+        }
+    };
+    
+    // Проверяем состояние при каждом клике на FAB
+    fabButton.addEventListener('click', () => {
+        setTimeout(updateFabState, 50);
+    });
+    
+    // Проверяем при клике на overlay (закрытие)
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('fab-overlay')) {
+        setTimeout(updateFabState, 50);
+        }
+    });
+    
+    // ✅ КЛЮЧЕВОЕ: Очищаем состояние при открытии ЛЮБОЙ модалки или экрана
+    // Отслеживаем MutationObserver для изменений display: block
+    const modalsToWatch = [
+        '#create-post-modal',
+        '#skills-modal',
+        '#qr-code-modal',
+        '#form-container',
+        '#profile-view-container',
+        '#settings-container'
+    ];
+    
+    modalsToWatch.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (!element) return;
+        
+        // Создаём наблюдатель за изменениями style
+        const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+            const display = window.getComputedStyle(element).display;
+            if (display === 'block' || display === 'flex') {
+                // Модалка открылась - очищаем состояние FAB
+                cleanupFabState();
+            }
+            }
+        });
+        });
+        
+        observer.observe(element, { attributes: true, attributeFilter: ['style'] });
+    });
+    
+    console.log('✅ FAB backdrop-filter fix initialized');
+    })();
+
     main();
 });
