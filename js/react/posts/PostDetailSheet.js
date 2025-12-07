@@ -106,20 +106,22 @@ function PostDetailSheet({
   onRepost,
 }) {
   const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
-
+  
+  // 🔥 НОВОЕ: State для hint overlay
+  const [isTypeHintVisible, setTypeHintVisible] = React.useState(false);
+  const typeHintTimeoutRef = React.useRef(null);
+  
   const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
 
-  // Локальное определение, что пост принадлежит текущему пользователю
   const currentUserId =
     window.__CURRENT_USER_ID ?? window.CURRENT_USER_ID ?? window.CURRENTUSERID;
-
   const authorId = String(author.user_id ?? author.userid ?? '');
-
   const isOwnPost =
     currentUserId != null && authorId &&
     String(currentUserId) === authorId
       ? true
-      : !!isMyPost; // оставляем флаг из "Мои запросы" как запасной
+      : !!isMyPost;
+
   const {
     content,
     full_description,
@@ -135,16 +137,32 @@ function PostDetailSheet({
 
   const typeConfig = getPostTypeConfig(post_type);
   const timeAgo = formatPostTime(created_at);
-
   const mainRole =
     skill_tags.length > 0
       ? skill_tags[0]
       : (t('specialist') || 'Specialist');
-
   const expLabel = getExperienceLabel(experience_years);
   const subtitleParts = [mainRole];
   if (expLabel) subtitleParts.push(expLabel);
   const subtitleText = subtitleParts.join(' • ');
+
+  // 🔥 НОВОЕ: Обработчик клика на бейдж
+  const handleTypeBadgeClick = () => {
+    setTypeHintVisible(true);
+    
+    if (typeHintTimeoutRef.current) {
+      clearTimeout(typeHintTimeoutRef.current);
+    }
+    
+    typeHintTimeoutRef.current = setTimeout(() => {
+      setTypeHintVisible(false);
+      typeHintTimeoutRef.current = null;
+    }, 3500);
+    
+    if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
+      tg.HapticFeedback.impactOccurred('light');
+    }
+  };
 
   const handleReport = () => {
     if (tg?.HapticFeedback?.notificationOccurred) {
@@ -396,8 +414,10 @@ function PostDetailSheet({
                 style: {
                   color: typeConfig.color,
                   borderColor: typeConfig.color,
-                  backgroundColor: `${typeConfig.color}1A`
-                }
+                  backgroundColor: `${typeConfig.color}1A`,
+                  cursor: 'pointer'
+                },
+                onClick: handleTypeBadgeClick
               },
               typeConfig.icon
             )
@@ -499,6 +519,30 @@ function PostDetailSheet({
             { className: `sheet-sticky-footer ${isIOS ? 'is-ios' : ''}` },
             ...(isOwnPost ? footerMyPost : footerForeignPost)
           ),
+          isTypeHintVisible &&
+            h(
+              motion.div,
+              {
+                className: 'status-hint-overlay',
+                initial: { opacity: 0, y: -8, scale: 0.97 },
+                animate: { opacity: 1, y: 0, scale: 1 },
+                exit: { opacity: 0, y: -8, scale: 0.97 },
+                transition: { duration: 0.2 }
+              },
+              h(
+                'div',
+                { className: 'status-hint-bubble' },
+                h('span', { 
+                  className: 'status-hint-label',
+                  style: { fontSize: '18px' } 
+                }, typeConfig.icon),
+                h(
+                  'span',
+                  null,
+                  t(`post_type_desc_${post_type}`) || typeConfig.label
+                )
+              )
+            )
         )
       )
     ),

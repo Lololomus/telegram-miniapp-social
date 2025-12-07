@@ -404,6 +404,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elements.settings.controlBtnTaps) elements.settings.controlBtnTaps.textContent = t('control_mode_taps') || "Кнопки";
         if (elements.settings.controlBtnSwipes) elements.settings.controlBtnSwipes.textContent = t('control_mode_swipes') || "Жесты";
 
+        // Theme buttons
+        if (elements.settings.themeButtons) {
+        const [autoBtn, lightBtn, darkBtn] = elements.settings.themeButtons;
+        if (autoBtn) autoBtn.textContent = t('theme_auto');
+        if (lightBtn) lightBtn.textContent = t('theme_light');
+        if (darkBtn) darkBtn.textContent = t('theme_dark');
+        }
+
+        // Glass Mode label
+        const glassLabel = elements.settings.glassToggleWrapper?.querySelector('label:not(.toggle-switch)');
+        if (glassLabel) {
+        glassLabel.textContent = t('glass_mode_label');
+        }
+
         [elements.profile.skillsToggleBtn, elements.detail.skillsToggleBtn].forEach(toggleButton => {
             if (toggleButton) {
                 const textSpan = toggleButton.querySelector('span:not(.arrow)');

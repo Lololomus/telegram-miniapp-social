@@ -81,6 +81,7 @@
   "feed_empty_search": "No one was found for your request.",
   "search_placeholder": "🔍 Filter by skills (e.g., Python)",
   "action_reset_filters": "Reset filters",
+  "filter_status_label": "Filter by status",
 
   "feed_posts_title": "Requests Feed",
   "my_posts_title": "My Requests",
@@ -96,10 +97,14 @@
 
   "post_type_label": "Request type:",
   "post_type_placeholder": "Select request type...",
-  "post_type_looking": "🤝 Looking for",
-  "post_type_offering": "💼 Offering",
-  "post_type_showcase": "🚀 Showcase",
+  "post_type_looking": "Looking for",
+  "post_type_offering": "Offering",
+  "post_type_showcase": "Showcase",
   "post_type_default": "Request",
+
+  "post_type_desc_looking": "Looking for a specialist to complete a task or project",
+  "post_type_desc_offering": "Offering professional services and expertise",
+  "post_type_desc_showcase": "Showcasing completed work or portfolio",
 
   "post_content_label": "Short Description:",
   "post_content_placeholder": "Describe your request, project, or offer...",
@@ -108,10 +113,15 @@
   "post_skills_label": "Tags (skills):",
   "post_skills_placeholder": "Java, Python (type or select)...",
   "post_created_success": "Your request has been published!",
+  "post_edited_success": "Request successfully updated!",
+  "post_deleted_success": "Request deleted",
 
   "post_view_short": "Short Description",
   "post_view_full": "Full Description",
   "post_view_skills": "Skills",
+
+  "post_meta_remote": "Remote",
+  "post_meta_negotiable": "Negotiable",
 
   "fab_create_request": "Create Request",
   "fab_my_requests": "My Requests",
@@ -242,5 +252,7 @@
   "exp_5_plus": "5+ years",
 
   "action_message": "Message in Telegram",
-  "action_close": "Close"
+  "action_close": "Close",
+  
+  "specialist": "Specialist"
 }
