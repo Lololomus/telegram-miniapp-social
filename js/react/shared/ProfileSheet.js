@@ -1,21 +1,20 @@
 // react/shared/ProfileSheet.js
-// v4.1: Pro Profile + Interactive Statuses + Status Overlay Hint
+// ОБНОВЛЕНО: Добавлена поддержка light theme через getThemeColors()
 
 import React, { useState, useMemo, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { motion, AnimatePresence } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-
-import { tg, isIOS, t, postJSON, useSheetLogic, SheetControls } from '../shared/react_shared_utils.js';
+import { tg, isIOS, t, postJSON, useSheetLogic, SheetControls, getThemeColors } from '../shared/react_shared_utils.js';
 
 const h = React.createElement;
 
 // Конфигурация статусов
 const STATUS_CONFIG = {
-  networking:   { icon: '🤝', colorClass: 'networking',   label: 'status_networking' },
+  networking: { icon: '🤝', colorClass: 'networking', label: 'status_networking' },
   open_to_work: { icon: '⚡', colorClass: 'open_to_work', label: 'status_open_to_work' },
-  hiring:       { icon: '💎', colorClass: 'hiring',       label: 'status_hiring' },
+  hiring: { icon: '💎', colorClass: 'hiring', label: 'status_hiring' },
   open_to_gigs: { icon: '🚀', colorClass: 'open_to_gigs', label: 'status_open_to_gigs' },
-  busy:         { icon: '⛔', colorClass: 'busy',         label: 'status_busy' }
+  busy: { icon: '⛔', colorClass: 'busy', label: 'status_busy' }
 };
 
 const getHeadline = (experience) => {
@@ -28,8 +27,9 @@ const getHeadline = (experience) => {
 export function ProfileSheet({ user, onClose }) {
   const isMyProfile = String(user.user_id) === String(window.__CURRENT_USER_ID);
   const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
+  const colors = getThemeColors(); // Получаем цвета темы
 
-  // Локальный стейт статуса (чтобы менять мгновенно)
+  // Локальный стейт статуса
   const [status, setStatus] = useState(user.status || 'networking');
   const [isStatusPickerOpen, setStatusPickerOpen] = useState(false);
   const [isStatusHintVisible, setStatusHintVisible] = useState(false);
@@ -82,22 +82,18 @@ export function ProfileSheet({ user, onClose }) {
   const currentStatusConfig = STATUS_CONFIG[status] || STATUS_CONFIG.networking;
 
   // --- Actions ---
-
   const handleStatusChange = async (newStatus) => {
-    setStatus(newStatus); // Оптимистичное обновление UI
+    setStatus(newStatus);
     setStatusPickerOpen(false);
     setStatusHintVisible(false);
-
     if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
       tg.HapticFeedback.impactOccurred('medium');
     }
-
     try {
       await postJSON(`${window.__CONFIG.backendUrl}/api/set-status`, {
         initData: tg.initData,
         status: newStatus
       });
-
       if (window.state && window.state.currentUserProfile) {
         window.state.currentUserProfile.status = newStatus;
       }
@@ -110,7 +106,6 @@ export function ProfileSheet({ user, onClose }) {
     const bot = window.__CONFIG?.botUsername;
     const app = window.__CONFIG?.appSlug;
     if (!bot || !app) return;
-
     const link = `https://t.me/${bot}/${app}?startapp=${user.user_id}`;
     const text = t('share_profile_text', { name: user.first_name });
     const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
@@ -129,13 +124,11 @@ export function ProfileSheet({ user, onClose }) {
       onClose();
       return;
     }
-
     try {
       const resp = await postJSON(
         `${window.__CONFIG.backendUrl}/get-telegram-user-info`,
         { initData: tg.initData, target_user_id: user.user_id }
       );
-
       if (resp.ok && resp.username) {
         tg.openTelegramLink(`https://t.me/${resp.username}`);
       } else {
@@ -147,31 +140,24 @@ export function ProfileSheet({ user, onClose }) {
   };
 
   const handleStatusBadgeClick = () => {
-    // Свой профиль — открываем пикер, как раньше
     if (isMyProfile) {
       setStatusPickerOpen(true);
       return;
     }
-
-    // Чужой профиль — показываем оверлей
     setStatusHintVisible(true);
-
     if (statusHintTimeoutRef.current) {
       clearTimeout(statusHintTimeoutRef.current);
     }
-
     statusHintTimeoutRef.current = setTimeout(() => {
       setStatusHintVisible(false);
       statusHintTimeoutRef.current = null;
     }, 3500);
-
     if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
       tg.HapticFeedback.impactOccurred('light');
     }
   };
 
   // --- Render ---
-
   return createPortal(
     h(
       motion.div,
@@ -187,7 +173,6 @@ export function ProfileSheet({ user, onClose }) {
         animate: { opacity: 1 },
         exit: { opacity: 0, pointerEvents: 'none', transition: { duration: 0.2 } }
       },
-
       // Backdrop
       h(
         motion.div,
@@ -196,14 +181,13 @@ export function ProfileSheet({ user, onClose }) {
           style: {
             position: 'absolute',
             inset: 0,
-            background: 'rgba(0,0,0,.7)'
+            background: colors.overlayBg // Динамический цвет
           },
           initial: { opacity: 0 },
           animate: { opacity: 1 },
           exit: { opacity: 0, transition: { duration: 0.2 } }
         }
       ),
-
       // Sheet
       h(
         motion.div,
@@ -220,9 +204,7 @@ export function ProfileSheet({ user, onClose }) {
           transition: { type: 'spring', damping: 30, stiffness: 300 },
           exit: { y: '100%', transition: { type: 'tween', ease: 'easeInOut', duration: 0.2 } }
         },
-
         h(SheetControls, { controlMode, dragControls, onClose }),
-
         h(
           'div',
           {
@@ -238,7 +220,6 @@ export function ProfileSheet({ user, onClose }) {
             },
             onClick: (e) => e.stopPropagation()
           },
-
           // 1. HEADER
           h(
             'div',
@@ -276,7 +257,6 @@ export function ProfileSheet({ user, onClose }) {
               h('span', { style: { fontSize: '22px' } }, currentStatusConfig.icon)
             )
           ),
-
           // 2. CONTENT
           h(
             'div',
@@ -290,7 +270,6 @@ export function ProfileSheet({ user, onClose }) {
                   { className: 'post-text-body', style: { marginBottom: 16 } },
                   user.bio
                 ),
-
               (isLoading || skills.length > 0) &&
                 h(
                   'div',
@@ -306,41 +285,33 @@ export function ProfileSheet({ user, onClose }) {
                         h('span', { key: s, className: 'skill-tag skill-tag--display' }, s)
                       )
                 ),
-
               h('div', {
                 className: 'content-divider',
-                // Было: margin 15px 0 в CSS. Делаем компактнее и чуть больше снизу.
                 style: { margin: '10px 0 8px' },
               }),
-
-              // Более компактный блок "Опыт работы"
+              // Experience
               h(
                 'div',
                 {
                   className: 'profile-block',
-                  // Убираем лишний верхний отступ, оставляем только небольшой нижний
                   style: { marginTop: 0, marginBottom: 10 },
                 },
                 h('h3', { className: 'content-title' }, t('experience', 'EXPERIENCE')),
                 isLoading
                   ? h(SkeletonTimeline)
                   : experience.length > 0
-                    ? experience.map((exp, i) =>
-                        h(ExperienceCard, { key: i, item: exp, type: 'work' })
-                      )
-                    : h('div', { className: 'empty-section' }, t('profile_no_experience', 'No experience added'))
+                  ? experience.map((exp, i) =>
+                      h(ExperienceCard, { key: i, item: exp, type: 'work' })
+                    )
+                  : h('div', { className: 'empty-section' }, t('profile_no_experience', 'No experience added'))
               ),
-
-              // Компактный блок "Образование" — почти без зазора с "Опыт работы"
+              // Education
               !isLoading && education.length > 0 && h(
                 'div',
                 {
                   className: 'profile-block',
                   style: {
-                    // Если есть опыт — минимальный отступ сверху (2px),
-                    // иначе чуть больше, но всё равно компактно.
                     marginTop: (Array.isArray(experience) && experience.length > 0) ? 2 : 6,
-                    // Снизу тоже совсем маленький отступ
                     marginBottom: 4,
                   },
                 },
@@ -349,7 +320,6 @@ export function ProfileSheet({ user, onClose }) {
                   h(ExperienceCard, { key: i, item: edu, type: 'edu' })
                 )
               ),
-
               links.length > 0 &&
                 h(
                   'div',
@@ -365,7 +335,6 @@ export function ProfileSheet({ user, onClose }) {
                 )
             )
           ),
-
           // 3. FOOTER
           h(
             'div',
@@ -390,7 +359,6 @@ export function ProfileSheet({ user, onClose }) {
                   h('line', { x1: 4, y1: 22, x2: 4, y2: 15 })
                 )
               ),
-
             h(
               'button',
               { className: 'icon-action-btn', onClick: handleShare },
@@ -411,7 +379,6 @@ export function ProfileSheet({ user, onClose }) {
                 h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
               )
             ),
-
             h(
               'button',
               {
@@ -423,8 +390,7 @@ export function ProfileSheet({ user, onClose }) {
                 : (t('action_message') || 'Message')
             )
           ),
-
-          // 4. STATUS HINT OVERLAY (поверх всего)
+          // 4. STATUS HINT OVERLAY
           !isMyProfile &&
             isStatusHintVisible &&
             h(
@@ -448,13 +414,20 @@ export function ProfileSheet({ user, onClose }) {
               )
             )
         )
-      )
+      ),
+      // STATUS PICKER
+      isMyProfile && isStatusPickerOpen &&
+        h(StatusPicker, {
+          currentStatus: status,
+          onSelect: handleStatusChange,
+          onClose: () => setStatusPickerOpen(false)
+        })
     ),
     document.body
   );
 }
 
-// Компонент выбора статуса
+// StatusPicker компонент
 function StatusPicker({ currentStatus, onSelect, onClose }) {
   return h(
     motion.div,
@@ -475,6 +448,10 @@ function StatusPicker({ currentStatus, onSelect, onClose }) {
         transition: { type: 'spring', damping: 25, stiffness: 300 },
         onClick: (e) => e.stopPropagation()
       },
+      h(
+        'div',
+        { className: 'status-drag-handle' }
+      ),
       h(
         'div',
         { className: 'status-picker-title' },
@@ -502,7 +479,7 @@ function StatusPicker({ currentStatus, onSelect, onClose }) {
   );
 }
 
-// Experience / skeleton как были в оригинале
+// ExperienceCard компонент
 function ExperienceCard({ item, type }) {
   const title = type === 'work' ? item.job_title : item.institution;
   const subtitle = type === 'work' ? item.company : item.degree;
@@ -541,6 +518,7 @@ function ExperienceCard({ item, type }) {
   );
 }
 
+// SkeletonTimeline компонент
 function SkeletonTimeline() {
   return h(
     'div',

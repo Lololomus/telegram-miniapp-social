@@ -552,3 +552,125 @@ export function useCardGestures({
         }
     };
 }
+
+/**
+ * Определяет текущую тему приложения
+ * @returns {Object} { isLight: boolean, isDark: boolean, isGlass: boolean }
+ */
+export function getThemeType() {
+  const body = document.body;
+  const isLight = body.classList.contains('theme-light');
+  const isDark = body.classList.contains('theme-dark');
+  const isGlass = body.classList.contains('theme-glass-overlay');
+  
+  return { isLight, isDark, isGlass };
+}
+
+/**
+ * Получить цвета для текущей темы
+ * @returns {Object} Объект с цветами для inline styles
+ */
+export function getThemeColors() {
+  const { isLight, isDark, isGlass } = getThemeType();
+  
+  if (isLight) {
+    if (isGlass) {
+      return {
+        bg: 'rgba(255, 255, 255, 0.85)',
+        bgSecondary: 'rgba(255, 255, 255, 0.50)',
+        text: '#0F172A',
+        textSecondary: '#334155',
+        hint: '#64748B',
+        border: '1px solid rgba(0, 0, 0, 0.08)',
+        overlayBg: 'rgba(0, 0, 0, 0.40)',
+        cardBg: 'rgba(255, 255, 255, 0.70)',
+        inputBg: 'rgba(255, 255, 255, 0.65)',
+        placeholder: 'rgba(0, 0, 0, 0.40)',
+        blur: 'blur(20px)',
+        shadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+      };
+    } else {
+      // Light без glass
+      return {
+        bg: '#FFFFFF',
+        bgSecondary: '#F9FAFB',
+        text: '#111827',
+        textSecondary: '#374151',
+        hint: '#6B7280',
+        border: '1px solid rgba(0, 0, 0, 0.08)',
+        overlayBg: 'rgba(0, 0, 0, 0.50)',
+        cardBg: '#FFFFFF',
+        inputBg: '#F9FAFB',
+        placeholder: 'rgba(0, 0, 0, 0.40)',
+        blur: 'none',
+        shadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+      };
+    }
+  } else if (isDark) {
+    // Dark theme
+    if (isGlass) {
+      return {
+        bg: 'rgba(18, 18, 18, 0.94)',
+        bgSecondary: 'rgba(255, 255, 255, 0.05)',
+        text: '#FFFFFF',
+        textSecondary: '#D4D4D8',
+        hint: '#A1A1AA',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        overlayBg: 'rgba(0, 0, 0, 0.75)',
+        cardBg: 'rgba(255, 255, 255, 0.03)',
+        inputBg: 'rgba(255, 255, 255, 0.05)',
+        placeholder: 'rgba(255, 255, 255, 0.40)',
+        blur: 'blur(20px)',
+        shadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+      };
+    } else {
+      return {
+        bg: '#121212',
+        bgSecondary: '#1C1C1E',
+        text: '#FFFFFF',
+        textSecondary: '#D4D4D8',
+        hint: '#A1A1AA',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        overlayBg: 'rgba(0, 0, 0, 0.85)',
+        cardBg: '#1C1C1E',
+        inputBg: '#2C2C2E',
+        placeholder: 'rgba(255, 255, 255, 0.40)',
+        blur: 'none',
+        shadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+      };
+    }
+  }
+  
+  // Fallback на light
+  return {
+    bg: '#FFFFFF',
+    text: '#111827',
+    hint: '#6B7280',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
+    overlayBg: 'rgba(0, 0, 0, 0.50)',
+  };
+}
+
+/**
+ * Получить type colors для PostCard (looking/offering/showcase)
+ * @returns {Object} Объект с цветами типов постов
+ */
+export function getTypeColors() {
+  const { isLight } = getThemeType();
+  
+  if (isLight) {
+    return {
+      looking: '#6366F1',
+      offering: '#10B981',
+      showcase: '#F59E0B',
+      default: '#6B7280',
+    };
+  } else {
+    return {
+      looking: '#0A84FF',
+      offering: '#34C759',
+      showcase: '#FF9500',
+      default: '#8E8E93',
+    };
+  }
+}

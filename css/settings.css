@@ -312,3 +312,116 @@ body.theme-dark:not(.theme-glass-overlay) .language-option-button.active {
   border-color: #6366f1 !important;
   color: #ffffff !important;
 }
+
+/* ==================== LIGHT THEME — SETTINGS ==================== */
+
+/* ==================== 1. SETTINGS SCREEN ==================== */
+
+/* Light без glass */
+body.theme-light .settings-screen {
+  background: #FFFFFF;
+  color: #111827;
+}
+
+body.theme-light .settings-group {
+  background: #F9FAFB;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .settings-item {
+  color: #374151;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+body.theme-light .settings-item:last-child {
+  border-bottom: none;
+}
+
+body.theme-light .settings-label {
+  color: #111827;
+}
+
+body.theme-light .settings-description {
+  color: #6B7280;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .settings-screen {
+  background: transparent;
+}
+
+body.theme-light.theme-glass-overlay .settings-group {
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .settings-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+body.theme-light.theme-glass-overlay .settings-label {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .settings-description {
+  color: #64748B;
+}
+
+/* ==================== 2. THEME BUTTONS ==================== */
+
+body.theme-light .theme-button {
+  background: #F3F4F6;
+  color: #374151;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .theme-button.active {
+  background: #6366F1;
+  color: #FFFFFF;
+  border-color: #6366F1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+body.theme-light .theme-button:active {
+  transform: scale(0.96);
+}
+
+body.theme-light.theme-glass-overlay .theme-button {
+  background: rgba(255, 255, 255, 0.50);
+  backdrop-filter: blur(10px);
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .theme-button.active {
+  background: #6366F1;
+  backdrop-filter: none;
+}
+
+/* ==================== 3. TOGGLE SWITCH ==================== */
+
+body.theme-light .toggle-switch {
+  background: rgba(0, 0, 0, 0.10);
+}
+
+body.theme-light .toggle-switch.active {
+  background: #6366F1;
+}
+
+body.theme-light .toggle-switch .toggle-handle {
+  background: #FFFFFF;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ==================== 4. SETTINGS HEADER ==================== */
+
+body.theme-light .settings-header {
+  color: #111827;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .settings-header {
+  color: #0F172A;
+  border-bottom: var(--glass-border);
+}

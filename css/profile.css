@@ -1047,3 +1047,462 @@ body.theme-dark:not(.theme-glass-overlay) #detail-links {
   border-radius: 14px;
   border: none;
 }
+
+/* ==================== LIGHT THEME — PROFILE & DASHBOARD ==================== */
+
+/* ==================== 1. PROFILE CARD ==================== */
+
+/* Light без glass */
+body.theme-light .profile-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  color: #111827;
+}
+
+body.theme-light .profile-section {
+  background: #F9FAFB;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .profile-section-title {
+  color: #111827;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .profile-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+body.theme-light.theme-glass-overlay .profile-section,
+body.theme-light.theme-glass-overlay #profile-links,
+body.theme-light.theme-glass-overlay #detail-links {
+  background: var(--glass-bg-secondary);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .profile-section-title {
+  color: #0F172A;
+}
+
+/* ==================== 2. PROFILE STATS ==================== */
+
+body.theme-light .stat-value {
+  color: #111827;
+}
+
+body.theme-light .stat-label {
+  color: #6B7280;
+}
+
+body.theme-light .stat-item {
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .stat-value {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .stat-label {
+  color: #64748B;
+}
+
+body.theme-light.theme-glass-overlay .stat-item {
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== 3. PROFILE LINK BUTTON ==================== */
+
+body.theme-light .profile-link-button {
+  background: #F3F4F6;
+  color: #111827;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .profile-link-button {
+  background: var(--glass-bg-input);
+  border: var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.theme-light.theme-glass-overlay .profile-link-chip {
+  background: rgba(255, 255, 255, 0.50);
+  border: var(--glass-border);
+  color: #6366F1;
+  backdrop-filter: blur(8px);
+}
+
+body.theme-light .profile-link-chip {
+  background: #EEF2FF;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: #6366F1;
+}
+
+/* ==================== 4. ICON BUTTONS (QR, SHARE, SETTINGS) ==================== */
+
+body.theme-light .icon-button {
+  background: #FFFFFF;
+  color: #6B7280;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light .icon-button:active {
+  background: #F9FAFB;
+  transform: scale(0.96);
+}
+
+body.theme-light.theme-glass-overlay .icon-button {
+  background: var(--glass-bg-secondary);
+  border: var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #111827;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .icon-button:active {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+/* ==================== 5. DASHBOARD CONTAINER ==================== */
+
+body.theme-light .dashboard-container {
+  background: transparent;
+}
+
+body.theme-light .dashboard-title {
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .dashboard-title {
+  color: #0F172A;
+}
+
+/* ==================== 6. DASHBOARD HERO ==================== */
+
+body.theme-light .dashboard-hero {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light.theme-glass-overlay .dashboard-hero {
+  background: var(--glass-bg);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+body.theme-light .hero-icon-btn {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #111827;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.theme-light.theme-glass-overlay .hero-icon-btn {
+  background: rgba(255, 255, 255, 0.70);
+  border: var(--glass-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body.theme-light .hero-icon-btn:active {
+  transform: scale(0.94);
+  background: rgba(255, 255, 255, 1);
+}
+
+body.theme-light .hero-name {
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .hero-name {
+  color: #0F172A;
+}
+
+/* ==================== 7. HERO STATUS PILL ==================== */
+
+body.theme-light .hero-status-pill {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #374151;
+}
+
+body.theme-light.theme-glass-overlay .hero-status-pill {
+  background: rgba(255, 255, 255, 0.40);
+  border: var(--glass-border);
+  backdrop-filter: blur(8px);
+}
+
+/* Цвета статусов сохраняем */
+body.theme-light .hero-status-pill.networking {
+  color: #BF5AF2;
+  border-color: rgba(191, 90, 242, 0.3);
+  background-color: rgba(191, 90, 242, 0.10);
+}
+
+body.theme-light .hero-status-pill.opentowork {
+  color: #30D158;
+  border-color: rgba(48, 209, 88, 0.3);
+  background-color: rgba(48, 209, 88, 0.10);
+}
+
+body.theme-light .hero-status-pill.hiring {
+  color: #0A84FF;
+  border-color: rgba(10, 132, 255, 0.3);
+  background-color: rgba(10, 132, 255, 0.10);
+}
+
+body.theme-light .hero-status-pill.opentogigs {
+  color: #FF9F0A;
+  border-color: rgba(255, 159, 10, 0.3);
+  background-color: rgba(255, 159, 10, 0.10);
+}
+
+body.theme-light .hero-status-pill.busy {
+  color: #98989D;
+  border-color: rgba(152, 152, 157, 0.3);
+  background-color: rgba(152, 152, 157, 0.10);
+}
+
+/* ==================== 8. HERO STATS ==================== */
+
+body.theme-light .hero-stats {
+  color: #6B7280;
+}
+
+body.theme-light .stat-box b {
+  color: #111827;
+}
+
+body.theme-light .stat-divider {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .hero-stats {
+  color: #64748B;
+}
+
+body.theme-light.theme-glass-overlay .stat-box b {
+  color: #0F172A;
+}
+
+/* ==================== 9. DASHBOARD EDIT BUTTON ==================== */
+
+body.theme-light .dashboard-edit-btn {
+  background: #6366F1;
+  color: #FFFFFF;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
+}
+
+body.theme-light .dashboard-edit-btn:active {
+  transform: scale(0.96);
+  background: #4F46E5;
+}
+
+/* ==================== 10. SEGMENTED CONTROL (TABS) ==================== */
+
+body.theme-light .segmented-control {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .segmented-control {
+  background: rgba(255, 255, 255, 0.30);
+  border: var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.theme-light .segment-btn {
+  background: transparent;
+  color: #6B7280;
+}
+
+body.theme-light .segment-btn.active {
+  background: rgba(99, 102, 241, 0.15);
+  color: #6366F1;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
+}
+
+body.theme-light.theme-glass-overlay .segment-btn.active {
+  background: rgba(255, 255, 255, 0.70);
+  color: #6366F1;
+  backdrop-filter: blur(8px);
+}
+
+/* ==================== 11. RESUME VIEW ==================== */
+
+body.theme-light .resume-view {
+  background: transparent;
+}
+
+body.theme-light .resume-block {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light.theme-glass-overlay .resume-block {
+  background: rgba(255, 255, 255, 0.60);
+  border: var(--glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body.theme-light .resume-block h4 {
+  color: #111827;
+}
+
+body.theme-light .resume-block p {
+  color: #374151;
+}
+
+body.theme-light.theme-glass-overlay .resume-block h4 {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .resume-block p {
+  color: #334155;
+}
+
+body.theme-light .resume-exp-title {
+  color: #111827;
+}
+
+body.theme-light .resume-exp-sub {
+  color: #6B7280;
+}
+
+body.theme-light.theme-glass-overlay .resume-exp-title {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .resume-exp-sub {
+  color: #64748B;
+}
+
+/* ==================== 12. MY POST ROW ==================== */
+
+body.theme-light .my-post-row {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light.theme-glass-overlay .my-post-row {
+  background: rgba(255, 255, 255, 0.60);
+  border: var(--glass-border);
+  backdrop-filter: blur(12px);
+}
+
+body.theme-light .my-post-icon-btn {
+  background: #F3F4F6;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.theme-light .my-post-icon-btn.destructive {
+  background: #DC2626 !important;
+  color: #FFFFFF !important;
+}
+
+body.theme-light .my-post-icon-btn.edit {
+  background: #10B981 !important;
+  color: #FFFFFF !important;
+}
+
+body.theme-light.theme-glass-overlay .my-post-icon-btn {
+  background: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(10px);
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .my-post-icon-btn:active {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* ==================== 13. FAB MAIN CONTAINER ==================== */
+
+body.theme-light .fab-main-button {
+  background: #6366F1;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+body.theme-light.theme-glass-overlay .fab-main-button {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: var(--glass-border);
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .fab-main-button:last-child {
+  background: #6366F1;
+  color: #FFFFFF;
+  border: none;
+}
+
+/* ==================== 14. PROFILE BIO TEXT ==================== */
+
+body.theme-light .profile-bio-text {
+  color: #374151;
+}
+
+body.theme-light.theme-glass-overlay .profile-bio-text {
+  color: #334155;
+}
+
+/* ==================== 15. PROFILE STATUS BADGE ==================== */
+
+body.theme-light .profile-status-badge {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .profile-status-badge {
+  background: rgba(255, 255, 255, 0.40);
+  border: var(--glass-border);
+  backdrop-filter: blur(8px);
+}
+
+/* Цвета сохраняем как в статусах */
+body.theme-light .profile-status-badge.networking {
+  color: #BF5AF2;
+  border-color: rgba(191, 90, 242, 0.3);
+  background-color: rgba(191, 90, 242, 0.1);
+}
+
+body.theme-light .profile-status-badge.opentowork {
+  color: #30D158;
+  border-color: rgba(48, 209, 88, 0.3);
+  background-color: rgba(48, 209, 88, 0.1);
+  box-shadow: 0 0 15px rgba(48, 209, 88, 0.2);
+}
+
+body.theme-light .profile-status-badge.hiring {
+  color: #0A84FF;
+  border-color: rgba(10, 132, 255, 0.3);
+  background-color: rgba(10, 132, 255, 0.1);
+}
+
+body.theme-light .profile-status-badge.opentogigs {
+  color: #FF9F0A;
+  border-color: rgba(255, 159, 10, 0.3);
+  background-color: rgba(255, 159, 10, 0.1);
+}
+
+body.theme-light .profile-status-badge.busy {
+  color: #98989D;
+  border-color: rgba(152, 152, 157, 0.3);
+  background-color: rgba(152, 152, 157, 0.1);
+}

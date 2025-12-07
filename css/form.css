@@ -733,3 +733,128 @@ body.theme-dark:not(.theme-glass-overlay) .edit-post-header {
   backdrop-filter: none !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
+
+/* ==================== LIGHT THEME — FORMS ==================== */
+
+/* ==================== 1. INPUTS & TEXTAREAS ==================== */
+
+/* Light без glass */
+body.theme-light input,
+body.theme-light textarea,
+body.theme-light select {
+  background: #F9FAFB;
+  color: #111827;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light input::placeholder,
+body.theme-light textarea::placeholder {
+  color: rgba(0, 0, 0, 0.40);
+}
+
+body.theme-light input:focus,
+body.theme-light textarea:focus,
+body.theme-light select:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  outline: none;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay input,
+body.theme-light.theme-glass-overlay textarea,
+body.theme-light.theme-glass-overlay select {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--glass-border);
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay input::placeholder,
+body.theme-light.theme-glass-overlay textarea::placeholder {
+  color: rgba(0, 0, 0, 0.40);
+}
+
+body.theme-light.theme-glass-overlay input:focus,
+body.theme-light.theme-glass-overlay textarea:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* ==================== 2. BUTTONS ==================== */
+
+/* Light без glass */
+body.theme-light .action-button {
+  background: #6366F1;
+  color: #FFFFFF;
+  border: none;
+}
+
+body.theme-light .action-button:active {
+  background: #4F46E5;
+  transform: scale(0.98);
+}
+
+body.theme-light .action-button.secondary {
+  background: #F3F4F6;
+  color: #374151;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .action-button.secondary:active {
+  background: #E5E7EB;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .action-button {
+  background: #6366F1;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+body.theme-light.theme-glass-overlay .action-button.secondary {
+  background: rgba(255, 255, 255, 0.50);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--glass-border);
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .action-button.secondary:active {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+/* ==================== 3. FORM LABELS & HINTS ==================== */
+
+body.theme-light label,
+body.theme-light .form-label {
+  color: #374151;
+}
+
+body.theme-light .form-hint,
+body.theme-light .form-description {
+  color: #6B7280;
+}
+
+body.theme-light.theme-glass-overlay label,
+body.theme-light.theme-glass-overlay .form-label {
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .form-hint {
+  color: #64748B;
+}
+
+/* ==================== 4. HEADER BUTTON ==================== */
+
+body.theme-light .header-button {
+  background-color: #F3F4F6;
+  color: #6366F1;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .header-button {
+  background: rgba(255, 255, 255, 0.60);
+  backdrop-filter: blur(10px);
+  border: var(--glass-border);
+}

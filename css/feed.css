@@ -760,3 +760,391 @@ body.theme-glass-overlay .status-hint-bubble {
   background: rgba(15, 15, 20, 0.78);
   border-color: rgba(255, 255, 255, 0.3);
 }
+
+/* ==================== LIGHT THEME — FEED ==================== */
+
+/* ==================== 1. QUICK FILTERS ==================== */
+
+/* Light без glass */
+body.theme-light .quick-filters button,
+body.theme-light .filter-chip {
+  background: #F3F4F6;
+  color: #374151;
+  border: 1px solid transparent;
+}
+
+body.theme-light .quick-filters button.active,
+body.theme-light .filter-chip.active {
+  background: #6366F1;
+  color: #FFFFFF;
+  border-color: #6366F1;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .quick-filters button,
+body.theme-light.theme-glass-overlay .filter-chip {
+  background: rgba(255, 255, 255, 0.60);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--glass-border);
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .quick-filters button.active,
+body.theme-light.theme-glass-overlay .filter-chip.active {
+  background: rgba(99, 102, 241, 0.90);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  border-color: transparent;
+}
+
+/* ==================== 2. FEED CARDS ==================== */
+
+/* Light без glass */
+body.theme-light .react-feed-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: #111827;
+}
+
+body.theme-light .react-feed-card:active {
+  background: #F9FAFB;
+  transform: scale(0.98);
+}
+
+body.theme-light .post-content-clamped {
+  color: #374151 !important;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .react-feed-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow);
+}
+
+body.theme-light.theme-glass-overlay .react-feed-card:active {
+  background: rgba(255, 255, 255, 0.80) !important;
+}
+
+/* ==================== 3. EXPERIENCE PILLS ==================== */
+
+/* Light без glass */
+body.theme-light .exp-pill {
+  background: #F3F4F6;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #374151;
+}
+
+body.theme-light .exp-pill.selected {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366F1;
+  color: #4F46E5;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .exp-pill {
+  background: rgba(255, 255, 255, 0.50) !important;
+  border: var(--glass-border) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #374151 !important;
+}
+
+body.theme-light.theme-glass-overlay .exp-pill.selected {
+  background: rgba(99, 102, 241, 0.20) !important;
+  border-color: #6366F1 !important;
+  color: #4F46E5 !important;
+}
+
+/* ==================== 4. POST SHEET (DETAIL VIEW) ==================== */
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .post-sheet-unified {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(30px) !important;
+  -webkit-backdrop-filter: blur(30px) !important;
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .post-text-title {
+  color: #0F172A !important;
+}
+
+body.theme-light.theme-glass-overlay .post-text-body {
+  color: #334155 !important;
+}
+
+body.theme-light.theme-glass-overlay .post-content-inset {
+  background-color: rgba(255, 255, 255, 0.40) !important;
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .content-divider {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .meta-item {
+  color: #64748B !important;
+}
+
+body.theme-light.theme-glass-overlay .meta-item.budget {
+  color: #0F172A !important;
+}
+
+body.theme-light.theme-glass-overlay .meta-item.date {
+  color: #94A3B8 !important;
+}
+
+body.theme-light.theme-glass-overlay .header-name {
+  color: #0F172A !important;
+}
+
+body.theme-light.theme-glass-overlay .header-subtitle {
+  color: #64748B !important;
+}
+
+/* ==================== 5. SHEET FOOTER ==================== */
+
+body.theme-light.theme-glass-overlay .sheet-sticky-footer {
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .icon-action-btn {
+  background: rgba(255, 255, 255, 0.50);
+  border: var(--glass-border);
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .icon-action-btn:active {
+  background: rgba(255, 255, 255, 0.70);
+}
+
+body.theme-light.theme-glass-overlay .main-action-btn {
+  background: #6366F1;
+  color: #FFFFFF;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+body.theme-light.theme-glass-overlay .main-action-btn.edit {
+  background: #10B981;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+/* ==================== 6. CONTEXT MENU ==================== */
+
+body.theme-light.theme-glass-overlay .post-context-menu-backdrop {
+  background: rgba(0, 0, 0, 0.40) !important;
+}
+
+body.theme-light.theme-glass-overlay .post-context-menu-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: var(--glass-border);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+body.theme-light.theme-glass-overlay .post-context-menu-button {
+  color: #111827;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+body.theme-light.theme-glass-overlay .post-context-menu-button:active,
+body.theme-light.theme-glass-overlay .post-context-menu-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light.theme-glass-overlay .post-context-menu-button.destructive {
+  color: #DC2626;
+}
+
+body.theme-light.theme-glass-overlay .post-context-menu-button.destructive:active,
+body.theme-light.theme-glass-overlay .post-context-menu-button.destructive:hover {
+  background-color: rgba(220, 38, 38, 0.10);
+}
+
+/* ==================== 7. EXPERIENCE CARDS (PROFILE) ==================== */
+
+body.theme-light.theme-glass-overlay .experience-card {
+  background: rgba(255, 255, 255, 0.40);
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .experience-card:active {
+  background: rgba(255, 255, 255, 0.50);
+}
+
+body.theme-light.theme-glass-overlay .exp-icon-box {
+  background: rgba(255, 255, 255, 0.50);
+  color: #6B7280;
+}
+
+body.theme-light.theme-glass-overlay .exp-title {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .exp-subtitle {
+  color: #64748B;
+}
+
+body.theme-light.theme-glass-overlay .exp-date {
+  color: #94A3B8;
+}
+
+body.theme-light.theme-glass-overlay .exp-desc {
+  color: #475569;
+}
+
+/* ==================== 8. SKELETON LOADERS ==================== */
+
+body.theme-light .skeleton-tag,
+body.theme-light .skeleton-text,
+body.theme-light .skeleton-line,
+body.theme-light .skeleton-box {
+  background-color: rgba(0, 0, 0, 0.08);
+  animation: pulse-light 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-light {
+  0%, 100% { opacity: 0.40; }
+  50% { opacity: 0.15; }
+}
+
+/* ==================== 9. WATERMARK ==================== */
+
+body.theme-light .post-watermark {
+  opacity: 0.02;
+}
+
+/* ==================== 10. STATUS PICKER SHEET ==================== */
+
+body.theme-light.theme-glass-overlay .status-picker-overlay {
+  background: rgba(0, 0, 0, 0.40);
+  backdrop-filter: blur(5px);
+}
+
+body.theme-light.theme-glass-overlay .status-picker-sheet {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-top: var(--glass-border);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+}
+
+body.theme-light.theme-glass-overlay .status-drag-handle {
+  background-color: rgba(0, 0, 0, 0.20);
+}
+
+body.theme-light.theme-glass-overlay .status-picker-title {
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .status-option {
+  background: rgba(255, 255, 255, 0.50);
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .status-option.selected {
+  background: rgba(255, 255, 255, 0.70);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.theme-light.theme-glass-overlay .status-label {
+  color: #111827;
+}
+
+/* Сохраняем цвета иконок статусов */
+body.theme-light.theme-glass-overlay .status-option.networking .status-icon {
+  color: #BF5AF2;
+}
+
+body.theme-light.theme-glass-overlay .status-option.opentowork .status-icon {
+  color: #30D158;
+}
+
+body.theme-light.theme-glass-overlay .status-option.hiring .status-icon {
+  color: #0A84FF;
+}
+
+body.theme-light.theme-glass-overlay .status-option.opentogigs .status-icon {
+  color: #FF9F0A;
+}
+
+body.theme-light.theme-glass-overlay .status-option.busy .status-icon {
+  color: #98989D;
+}
+
+/* ==================== 11. FEED STATUS BADGE ==================== */
+
+body.theme-light .feed-status-badge {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .feed-status-badge {
+  background: rgba(255, 255, 255, 0.40);
+  border: var(--glass-border);
+  backdrop-filter: blur(8px);
+}
+
+/* Цвета сохраняются как есть */
+body.theme-light .feed-status-badge.networking {
+  color: #BF5AF2;
+  background: rgba(191, 90, 242, 0.10);
+  border-color: rgba(191, 90, 242, 0.25);
+}
+
+body.theme-light .feed-status-badge.opentowork {
+  color: #30D158;
+  background: rgba(48, 209, 88, 0.10);
+  border-color: rgba(48, 209, 88, 0.25);
+}
+
+body.theme-light .feed-status-badge.hiring {
+  color: #0A84FF;
+  background: rgba(10, 132, 255, 0.10);
+  border-color: rgba(10, 132, 255, 0.25);
+}
+
+body.theme-light .feed-status-badge.opentogigs {
+  color: #FF9F0A;
+  background: rgba(255, 159, 10, 0.10);
+  border-color: rgba(255, 159, 10, 0.25);
+}
+
+body.theme-light .feed-status-badge.busy {
+  color: #98989D;
+  background: rgba(152, 152, 157, 0.10);
+  border-color: rgba(152, 152, 157, 0.25);
+}
+
+/* ==================== 12. PROFILE HEADER ROW ==================== */
+
+body.theme-light.theme-glass-overlay .profile-header-row {
+  /* Стили применяются через React компонент */
+}
+
+body.theme-light.theme-glass-overlay .profile-name {
+  color: #0F172A !important;
+}
+
+body.theme-light.theme-glass-overlay .profile-headline {
+  color: #64748B !important;
+}
+
+body.theme-light.theme-glass-overlay .profile-mini-stats {
+  color: #94A3B8 !important;
+}
+
+/* ==================== 13. EMPTY SECTION ==================== */
+
+body.theme-light .empty-section {
+  color: #94A3B8;
+}

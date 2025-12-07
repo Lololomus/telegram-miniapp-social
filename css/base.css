@@ -385,3 +385,100 @@ body.theme-glass-overlay .icon-button {
   backdrop-filter: blur(10px);
   color: var(--main-text-color);
 }
+
+/* ==================== LIGHT THEME — BASE ELEMENTS ==================== */
+
+/* ==================== 1. WELCOME CARD ==================== */
+
+body.theme-light .welcome-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light .welcome-card h2 {
+  color: #111827;
+}
+
+body.theme-light .welcome-card p {
+  color: #6B7280;
+}
+
+body.theme-light.theme-glass-overlay .welcome-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+body.theme-light.theme-glass-overlay .welcome-card h2 {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .welcome-card p {
+  color: #64748B;
+}
+
+/* ==================== 2. TOAST NOTIFICATIONS ==================== */
+
+body.theme-light .toast-item {
+  background: #6366F1;
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+body.theme-light .toast-item.error {
+  background: #DC2626;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+}
+
+body.theme-light .toast-item.success {
+  background: #10B981;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
+body.theme-light .toast-item.warning {
+  background: #F59E0B;
+  color: #111827;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
+}
+
+/* ==================== 3. SPINNER / LOADER ==================== */
+
+body.theme-light .spinner {
+  border-color: rgba(0, 0, 0, 0.1);
+  border-top-color: #6366F1;
+}
+
+body.theme-light .loading-text {
+  color: #6B7280;
+}
+
+/* ==================== 4. EMPTY STATE ==================== */
+
+body.theme-light .empty-state {
+  color: #6B7280;
+}
+
+body.theme-light .empty-state-title {
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .empty-state-title {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .empty-state {
+  color: #64748B;
+}
+
+/* ==================== 5. DIVIDER ==================== */
+
+body.theme-light .divider {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .divider {
+  background: rgba(0, 0, 0, 0.08);
+}

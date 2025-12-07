@@ -1,5 +1,5 @@
 // react/posts/PostCard.js
-// v2.0: SVG icons + Square avatars
+// ОБНОВЛЕНО: Добавлена поддержка light theme через getThemeColors() и getTypeColors()
 
 import React, { memo } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
@@ -12,10 +12,11 @@ import {
   FEED_ITEM_SPRING,
   useCardGestures,
 } from './posts_utils.js';
+import { getThemeColors, getTypeColors } from '../shared/react_shared_utils.js';
 
 const h = React.createElement;
 
-// 🔥 НОВАЯ ФУНКЦИЯ: Получить SVG иконку по типу поста
+// Получить SVG иконку по типу поста
 const getPostTypeIcon = (post_type) => {
   const iconProps = {
     viewBox: '0 0 24 24',
@@ -29,25 +30,19 @@ const getPostTypeIcon = (post_type) => {
 
   switch (post_type) {
     case 'looking':
-      // Лупа (поиск)
       return h('svg', iconProps,
         h('circle', { cx: 11, cy: 11, r: 8 }),
         h('line', { x1: 21, y1: 21, x2: 16.65, y2: 16.65 })
       );
-    
     case 'offering':
-      // Портфель (услуги)
       return h('svg', iconProps,
         h('rect', { x: 2, y: 7, width: 20, height: 14, rx: 2, ry: 2 }),
         h('path', { d: 'M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16' })
       );
-    
     case 'showcase':
-      // Молния (демо)
       return h('svg', iconProps,
         h('polygon', { points: '13 2 3 14 12 14 11 22 21 10 12 10 13 2' })
       );
-    
     default:
       return null;
   }
@@ -65,19 +60,16 @@ const PostCard = memo(function PostCard({
   isContextMenuOpen,
   isHighlight = false,
 }) {
+  const colors = getThemeColors(); // Получаем цвета темы
+  const typeColors = getTypeColors(); // Получаем цвета типов
+
   const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
   const { content = 'Нет описания', post_type = 'default', skill_tags = [], created_at } = post;
   const avatar = author.photo_path ? `${window.__CONFIG?.backendUrl || location.origin}/${author.photo_path}` : 'https://t.me/i/userpic/320/null.jpg';
-  
-  // Карта цветов для типов постов
-  const type_colors = {
-    looking: '#0A84FF',
-    offering: '#34C759',
-    showcase: '#FF9500',
-    default: '#8E8E93'
-  };
-  const type_color = type_colors[post_type] || type_colors.default;
-  
+
+  // Динамические цвета типов
+  const type_color = typeColors[post_type] || typeColors.default;
+
   const timeAgo = formatPostTime(created_at);
   const postKey = post.post_id || `temp-post-${Math.random()}`;
 
@@ -162,8 +154,7 @@ const PostCard = memo(function PostCard({
       h(
         'div',
         { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 } },
-        
-        // 🔥 АВАТАР (КВАДРАТНЫЙ)
+        // АВАТАР
         h(
           'div',
           {
@@ -171,14 +162,14 @@ const PostCard = memo(function PostCard({
           },
           h(
             'div',
-            { 
-              style: { 
-                height: 44, 
-                width: 44, 
-                borderRadius: '14px', // 🔥 Было 50% (круг), стало 14px (квадрат со скруглением)
-                background: 'var(--secondary-bg-color)', 
+            {
+              style: {
+                height: 44,
+                width: 44,
+                borderRadius: '14px',
+                background: 'var(--secondary-bg-color)',
                 overflow: 'hidden',
-              } 
+              }
             },
             h('img', {
               src: avatar,
@@ -187,9 +178,8 @@ const PostCard = memo(function PostCard({
               draggable: 'false',
               style: { width: '100%', height: '100%', objectFit: 'cover' }
             })
-          ),
+          )
         ),
-        
         // ИМЯ + ВРЕМЯ
         h(
           'div',
@@ -201,39 +191,35 @@ const PostCard = memo(function PostCard({
             },
             h(
               'div',
-              { style: { fontWeight: 600, fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--main-text-color, #000)' } },
+              { style: { fontWeight: 600, fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: colors.text } }, // Динамический цвет
               author.first_name || 'User',
-            ),
+            )
           ),
-          timeAgo && h('div', { style: { fontSize: 14, color: 'var(--main-hint-color, #999)' } }, timeAgo),
+          timeAgo && h('div', { style: { fontSize: 14, color: colors.hint } }, timeAgo) // Динамический цвет
         ),
-        
-        // 🔥 БЕЙДЖ ТИПА (SVG ИКОНКА В КВАДРАТЕ)
+        // БЕЙДЖ ТИПА
         h(
           'div',
-          { 
-            style: { 
+          {
+            style: {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               width: 40,
               height: 40,
               borderRadius: 12,
-              background: `${type_color}1A`, // 10% прозрачности
+              background: `${type_color}1A`,
               color: type_color,
               border: `1.5px solid ${type_color}`,
               flexShrink: 0
-            } 
+            }
           },
           getPostTypeIcon(post_type)
         ),
-        
-        showActionsSpacer && h('div', { style: { width: '40px', flexShrink: 0 } }),
+        showActionsSpacer && h('div', { style: { width: '40px', flexShrink: 0 } })
       ),
-      
       // КОНТЕНТ
       h('p', { className: 'post-content-clamped' }, content),
-      
       // НАВЫКИ
       skill_tags && skill_tags.length > 0 && h(
         'div',
@@ -241,7 +227,7 @@ const PostCard = memo(function PostCard({
         skill_tags.map((skill, i) =>
           h('span', { key: i, className: 'skill-tag skill-tag--display', style: { cursor: 'default' } }, skill)
         )
-      ),
+      )
     )
   );
 });

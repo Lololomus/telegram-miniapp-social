@@ -600,3 +600,231 @@ body.fab-closing .bottom-tabbar {
   border-top: var(--glass-border) !important; /* ← ДОБАВИЛИ */
   transition: background 0.2s ease, backdrop-filter 0.2s ease !important;
 }
+
+/* ==================== LIGHT THEME ==================== */
+body.theme-light {
+  --main-bg-color: #FFFFFF;
+  --secondary-bg-color: #F9FAFB;
+  --main-text-color: #111827;
+  --main-hint-color: #6B7280;
+  --main-button-color: #6366F1;
+  --main-button-text-color: #FFFFFF;
+}
+
+/* ==================== LIGHT GLASS MODE ==================== */
+body.theme-light.theme-glass-overlay {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(236, 72, 153, 0.12) 0%, transparent 35%),
+    radial-gradient(circle at 85% 15%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(147, 51, 234, 0.10) 0%, transparent 45%),
+    radial-gradient(circle at 10% 80%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 90% 85%, rgba(251, 146, 60, 0.10) 0%, transparent 35%),
+    linear-gradient(135deg, #EDE9FE 0%, #DBEAFE 50%, #FEE2E2 100%);
+  background-attachment: fixed;
+
+  /* Glass переменные */
+  --glass-bg: rgba(255, 255, 255, 0.70);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.50);
+  --glass-bg-input: rgba(255, 255, 255, 0.60);
+  --glass-border: 1px solid rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-bg-ios-fallback: rgba(255, 255, 255, 0.95);
+  --glass-bg-ios-fallback-secondary: rgba(255, 255, 255, 0.85);
+}
+
+/* ==================== HEADER (APP HEADER) ==================== */
+
+/* Light без glass */
+body.theme-light .app-header {
+  background: #FFFFFF;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.theme-light .header-title {
+  color: #111827;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .app-header {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: var(--glass-border);
+}
+
+/* ==================== SEARCH BAR ==================== */
+
+/* Light без glass */
+body.theme-light .header-search-input {
+  background-color: #F3F4F6 !important;
+  color: #111827 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .header-search-input::placeholder {
+  color: rgba(0, 0, 0, 0.40);
+}
+
+body.theme-light .header-search-icon {
+  color: #6B7280;
+}
+
+body.theme-light .header-search-clear {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+body.theme-light .header-search-clear svg {
+  color: #FFFFFF;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .header-search-input {
+  background: rgba(255, 255, 255, 0.60) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--glass-border);
+}
+
+body.theme-light .header-filter-btn {
+  background: rgba(0, 0, 0, 0.05);
+  color: #6B7280;
+}
+
+body.theme-light.theme-glass-overlay .header-filter-btn {
+  background: rgba(255, 255, 255, 0.50);
+  backdrop-filter: blur(10px);
+  border: var(--glass-border);
+}
+
+/* ==================== TABBAR ==================== */
+
+/* Light без glass */
+body.theme-light .bottom-tabbar {
+  background: #FFFFFF;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.theme-light .tab-item {
+  color: #6B7280;
+}
+
+body.theme-light .tab-item.active {
+  color: #6366F1;
+}
+
+body.theme-light .tab-label {
+  color: inherit;
+}
+
+/* Light glass */
+body.theme-light.theme-glass-overlay .bottom-tabbar {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: var(--glass-border);
+}
+
+/* ==================== FAB BUTTON ==================== */
+
+body.theme-light .tab-fab-button {
+  background: #6366F1 !important;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4) !important;
+  color: #FFFFFF !important;
+}
+
+body.theme-light.theme-glass-overlay .tab-fab-button {
+  background: #6366F1 !important;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5) !important;
+}
+
+/* ==================== FAB MENU POPOUT ==================== */
+
+body.theme-light.theme-glass-overlay .fab-overlay {
+  background: rgba(0, 0, 0, 0.30);
+}
+
+body.theme-light.theme-glass-overlay .fab-menu-item {
+  background: rgba(255, 255, 255, 0.90);
+  border: var(--glass-border);
+  color: #111827;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+body.theme-light.theme-glass-overlay .fab-icon-bg.blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3B82F6;
+}
+
+body.theme-light.theme-glass-overlay .fab-icon-bg.green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+}
+
+body.theme-light.theme-glass-overlay .fab-icon-bg.orange {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+}
+
+body.theme-light.theme-glass-overlay .fab-icon-bg.red {
+  background: rgba(244, 63, 94, 0.15);
+  color: #F43F5E;
+}
+
+/* ==================== FAB OPEN STATE ==================== */
+
+body.theme-light.fab-is-open .app-header {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+body.theme-light.fab-is-open .bottom-tabbar {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+body.theme-light.fab-closing .app-header {
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  background: var(--glass-bg) !important;
+}
+
+body.theme-light.fab-closing .bottom-tabbar {
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  background: var(--glass-bg) !important;
+}
+
+/* ==================== SKILLS INPUT GROUP ==================== */
+
+body.theme-light .skills-input-button {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #6B7280;
+}
+
+body.theme-light.theme-glass-overlay .skills-input-button {
+  background: rgba(255, 255, 255, 0.50) !important;
+  border: var(--glass-border) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* ==================== PROFILE INTERNAL TITLE ==================== */
+
+body.theme-light .profile-internal-title {
+  color: #111827;
+}
+
+/* ==================== SPINNER ==================== */
+
+body.theme-light .spinner {
+  border-color: rgba(0, 0, 0, 0.1);
+  border-top-color: #6366F1;
+}

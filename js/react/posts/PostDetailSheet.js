@@ -1,19 +1,21 @@
 // react/posts/PostDetailSheet.js
-// v3.5: Report Button + Text Rendering Fixes + i18n meta
+// ОБНОВЛЕНО: Добавлена поддержка light theme через getThemeColors()
 
 import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { motion } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-
 import { t, formatPostTime, isIOS, useSheetLogic, SheetControls, tg } from './posts_utils.js';
+import { getThemeColors, getTypeColors } from '../shared/react_shared_utils.js';
 
 const h = React.createElement;
 
 const getPostTypeConfig = (type) => {
+  const typeColors = getTypeColors(); // Динамические цвета
+  
   switch (type) {
     case 'looking':
       return {
-        color: '#0A84FF',
+        color: typeColors.looking,
         label: t('post_type_looking') || 'Looking for',
         icon: h(
           'svg',
@@ -32,7 +34,7 @@ const getPostTypeConfig = (type) => {
       };
     case 'offering':
       return {
-        color: '#34C759',
+        color: typeColors.offering,
         label: t('post_type_offering') || 'Offering',
         icon: h(
           'svg',
@@ -53,7 +55,7 @@ const getPostTypeConfig = (type) => {
       };
     case 'showcase':
       return {
-        color: '#FF9500',
+        color: typeColors.showcase,
         label: t('post_type_showcase') || 'Showcase',
         icon: h(
           'svg',
@@ -73,7 +75,7 @@ const getPostTypeConfig = (type) => {
       };
     default:
       return {
-        color: '#8E8E93',
+        color: typeColors.default,
         label: t('post_type_default') || 'Post',
         icon: null,
       };
@@ -82,15 +84,13 @@ const getPostTypeConfig = (type) => {
 
 const getExperienceLabel = (expValue) => {
   if (!expValue) return null;
-
   const map = {
-  no_exp: 'exp_no_exp',
-  less_1: 'exp_less_1',
-  '1-3':  'exp_1_3',
-  '3-5':  'exp_3_5',
-  '5+':   'exp_5_plus'
-};
-
+    no_exp: 'exp_no_exp',
+    less_1: 'exp_less_1',
+    '1-3': 'exp_1_3',
+    '3-5': 'exp_3_5',
+    '5+': 'exp_5_plus'
+  };
   const key = map[expValue];
   return key ? (t(key) || expValue) : expValue;
 };
@@ -106,13 +106,12 @@ function PostDetailSheet({
   onRepost,
 }) {
   const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
-  
-  // 🔥 НОВОЕ: State для hint overlay
+  const colors = getThemeColors(); // Получаем цвета темы
+
   const [isTypeHintVisible, setTypeHintVisible] = React.useState(false);
   const typeHintTimeoutRef = React.useRef(null);
-  
-  const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
 
+  const author = post.author || { user_id: 'unknown', first_name: 'Unknown' };
   const currentUserId =
     window.__CURRENT_USER_ID ?? window.CURRENT_USER_ID ?? window.CURRENTUSERID;
   const authorId = String(author.user_id ?? author.userid ?? '');
@@ -137,28 +136,26 @@ function PostDetailSheet({
 
   const typeConfig = getPostTypeConfig(post_type);
   const timeAgo = formatPostTime(created_at);
+
   const mainRole =
     skill_tags.length > 0
       ? skill_tags[0]
       : (t('specialist') || 'Specialist');
+
   const expLabel = getExperienceLabel(experience_years);
   const subtitleParts = [mainRole];
   if (expLabel) subtitleParts.push(expLabel);
   const subtitleText = subtitleParts.join(' • ');
 
-  // 🔥 НОВОЕ: Обработчик клика на бейдж
   const handleTypeBadgeClick = () => {
     setTypeHintVisible(true);
-    
     if (typeHintTimeoutRef.current) {
       clearTimeout(typeHintTimeoutRef.current);
     }
-    
     typeHintTimeoutRef.current = setTimeout(() => {
       setTypeHintVisible(false);
       typeHintTimeoutRef.current = null;
     }, 3500);
-    
     if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
       tg.HapticFeedback.impactOccurred('light');
     }
@@ -171,7 +168,7 @@ function PostDetailSheet({
     tg.showAlert(t('report_sent') || 'Жалоба отправлена');
   };
 
-  // Для своих постов: только репост и закрыть
+  // Footer buttons остаются без изменений
   const footerMyPost = [
     h(
       'button',
@@ -204,107 +201,99 @@ function PostDetailSheet({
       {
         key: 'respond',
         className: 'main-action-btn',
-        onClick: onClose, // вместо onRespond(post)
+        onClick: onClose,
       },
       t('action_close') || 'Закрыть',
     ),
   ];
 
   const footerForeignPost = [
-  // 1) Репорт
-  h(
-    'button',
-    {
-      key: 'report',
-      className: 'icon-action-btn destructive',
-      onClick: handleReport,
-    },
     h(
-      'svg',
+      'button',
       {
-        width: 24,
-        height: 24,
-        viewBox: '0 0 24 24',
-        fill: 'none',
-        stroke: 'currentColor',
-        strokeWidth: 2,
-        strokeLinecap: 'round',
-        strokeLinejoin: 'round',
+        key: 'report',
+        className: 'icon-action-btn destructive',
+        onClick: handleReport,
       },
-      h('path', {
-        d: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z',
-      }),
-      h('line', { x1: 4, y1: 22, x2: 4, y2: 15 }),
+      h(
+        'svg',
+        {
+          width: 24,
+          height: 24,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+        },
+        h('path', {
+          d: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z',
+        }),
+        h('line', { x1: 4, y1: 22, x2: 4, y2: 15 }),
+      ),
     ),
-  ),
-
-  // 2) Профиль автора
-  h(
-    'button',
-    {
-      key: 'profile',
-      className: 'icon-action-btn',
-      onClick: () => onOpenProfile && onOpenProfile(author),
-    },
     h(
-      'svg',
+      'button',
       {
-        width: 24,
-        height: 24,
-        viewBox: '0 0 24 24',
-        fill: 'none',
-        stroke: 'currentColor',
-        strokeWidth: 2,
-        strokeLinecap: 'round',
-        strokeLinejoin: 'round',
+        key: 'profile',
+        className: 'icon-action-btn',
+        onClick: () => onOpenProfile && onOpenProfile(author),
       },
-      // Иконка пользователя: туловище + голова
-      h('path', {
-        d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2',
-      }),
-      h('circle', { cx: 12, cy: 7, r: 4 }),
+      h(
+        'svg',
+        {
+          width: 24,
+          height: 24,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+        },
+        h('path', {
+          d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2',
+        }),
+        h('circle', { cx: 12, cy: 7, r: 4 }),
+      ),
     ),
-  ),
-
-  // 3) Репост (сейчас — репост запроса)
-  h(
-    'button',
-    {
-      key: 'share',
-      className: 'icon-action-btn',
-      onClick: () => onRepost(post),
-    },
     h(
-      'svg',
+      'button',
       {
-        width: 24,
-        height: 24,
-        viewBox: '0 0 24 24',
-        fill: 'none',
-        stroke: 'currentColor',
-        strokeWidth: 2,
-        strokeLinecap: 'round',
-        strokeLinejoin: 'round',
+        key: 'share',
+        className: 'icon-action-btn',
+        onClick: () => onRepost(post),
       },
-      h('circle', { cx: 18, cy: 5, r: 3 }),
-      h('circle', { cx: 6, cy: 12, r: 3 }),
-      h('circle', { cx: 18, cy: 19, r: 3 }),
-      h('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
-      h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 }),
+      h(
+        'svg',
+        {
+          width: 24,
+          height: 24,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+        },
+        h('circle', { cx: 18, cy: 5, r: 3 }),
+        h('circle', { cx: 6, cy: 12, r: 3 }),
+        h('circle', { cx: 18, cy: 19, r: 3 }),
+        h('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
+        h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 }),
+      ),
     ),
-  ),
-
-  // 4) Откликнуться
-  h(
-    'button',
-    {
-      key: 'respond',
-      className: 'main-action-btn',
-      onClick: () => onRespond(post),
-    },
-    t('action_respond') || 'Respond',
-  ),
-];
+    h(
+      'button',
+      {
+        key: 'respond',
+        className: 'main-action-btn',
+        onClick: () => onRespond(post),
+      },
+      t('action_respond') || 'Respond',
+    ),
+  ];
 
   return createPortal(
     h(
@@ -323,9 +312,9 @@ function PostDetailSheet({
           opacity: 0,
           pointerEvents: 'none',
           transition: { duration: 0.2 }
-        }
+        },
       },
-
+      // Backdrop с динамическим цветом
       h(
         motion.div,
         {
@@ -333,14 +322,13 @@ function PostDetailSheet({
           style: {
             position: 'absolute',
             inset: 0,
-            background: 'rgba(0,0,0,.7)'
+            background: colors.overlayBg, // Используем цвет из темы
           },
           initial: { opacity: 0 },
           animate: { opacity: 1 },
           exit: { opacity: 0, transition: { duration: 0.2 } }
         }
       ),
-
       h(
         motion.div,
         {
@@ -357,11 +345,9 @@ function PostDetailSheet({
           exit: {
             y: '100%',
             transition: { type: 'tween', ease: 'easeInOut', duration: 0.2 }
-          }
+          },
         },
-
         h(SheetControls, { controlMode, dragControls, onClose }),
-
         h(
           'div',
           {
@@ -378,7 +364,6 @@ function PostDetailSheet({
             },
             onClick: (e) => e.stopPropagation()
           },
-
           h(
             'div',
             {
@@ -387,7 +372,6 @@ function PostDetailSheet({
             },
             typeConfig.icon
           ),
-
           // HEADER
           h(
             'div',
@@ -422,7 +406,6 @@ function PostDetailSheet({
               typeConfig.icon
             )
           ),
-
           // CONTENT
           h(
             'div',
@@ -430,7 +413,6 @@ function PostDetailSheet({
             h(
               'div',
               { className: 'post-content-inset' },
-
               h(
                 'h2',
                 {
@@ -439,7 +421,6 @@ function PostDetailSheet({
                 },
                 content
               ),
-
               full_description &&
                 h(
                   'div',
@@ -449,7 +430,6 @@ function PostDetailSheet({
                   },
                   full_description
                 ),
-
               skill_tags.length > 0 &&
                 h(
                   'div',
@@ -465,9 +445,7 @@ function PostDetailSheet({
                     )
                   )
                 ),
-
               h('div', { className: 'content-divider' }),
-
               h(
                 'div',
                 { className: 'post-meta-row' },
@@ -512,7 +490,6 @@ function PostDetailSheet({
               )
             )
           ),
-
           // FOOTER
           h(
             'div',
@@ -532,9 +509,9 @@ function PostDetailSheet({
               h(
                 'div',
                 { className: 'status-hint-bubble' },
-                h('span', { 
+                h('span', {
                   className: 'status-hint-label',
-                  style: { fontSize: '18px' } 
+                  style: { fontSize: '18px' }
                 }, typeConfig.icon),
                 h(
                   'span',
