@@ -1,39 +1,70 @@
 /* css/modals.css */
 
-/* --- СТИЛИ: МОДАЛЬНОЕ ОКНО QR-КОДА --- */
+/* ============================================
+   1. QR CODE MODAL
+   ============================================ */
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999 !important;  /* ← ЭТУ СТРОКУ */
+  z-index: 9999 !important;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
 }
-.modal-content {
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    padding: 25px; border-radius: 14px; text-align: center; max-width: 90%;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
-}
-#qrcode-output {
-    margin: 20px auto; width: 200px; height: 200px; background-color: white;
-    padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-}
-#qrcode-output img { display: block; max-width: 100%; max-height: 100%; }
-#qr-link-display {
-    font-size: 12px; color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    opacity: var(--main-hint-opacity, 1); word-break: break-all; margin-bottom: 20px;
-}
-.modal-content .action-button.secondary { margin-top: 15px; }
 
-/* --- Стили для модального окна навыков (HTML) --- */
-#skills-modal {
+.modal-content {
+  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+  padding: 25px;
+  border-radius: 14px;
+  text-align: center;
+  max-width: 90%;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+#qrcode-output {
+  margin: 20px auto;
+  width: 200px;
+  height: 200px;
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#qrcode-output img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+#qr-link-display {
+  font-size: 12px;
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  opacity: var(--main-hint-opacity, 1);
+  word-break: break-all;
+  margin-bottom: 20px;
+}
+
+.modal-content .action-button.secondary {
+  margin-top: 15px;
+}
+
+/* ============================================
+   2. FULL SCREEN MODALS BASE (HTML)
+   ============================================ */
+
+#create-post-modal,
+#skills-modal {
+  display: none;
   flex-direction: column;
   position: fixed;
   top: 0;
@@ -42,11 +73,25 @@
   bottom: 0;
   height: 100dvh;
   height: 100vh;
-  z-index: 4000; 
-  padding: var(--modal-header-offset) var(--screen-padding-x) 0;
+  padding-top: 0;
+  background-color: var(--main-bg-color);
+  transition: background 0.3s;
+  box-sizing: border-box;
+  scrollbar-width: none;
+}
+
+#create-post-modal {
+  z-index: 8000 !important;
+}
+
+#skills-modal {
+  z-index: 9000 !important;
+  padding-top: 120px !important;
   overflow-y: auto;
-  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-  transition: background-color 0.3s;
+}
+
+#skills-modal::-webkit-scrollbar {
+  width: 0;
 }
 
 @media (min-width: 700px) {
@@ -58,12 +103,48 @@
   }
 }
 
+/* ============================================
+   3. MODAL HEADERS
+   ============================================ */
+
+#create-post-modal .form-header,
+#skills-modal .form-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(env(safe-area-inset-top, 40px) + 65px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 12px;
+  background: var(--main-bg-color);
+  z-index: 10;
+  border-bottom: 1px solid var(--secondary-bg-color);
+}
+
 #skills-modal .form-header {
   padding: 0 0 6px 0;
   margin-bottom: 8px;
   flex-shrink: 0;
   text-align: center;
 }
+
+/* ============================================
+   4. MODAL CONTENT AREAS
+   ============================================ */
+
+#create-post-modal .form-content {
+  box-sizing: border-box;
+  flex: 1;
+  overflow-y: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 120px !important;
+  margin-top: 0 !important;
+  padding-bottom: 100px;
+}
+
 #skills-modal > .status-filter-group,
 #skills-modal-list-container {
   max-width: 600px;
@@ -75,264 +156,12 @@
   gap: var(--skills-section-gap-y);
 }
 
-/* 1. Контейнер со списком навыков (Языки, Фронтенд и т.д.) */
 #skills-modal-list-container {
   padding: 0 16px 100px 16px;
-}
-
-/* 2. Группа фильтров (Тип запроса) */
-#skills-modal > .status-filter-group {
-  /* Отступ для фильтров, если они есть */
-  margin-top: calc(env(safe-area-inset-top, 40px) + 90px) !important;
-  margin-bottom: 20px;
-  padding: 0 16px;
-}
-
-.skill-category { margin: 0; padding: 0; }
-.skill-category:last-child { margin-bottom: 0; }
-.skill-category-title {
-    font-size: 15px; font-weight: 600;
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    margin: 0 0 2px 0; padding-bottom: 8px; border-bottom: none;
-}
-
-.skill-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--skills-tags-gap);
-}
-
-.fab-modal-save-container {
-    position: fixed;
-    bottom: 25px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 40px);
-    max-width: 560px;
-    z-index: 4001; /* Для модалки навыков */
-}
-
-/* Общий стиль для главной кнопки действия */
-.action-button.fab-modal-save {
-    width: 100%;
-    border-radius: 16px; /* Скругление как у iOS кнопок */
-    padding: 16px;
-    font-size: 17px;
-    font-weight: 600;
-    text-align: center;
-    
-    /* Анимация пульсации (как была у тебя) */
-    animation: fab-pulse-main 3s infinite ease-in-out;
-    
-    /* Тень */
-    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
-    transition: transform 0.2s;
-}
-
-.action-button.fab-modal-save:active {
-    transform: scale(0.96);
-}
-
-/* --- Фильтр статусов --- */
-.status-filter-group {
-  padding: 0 16px 0 16px;
-  margin-bottom: var(--skills-section-gap-y);
-  border-bottom: none;
-  transition: border-color 0.3s;
-}
-.status-filter-group-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    margin: 0 0 12px 0;
-}
-.status-filter-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--skills-tags-gap);
-}
-
-.status-tag {
-    cursor: pointer;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1.5px solid transparent;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-}
-
-.status-tag.active {
-    color: #ffffff;
-    border-color: transparent !important;
-}
-
-.status-tag[data-status="looking"] { border-color: #0A84FF; color: #0A84FF; }
-.status-tag[data-status="looking"].active { background-color: #0A84FF; }
-.status-tag[data-status="offering"] { border-color: #34C759; color: #34C759; }
-.status-tag[data-status="offering"].active { background-color: #34C759; }
-.status-tag[data-status="showcase"] { border-color: #FF9500; color: #FF9500; }
-.status-tag[data-status="showcase"].active { background-color: #FF9500; }
-
-/* Статусы людей в модалке навыков */
-.status-tag[data-status="networking"] {
-  border-color: #BF5AF2;
-  color: #BF5AF2;
-}
-.status-tag[data-status="networking"].active {
-  background-color: #BF5AF2;
-}
-
-.status-tag[data-status="open_to_work"] {
-  border-color: #30D158;
-  color: #30D158;
-}
-.status-tag[data-status="open_to_work"].active {
-  background-color: #30D158;
-}
-
-.status-tag[data-status="hiring"] {
-  border-color: #0A84FF;
-  color: #0A84FF;
-}
-.status-tag[data-status="hiring"].active {
-  background-color: #0A84FF;
-}
-
-.status-tag[data-status="open_to_gigs"] {
-  border-color: #FF9F0A;
-  color: #FF9F0A;
-}
-.status-tag[data-status="open_to_gigs"].active {
-  background-color: #FF9F0A;
-}
-
-body.theme-dark .status-tag {
-    background-color: var(--secondary-bg-color, #2c2c2e);
-    color: var(--main-hint-color, #98989e);
-}
-body.theme-dark .status-tag[data-status="looking"] { border-color: #0A84FF; color: #0A84FF; }
-body.theme-dark .status-tag[data-status="offering"] { border-color: #34C759; color: #34C759; }
-body.theme-dark .status-tag[data-status="showcase"] { border-color: #FF9500; color: #FF9500; }
-body.theme-dark .status-tag.active { color: #ffffff; }
-
-body.theme-dark .status-tag {
-  background-color: var(--secondary-bg-color, #2c2c2e);
-  color: var(--main-hint-color, #98989e);
-}
-
-/* СЮДА вставь все новые статусы людей */
-body.theme-dark .status-tag[data-status="networking"]   { border-color: #BF5AF2; color: #BF5AF2; }
-body.theme-dark .status-tag[data-status="open_to_work"] { border-color: #30D158; color: #30D158; }
-body.theme-dark .status-tag[data-status="hiring"]       { border-color: #0A84FF; color: #0A84FF; }
-body.theme-dark .status-tag[data-status="open_to_gigs"] { border-color: #FF9F0A; color: #FF9F0A; }
-
-/* Уже были и остаются */
-body.theme-dark .status-tag[data-status="looking"]  { border-color: #0A84FF; color: #0A84FF; }
-body.theme-dark .status-tag[data-status="offering"] { border-color: #34C759; color: #34C759; }
-body.theme-dark .status-tag[data-status="showcase"] { border-color: #FF9500; color: #FF9500; }
-
-/* И В САМОМ КОНЦЕ блока — универсальное правило для активных */
-body.theme-dark .status-tag.active { color: #ffffff; }
-
-/* --- HTML СТЕКЛО --- */
-body.theme-glass-overlay .modal-overlay { background-color: rgba(0, 0, 0, 0.4); }
-
-body.theme-glass-overlay .modal-content {
-    background-color: var(--glass-bg);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    border-radius: 24px;
-}
-
-/* ПОЛНОЭКРАННЫЕ МОДАЛКИ (База) */
-#create-post-modal {
-  display: none;
-  flex-direction: column;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 100dvh;
-  z-index: 8000 !important;
-  padding-top: 0;
-  background-color: var(--main-bg-color);
-  transition: background 0.3s;
-}
-
-/* ✅ Z-INDEX FIX: Навыки должны быть ВЫШЕ редактирования */
-#skills-modal {
-  display: none;
-  flex-direction: column;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  height: 100dvh;
-  z-index: 9000 !important; /* Уровень 2 (Поверх всего) */
-  padding-top: 0;
-  background-color: var(--main-bg-color);
-  transition: background 0.3s;
-}
-
-.fab-modal-save-container { z-index: 6001 !important; }
-
-/* Хедер модалки (Общий для Создания и Навыков) */
-#create-post-modal .form-header,
-#skills-modal .form-header {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  
-  /* Делаем хедер чуть выше (65px + safe area), чтобы текст "New Request" сел ниже */
-  height: calc(env(safe-area-inset-top, 40px) + 65px);
-  
-  display: flex;
-  align-items: flex-end; /* Прижимаем текст к низу */
-  justify-content: center;
-  
-  /* Небольшой отступ снизу для воздуха */
-  padding-bottom: 12px;
-  
-  background: var(--main-bg-color);
-  z-index: 10;
-  border-bottom: 1px solid var(--secondary-bg-color);
-}
-
-/* --- ЛОГИКА ОТСТУПОВ (SPACING) --- */
-
-/* 1. Контент СОЗДАНИЯ поста (New Request) */
-#create-post-modal .form-content {
-  box-sizing: border-box;
-  flex: 1;
-  overflow-y: auto;
-  padding-left: 20px;
-  padding-right: 20px;
-  
-  /* Хедер (60) + Safe (40) + Воздух (20) = 120px */
-  padding-top: 120px !important; 
   margin-top: 0 !important;
-  
-  padding-bottom: 100px;
+  padding-top: 0 !important;
 }
 
-/* 2. Контент НАВЫКОВ (Select Skills) */
-#skills-modal {
-    /* ✅ ГЛАВНЫЙ ФИКС: Отступ задаем КОНТЕЙНЕРУ */
-    /* Теперь неважно, есть фильтры или нет — контент начнется с 120px */
-    padding-top: 120px !important;
-    box-sizing: border-box;
-    /* Скроллбар скрыт, но скролл работает */
-    scrollbar-width: none; 
-}
-#skills-modal::-webkit-scrollbar { width: 0; }
-
-/* Сбрасываем отступы у детей, т.к. отступ дает родитель */
 #skills-modal > .status-filter-group {
   margin-top: 0 !important;
   padding: 0 16px;
@@ -341,473 +170,369 @@ body.theme-glass-overlay .modal-content {
   border: none;
 }
 
-#skills-modal-list-container {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-bottom: 100px; 
+/* ============================================
+   5. SKILL CATEGORIES
+   ============================================ */
+
+.skill-category {
+  margin: 0;
+  padding: 0;
+  border-bottom: none !important;
 }
 
-
-/* --- СТИЛЬ ДЛЯ РЕЖИМА СТЕКЛА (ВКЛ) --- */
-body.theme-glass-overlay #create-post-modal,
-body.theme-glass-overlay .edit-post-screen {
-    background: var(--deep-glass-background) !important;
-    background-attachment: fixed;
+.skill-category:last-child {
+  margin-bottom: 0;
 }
 
-/* ✅ ФИКС ПУСТОГО ЭКРАНА */
-body.theme-glass-overlay #skills-modal {
-    background: var(--deep-glass-background) !important;
-    background-attachment: fixed;
-    
-    /* УБРАЛИ display: block !important, чтобы не ломать flex из JS */
+.skill-category-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  margin: 0 0 2px 0;
+  padding-bottom: 8px;
+  border-bottom: none;
 }
 
-body.theme-glass-overlay .modal-overlay {
-  background-color: rgba(0,0,0,0.75) !important;
-  backdrop-filter: blur(8px);
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--skills-tags-gap);
 }
 
-body.theme-glass-overlay .modal-content {
-  background-color: var(--glass-bg) !important;
-  backdrop-filter: blur(25px) !important;
-  -webkit-backdrop-filter: blur(25px) !important;
-  border: var(--glass-border) !important;
+/* ============================================
+   6. FAB MODAL SAVE BUTTON
+   ============================================ */
+
+.fab-modal-save-container {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 560px;
+  z-index: 4001;
 }
 
-/* Хедер в режиме Стекла */
-body.theme-glass-overlay #create-post-modal .form-header,
-body.theme-glass-overlay #skills-modal .form-header,
-body.theme-glass-overlay .edit-post-header {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    border-bottom: none !important;
-    box-shadow: none !important;
-    pointer-events: none;
-    
-    /* Легкий градиент под текстом, чтобы читалось */
-    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%) !important;
+.action-button.fab-modal-save {
+  width: 100%;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  animation: fab-pulse-main 3s infinite ease-in-out;
+  box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+  transition: transform 0.2s;
 }
 
-/* Заголовки */
-body.theme-glass-overlay h1, 
-body.theme-glass-overlay .edit-post-header h2 {
-    color: #ffffff !important;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    margin: 0 !important;
+.action-button.fab-modal-save:active {
+  transform: scale(0.96);
 }
 
-/* 3. ЦВЕТНЫЕ ТЕГИ СТАТУСА (В Стекле) */
-body.theme-glass-overlay .status-tag {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #cccccc;
-    font-weight: 600;
-    transition: all 0.1s ease; /* Быстрая анимация */
+/* ============================================
+   7. STATUS FILTER GROUP
+   ============================================ */
+
+.status-filter-group {
+  padding: 0 16px 0 16px;
+  margin-bottom: var(--skills-section-gap-y);
+  border-bottom: none;
+  transition: border-color 0.3s;
 }
 
-/* Looking for */
-body.theme-glass-overlay .status-tag[data-status="looking"] { color: #60a5fa !important; border-color: rgba(96, 165, 250, 0.3) !important; }
-body.theme-glass-overlay .status-tag[data-status="looking"].active {
-    background: #2563eb !important; color: white !important; border-color: #2563eb !important;
-    box-shadow: 0 0 15px rgba(37, 99, 235, 0.6);
+.status-filter-group-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  margin: 0 0 12px 0;
 }
 
-/* Offering */
-body.theme-glass-overlay .status-tag[data-status="offering"] { color: #4ade80 !important; border-color: rgba(74, 222, 128, 0.3) !important; }
-body.theme-glass-overlay .status-tag[data-status="offering"].active {
-    background: #16a34a !important; color: white !important; border-color: #16a34a !important;
-    box-shadow: 0 0 15px rgba(22, 163, 74, 0.6);
+.status-filter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--skills-tags-gap);
 }
 
-/* Showcase */
-body.theme-glass-overlay .status-tag[data-status="showcase"] { color: #f472b6 !important; border-color: rgba(244, 114, 182, 0.3) !important; }
-body.theme-glass-overlay .status-tag[data-status="showcase"].active {
-    background: #db2777 !important; color: white !important; border-color: #db2777 !important;
-    box-shadow: 0 0 15px rgba(219, 39, 119, 0.6);
+/* ============================================
+   8. STATUS TAGS (Base)
+   ============================================ */
+
+.status-tag {
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid transparent;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  color: var(--main-text-color, var(--tg-theme-text-color, #000000));
 }
 
-/* Networking */
-body.theme-glass-overlay .status-tag[data-status="networking"] {
-  color: #BF5AF2 !important;
-  border-color: rgba(191, 90, 242, 0.3) !important;
-}
-body.theme-glass-overlay .status-tag[data-status="networking"].active {
-  background: #BF5AF2 !important;
-  color: #ffffff !important;
-  border-color: #BF5AF2 !important;
-  box-shadow: 0 0 15px rgba(191, 90, 242, 0.6);
+.status-tag.active {
+  color: #ffffff;
+  border-color: transparent !important;
 }
 
-/* Open to work */
-body.theme-glass-overlay .status-tag[data-status="open_to_work"] {
-  color: #30D158 !important;
-  border-color: rgba(48, 209, 88, 0.3) !important;
-}
-body.theme-glass-overlay .status-tag[data-status="open_to_work"].active {
-  background: #30D158 !important;
-  color: #ffffff !important;
-  border-color: #30D158 !important;
-  box-shadow: 0 0 15px rgba(48, 209, 88, 0.6);
+/* Request Status Tags */
+.status-tag[data-status="looking"] {
+  border-color: #0A84FF;
+  color: #0A84FF;
 }
 
-/* Hiring */
-body.theme-glass-overlay .status-tag[data-status="hiring"] {
-  color: #0A84FF !important;
-  border-color: rgba(10, 132, 255, 0.3) !important;
-}
-body.theme-glass-overlay .status-tag[data-status="hiring"].active {
-  background: #0A84FF !important;
-  color: #ffffff !important;
-  border-color: #0A84FF !important;
-  box-shadow: 0 0 15px rgba(10, 132, 255, 0.6);
+.status-tag[data-status="looking"].active {
+  background-color: #0A84FF;
 }
 
-/* Open to gigs */
-body.theme-glass-overlay .status-tag[data-status="open_to_gigs"] {
-  color: #FF9F0A !important;
-  border-color: rgba(255, 159, 10, 0.3) !important;
-}
-body.theme-glass-overlay .status-tag[data-status="open_to_gigs"].active {
-  background: #FF9F0A !important;
-  color: #ffffff !important;
-  border-color: #FF9F0A !important;
-  box-shadow: 0 0 15px rgba(255, 159, 10, 0.6);
+.status-tag[data-status="offering"] {
+  border-color: #34C759;
+  color: #34C759;
 }
 
-/* 4. КНОПКИ ДЕЙСТВИЙ */
-body.theme-glass-overlay .fab-modal-save-container .action-button,
-body.theme-glass-overlay #save-post-button,
-body.theme-glass-overlay #save-skills-modal-button, 
-body.theme-glass-overlay .action-button.fab-modal-save {
-    background-color: #007AFF !important;
-    color: #ffffff !important;
-    border: none !important;
-    box-shadow: 0 10px 30px rgba(0, 122, 255, 0.5) !important;
-    opacity: 1 !important;
+.status-tag[data-status="offering"].active {
+  background-color: #34C759;
 }
-body.theme-glass-overlay .action-button:active { transform: scale(0.96); filter: brightness(1.1); }
 
-/* --- REACT МОДАЛКИ --- */
+.status-tag[data-status="showcase"] {
+  border-color: #FF9500;
+  color: #FF9500;
+}
+
+.status-tag[data-status="showcase"].active {
+  background-color: #FF9500;
+}
+
+/* People Status Tags */
+.status-tag[data-status="networking"] {
+  border-color: #BF5AF2;
+  color: #BF5AF2;
+}
+
+.status-tag[data-status="networking"].active {
+  background-color: #BF5AF2;
+}
+
+.status-tag[data-status="open_to_work"] {
+  border-color: #30D158;
+  color: #30D158;
+}
+
+.status-tag[data-status="open_to_work"].active {
+  background-color: #30D158;
+}
+
+.status-tag[data-status="hiring"] {
+  border-color: #0A84FF;
+  color: #0A84FF;
+}
+
+.status-tag[data-status="hiring"].active {
+  background-color: #0A84FF;
+}
+
+.status-tag[data-status="open_to_gigs"] {
+  border-color: #FF9F0A;
+  color: #FF9F0A;
+}
+
+.status-tag[data-status="open_to_gigs"].active {
+  background-color: #FF9F0A;
+}
+
+/* ============================================
+   9. REACT SHEET BASE
+   ============================================ */
+
 .react-sheet-content {
-    /* ✅ FIX: Фон сплошной */
-    background-color: #18181b !important; /* Zinc-900 */
-    
-    transition: background-color 0.3s;
-    will-change: transform; transform: translateZ(0); backface-visibility: hidden;
-    touch-action: pan-y; -webkit-overflow-scrolling: touch;
+  background-color: #18181b !important;
+  transition: background-color 0.3s;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.theme-dark .react-sheet-content {
-    background-color: var(--secondary-bg-color, #2c2c2e);
+  background-color: var(--secondary-bg-color, #2c2c2e);
 }
 
-/* Если активно "Стекло", делаем чуть прозрачнее, но с сильным блюром */
-body.theme-glass-overlay .react-sheet-content {
-    background-color: rgba(24, 24, 27, 0.98) !important; /* Почти сплошной */
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border-top: var(--glass-border);
-}
-
-body.theme-glass-overlay .react-sheet-content.is-ios {
-    background-color: var(--glass-bg-ios-fallback);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
+/* ============================================
+   10. REACT SHEET CONTROLS
+   ============================================ */
 
 .react-sheet-actions-button {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    z-index: 10;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    background-color: var(--secondary-bg-color, #efefef);
-    color: var(--main-hint-color, #999999);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    font-size: 20px;
-    line-height: 1;
-    transition: all 0.3s;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background-color: var(--secondary-bg-color, #efefef);
+  color: var(--main-hint-color, #999999);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  transition: all 0.3s;
 }
-.react-sheet-actions-button:active { transform: scale(0.9); }
+
+.react-sheet-actions-button:active {
+  transform: scale(0.9);
+}
 
 body.theme-dark .react-sheet-actions-button {
-    background-color: var(--main-bg-color, #1c1c1d);
-    color: var(--main-hint-color, #98989e);
-}
-
-body.theme-glass-overlay .react-sheet-actions-button {
-    background-color: var(--glass-bg-secondary);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: var(--glass-border);
-    color: var(--main-text-color);
-    opacity: 0.8;
-}
-
-body.theme-glass-overlay .react-sheet-actions-button.is-ios {
-    background-color: var(--glass-bg-ios-fallback-secondary);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+  background-color: var(--main-bg-color, #1c1c1d);
+  color: var(--main-hint-color, #98989e);
 }
 
 .react-sheet-chevron-close {
-    position: absolute;
-    top: -15px; 
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    background-color: var(--secondary-bg-color, #efefef);
-    color: var(--main-hint-color, #999999);
-    border: 1.5px solid var(--main-bg-color, #fff);
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-    transition: all 0.3s;
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background-color: var(--secondary-bg-color, #efefef);
+  color: var(--main-hint-color, #999999);
+  border: 1.5px solid var(--main-bg-color, #fff);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
 }
-.react-sheet-chevron-close svg { width: 20px; height: 20px; }
-.react-sheet-chevron-close:active { transform: translateX(-50%) scale(0.9); }
+
+.react-sheet-chevron-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.react-sheet-chevron-close:active {
+  transform: translateX(-50%) scale(0.9);
+}
 
 body.theme-dark .react-sheet-chevron-close {
-    background-color: var(--secondary-bg-color, #2c2c2e);
-    color: var(--main-hint-color, #98989e);
-    border: 1.5px solid var(--main-bg-color, #1c1c1d);
+  background-color: var(--secondary-bg-color, #2c2c2e);
+  color: var(--main-hint-color, #98989e);
+  border: 1.5px solid var(--main-bg-color, #1c1c1d);
 }
 
-body.theme-glass-overlay .react-sheet-chevron-close {
-    background-color: var(--glass-bg-secondary);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: var(--glass-border);
-    color: #ffffff; 
-    opacity: 1;
-    box-shadow: var(--glass-shadow);
-}
+/* ============================================
+   11. REACT SHEET HANDLE
+   ============================================ */
 
-body.theme-glass-overlay .react-sheet-chevron-close.is-ios {
-    background-color: var(--glass-bg-ios-fallback-secondary);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
-
-/* --- ПАЛОЧКА (Handle) --- */
 .react-sheet-handle-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    /* Увеличенная зона свайпа (60px) */
-    height: 60px; 
-    display: flex;
-    /* Палочка выше (отступ 8px) */
-    align-items: flex-start;
-    padding-top: 8px;
-    justify-content: center;
-    z-index: 25;
-    cursor: grab;
-    touch-action: none; /* Запрет браузерного скролла */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 8px;
+  justify-content: center;
+  z-index: 25;
+  cursor: grab;
+  touch-action: none;
 }
 
 .react-sheet-handle-bar {
-    width: 64px; 
-    height: 5px;
-    border-radius: 100px;
-    background-color: var(--secondary-bg-color, #efefef);
-    filter: brightness(0.85);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  width: 64px;
+  height: 5px;
+  border-radius: 100px;
+  background-color: var(--secondary-bg-color, #efefef);
+  filter: brightness(0.85);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 body.theme-dark .react-sheet-handle-bar {
-    background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
-body.theme-glass-overlay .react-sheet-handle-bar {
-    background-color: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(5px);
-}
+/* ============================================
+   12. SHEET FOOTER
+   ============================================ */
 
-/* --- Sticky Footer --- */
 .sheet-footer {
-    background-color: var(--secondary-bg-color, #efefef);
-    position: relative;
-    z-index: 10;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  background-color: var(--secondary-bg-color, #efefef);
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 }
 
 body.theme-dark .sheet-footer {
-    background-color: var(--secondary-bg-color, #2c2c2e);
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+  background-color: var(--secondary-bg-color, #2c2c2e);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
 }
 
-body.theme-glass-overlay .sheet-footer {
-    background-color: var(--glass-bg-secondary);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: var(--glass-border);
-    box-shadow: none;
-}
+/* ============================================
+   13. EDIT POST SCREEN
+   ============================================ */
 
-body.theme-glass-overlay .action-button {
-    background-color: var(--main-button-color); 
-    color: #ffffff;
-    border: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-body.theme-glass-overlay .action-button.secondary {
-    background-color: var(--glass-bg-input);
-    color: #ffffff;
-    border: var(--glass-border);
-    backdrop-filter: blur(10px);
-}
-
-body.theme-glass-overlay .action-button:active,
-body.theme-glass-overlay .action-button.secondary:active {
-    opacity: 0.8;
-    transform: scale(0.98);
-}
-
-/* === ANTI-SELECT === */
-.react-sheet-content * {
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-    -webkit-touch-callout: none !important;
-    -webkit-user-drag: none !important;
-    user-drag: none !important;
-    -webkit-tap-highlight-color: transparent !important;
-}
-.react-sheet-content input,
-.react-sheet-content textarea,
-.react-sheet-content select {
-    -webkit-user-select: text !important;
-    -moz-user-select: text !important;
-    -ms-user-select: text !important;
-    user-select: text !important;
-    -webkit-touch-callout: default !important;
-}
-.react-sheet-content select {
-    -webkit-user-select: default !important;
-    user-select: default !important;
-}
-
-/* --- УЛУЧШЕНИЕ ЦВЕТНЫХ КНОПОК (СТЕКЛО 60%) --- */
-/* Замени этим кодом предыдущий блок в конце css/modals.css */
-
-/* 1. База: белый текст, тень */
-body.theme-dark.theme-glass-overlay .status-tag {
-    font-weight: 600;
-    color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-width: 1px;
-    border-style: solid;
-    transition: all 0.2s ease;
-}
-
-/* 2. СИНИЙ (Ищу специалиста) */
-body.theme-dark.theme-glass-overlay .status-tag[data-status="looking"] {
-    background-color: rgba(10, 132, 255, 0.15);
-    border-color: rgba(10, 132, 255, 0.4);
-}
-/* Активный: 60% непрозрачности */
-body.theme-dark.theme-glass-overlay .status-tag[data-status="looking"].active {
-    background-color: rgba(10, 132, 255, 0.6); 
-    border-color: rgba(10, 132, 255, 0.9);
-    box-shadow: 0 4px 15px rgba(10, 132, 255, 0.4);
-}
-
-/* 3. ЗЕЛЕНЫЙ (Предлагаю услуги) */
-body.theme-dark.theme-glass-overlay .status-tag[data-status="offering"] {
-    background-color: rgba(52, 199, 89, 0.15);
-    border-color: rgba(52, 199, 89, 0.4);
-}
-/* Активный: 60% непрозрачности */
-body.theme-dark.theme-glass-overlay .status-tag[data-status="offering"].active {
-    background-color: rgba(52, 199, 89, 0.6);
-    border-color: rgba(52, 199, 89, 0.9);
-    box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4);
-}
-
-/* 4. ОРАНЖЕВЫЙ (Демонстрация) */
-body.theme-dark.theme-glass-overlay .status-tag[data-status="showcase"] {
-    background-color: rgba(255, 149, 0, 0.15);
-    border-color: rgba(255, 149, 0, 0.4);
-}
-/* Активный: 60% непрозрачности */
-body.theme-dark.theme-glass-overlay .status-tag[data-status="showcase"].active {
-    background-color: rgba(255, 149, 0, 0.6);
-    border-color: rgba(255, 149, 0, 0.9);
-    box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);
-}
-
-/* --- GLASS MODE TEXT FIXES (Заголовки как в модалке навыков) --- */
-body.theme-dark.theme-glass-overlay h1, 
-body.theme-dark.theme-glass-overlay h2,
-body.theme-dark.theme-glass-overlay .form-header h1 {
-    color: #ffffff !important;
-    opacity: 1;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Тень для читаемости на пестром фоне */
-}
-
-/* --- ЭКРАН РЕДАКТИРОВАНИЯ (React Full Screen) --- */
-
-/* Делаем его похожим на нативный экран */
 .edit-post-screen {
-    background-color: var(--main-bg-color) !important;
-    /* Сбрасываем стили обычной модалки */
-    border-radius: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    padding: 0 !important;
-    box-shadow: none !important;
+  background-color: var(--main-bg-color) !important;
+  border-radius: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 
-/* Хедер */
 .edit-post-header {
-    border-bottom: 1px solid var(--secondary-bg-color);
+  border-bottom: 1px solid var(--secondary-bg-color);
 }
 
-/* Стили для FAB контейнера внутри редактирования */
 .edit-post-fab-container {
-    /* Убедимся, что он выше контента */
-    z-index: 5002;
+  z-index: 5002;
 }
 
-/* --- АДАПТАЦИЯ ПОД СТЕКЛО --- */
-body.theme-glass-overlay .edit-post-screen {
-    background-color: #09090b !important; /* Сплошной темный */
+/* ============================================
+   14. ANTI-SELECT
+   ============================================ */
+
+.react-sheet-content * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
-body.theme-glass-overlay .edit-post-header {
-    border-bottom: var(--glass-border);
-    background-color: rgba(255,255,255,0.02);
+.react-sheet-content input,
+.react-sheet-content textarea {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
 }
 
-body.theme-glass-overlay .edit-post-header h2 {
-    color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+.react-sheet-content select {
+  -webkit-user-select: default !important;
+  user-select: default !important;
 }
 
-/* ФИКС: Убираем разделители в модалках */
+/* ============================================
+   15. DIVIDER FIXES
+   ============================================ */
+
 .modal-divider,
 .section-divider,
 .skill-category-divider {
@@ -819,27 +544,65 @@ body.theme-glass-overlay .edit-post-header h2 {
   border-top: none !important;
 }
 
-.skill-category {
-  border-bottom: none !important;
+/* ============================================
+   16. DARK THEME (No Glass)
+   ============================================ */
+
+body.theme-dark .status-tag {
+  background-color: var(--secondary-bg-color, #2c2c2e);
+  color: var(--main-hint-color, #98989e);
 }
 
-/* === ФИКС: СПЛОШНОЙ ФОН МОДАЛОК БЕЗ СТЕКЛА === */
-
-/* Модалка навыков */
-body.theme-dark:not(.theme-glass-overlay) #skills-modal {
-  background: #0f0f11 !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+/* Request Types (Posts/Hub) */
+body.theme-dark .status-tag[data-status="looking"] {
+  border-color: #0A84FF;
+  color: #0A84FF;
 }
 
-/* Модалка создания поста */
+body.theme-dark .status-tag[data-status="offering"] {
+  border-color: #34C759;
+  color: #34C759;
+}
+
+body.theme-dark .status-tag[data-status="showcase"] {
+  border-color: #FF9500;
+  color: #FF9500;
+}
+
+/* People Types (Feed) */
+body.theme-dark .status-tag[data-status="networking"] {
+  border-color: #BF5AF2;
+  color: #BF5AF2;
+}
+
+body.theme-dark .status-tag[data-status="open_to_work"] {
+  border-color: #30D158;
+  color: #30D158;
+}
+
+body.theme-dark .status-tag[data-status="hiring"] {
+  border-color: #0A84FF;
+  color: #0A84FF;
+}
+
+body.theme-dark .status-tag[data-status="open_to_gigs"] {
+  border-color: #FF9F0A;
+  color: #FF9F0A;
+}
+
+/* Active state для всех */
+body.theme-dark .status-tag.active {
+  color: #ffffff;
+}
+
+/* Dark theme modals background */
+body.theme-dark:not(.theme-glass-overlay) #skills-modal,
 body.theme-dark:not(.theme-glass-overlay) #create-post-modal {
   background: #0f0f11 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-/* Хедеры модалок */
 body.theme-dark:not(.theme-glass-overlay) #skills-modal .form-header,
 body.theme-dark:not(.theme-glass-overlay) #create-post-modal .form-header {
   background: #0f0f11 !important;
@@ -848,9 +611,405 @@ body.theme-dark:not(.theme-glass-overlay) #create-post-modal .form-header {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
-/* ==================== LIGHT THEME — MODALS ==================== */
+/* ============================================
+   17. GLASS THEME (Dark)
+   ============================================ */
 
-/* ==================== 1. GENERIC MODAL & QR MODAL ==================== */
+body.theme-glass-overlay .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+body.theme-glass-overlay .modal-content {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 24px;
+}
+
+body.theme-glass-overlay #create-post-modal,
+body.theme-glass-overlay .edit-post-screen,
+body.theme-glass-overlay #skills-modal {
+  background: var(--deep-glass-background) !important;
+  background-attachment: fixed;
+}
+
+body.theme-glass-overlay #create-post-modal .form-header,
+body.theme-glass-overlay #skills-modal .form-header,
+body.theme-glass-overlay .edit-post-header {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%) !important;
+}
+
+body.theme-glass-overlay h1,
+body.theme-glass-overlay .edit-post-header h2 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  margin: 0 !important;
+}
+
+body.theme-glass-overlay .status-tag {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cccccc;
+  font-weight: 600;
+  transition: all 0.1s ease;
+}
+
+/* Glass Status Tags - Request Types */
+body.theme-glass-overlay .status-tag[data-status="looking"] {
+  color: #60a5fa !important;
+  border-color: rgba(96, 165, 250, 0.3) !important;
+}
+
+body.theme-glass-overlay .status-tag[data-status="looking"].active {
+  background: #2563eb !important;
+  color: white !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 15px rgba(37, 99, 235, 0.6);
+}
+
+body.theme-glass-overlay .status-tag[data-status="offering"] {
+  color: #4ade80 !important;
+  border-color: rgba(74, 222, 128, 0.3) !important;
+}
+
+body.theme-glass-overlay .status-tag[data-status="offering"].active {
+  background: #16a34a !important;
+  color: white !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 15px rgba(22, 163, 74, 0.6);
+}
+
+body.theme-glass-overlay .status-tag[data-status="showcase"] {
+  color: #f472b6 !important;
+  border-color: rgba(244, 114, 182, 0.3) !important;
+}
+
+body.theme-glass-overlay .status-tag[data-status="showcase"].active {
+  background: #db2777 !important;
+  color: white !important;
+  border-color: #db2777 !important;
+  box-shadow: 0 0 15px rgba(219, 39, 119, 0.6);
+}
+
+/* Glass Status Tags - People Types */
+body.theme-glass-overlay .status-tag[data-status="networking"] {
+  color: #BF5AF2 !important;
+  border-color: rgba(191, 90, 242, 0.3) !important;
+}
+
+body.theme-glass-overlay .status-tag[data-status="networking"].active {
+  background: #BF5AF2 !important;
+  color: #ffffff !important;
+  border-color: #BF5AF2 !important;
+  box-shadow: 0 0 15px rgba(191, 90, 242, 0.6);
+}
+
+body.theme-glass-overlay .status-tag[data-status="open_to_work"] {
+  color: #30D158 !important;
+  border-color: rgba(48, 209, 88, 0.3) !important;
+}
+
+body.theme-glass-overlay .status-tag[data-status="open_to_work"].active {
+  background: #30D158 !important;
+  color: #ffffff !important;
+  border-color: #30D158 !important;
+  box-shadow: 0 0 15px rgba(48, 209, 88, 0.6);
+}
+
+body.theme-glass-overlay .status-tag[data-status="hiring"] {
+  color: #0A84FF !important;
+  border-color: rgba(10, 132, 255, 0.3) !important;
+}
+
+body.theme-glass-overlay .status-tag[data-status="hiring"].active {
+  background: #0A84FF !important;
+  color: #ffffff !important;
+  border-color: #0A84FF !important;
+  box-shadow: 0 0 15px rgba(10, 132, 255, 0.6);
+}
+
+body.theme-glass-overlay .status-tag[data-status="open_to_gigs"] {
+  color: #FF9F0A !important;
+  border-color: rgba(255, 159, 10, 0.3) !important;
+}
+
+body.theme-glass-overlay .status-tag[data-status="open_to_gigs"].active {
+  background: #FF9F0A !important;
+  color: #ffffff !important;
+  border-color: #FF9F0A !important;
+  box-shadow: 0 0 15px rgba(255, 159, 10, 0.6);
+}
+
+/* Glass Action Buttons */
+body.theme-glass-overlay .fab-modal-save-container .action-button,
+body.theme-glass-overlay #save-post-button,
+body.theme-glass-overlay #save-skills-modal-button,
+body.theme-glass-overlay .action-button.fab-modal-save {
+  background-color: #007AFF !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(0, 122, 255, 0.5) !important;
+  opacity: 1 !important;
+}
+
+body.theme-glass-overlay .action-button:active {
+  transform: scale(0.96);
+  filter: brightness(1.1);
+}
+
+/* Glass React Sheet */
+body.theme-glass-overlay .react-sheet-content {
+  background-color: rgba(24, 24, 27, 0.98) !important;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-top: var(--glass-border);
+}
+
+body.theme-glass-overlay .react-sheet-content.is-ios {
+  background-color: var(--glass-bg-ios-fallback);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.theme-glass-overlay .react-sheet-actions-button {
+  background-color: var(--glass-bg-secondary);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: var(--glass-border);
+  color: var(--main-text-color);
+  opacity: 0.8;
+}
+
+body.theme-glass-overlay .react-sheet-actions-button.is-ios {
+  background-color: var(--glass-bg-ios-fallback-secondary);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.theme-glass-overlay .react-sheet-chevron-close {
+  background-color: var(--glass-bg-secondary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--glass-border);
+  color: #ffffff;
+  opacity: 1;
+  box-shadow: var(--glass-shadow);
+}
+
+body.theme-glass-overlay .react-sheet-chevron-close.is-ios {
+  background-color: var(--glass-bg-ios-fallback-secondary);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.theme-glass-overlay .react-sheet-handle-bar {
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(5px);
+}
+
+body.theme-glass-overlay .sheet-footer {
+  background-color: var(--glass-bg-secondary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: var(--glass-border);
+  box-shadow: none;
+}
+
+body.theme-glass-overlay .action-button {
+  background-color: var(--main-button-color);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.theme-glass-overlay .action-button.secondary {
+  background-color: var(--glass-bg-input);
+  color: #ffffff;
+  border: var(--glass-border);
+  backdrop-filter: blur(10px);
+}
+
+body.theme-glass-overlay .action-button:active,
+body.theme-glass-overlay .action-button.secondary:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+/* Glass Dark Mode Enhanced */
+body.theme-dark.theme-glass-overlay .status-tag {
+  font-weight: 600;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-width: 1px;
+  border-style: solid;
+  transition: all 0.2s ease;
+}
+
+body.theme-dark.theme-glass-overlay .status-tag[data-status="looking"] {
+  background-color: rgba(10, 132, 255, 0.15);
+  border-color: rgba(10, 132, 255, 0.4);
+}
+
+body.theme-dark.theme-glass-overlay .status-tag[data-status="looking"].active {
+  background-color: rgba(10, 132, 255, 0.6);
+  border-color: rgba(10, 132, 255, 0.9);
+  box-shadow: 0 4px 15px rgba(10, 132, 255, 0.4);
+}
+
+body.theme-dark.theme-glass-overlay .status-tag[data-status="offering"] {
+  background-color: rgba(52, 199, 89, 0.15);
+  border-color: rgba(52, 199, 89, 0.4);
+}
+
+body.theme-dark.theme-glass-overlay .status-tag[data-status="offering"].active {
+  background-color: rgba(52, 199, 89, 0.6);
+  border-color: rgba(52, 199, 89, 0.9);
+  box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4);
+}
+
+body.theme-dark.theme-glass-overlay .status-tag[data-status="showcase"] {
+  background-color: rgba(255, 149, 0, 0.15);
+  border-color: rgba(255, 149, 0, 0.4);
+}
+
+body.theme-dark.theme-glass-overlay .status-tag[data-status="showcase"].active {
+  background-color: rgba(255, 149, 0, 0.6);
+  border-color: rgba(255, 149, 0, 0.9);
+  box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);
+}
+
+body.theme-dark.theme-glass-overlay h1,
+body.theme-dark.theme-glass-overlay h2,
+body.theme-dark.theme-glass-overlay .form-header h1 {
+  color: #ffffff !important;
+  opacity: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+body.theme-glass-overlay .edit-post-screen {
+  background-color: #09090b !important;
+}
+
+body.theme-glass-overlay .edit-post-header {
+  border-bottom: var(--glass-border);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+body.theme-glass-overlay .edit-post-header h2 {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   18. LIGHT THEME (No Glass) - UNIFIED OUTLINE STYLE
+   ============================================ */
+
+/* Базовый стиль для всех статусов */
+body.theme-light:not(.theme-glass-overlay) .status-tag {
+  background: transparent !important;
+  border: 1.5px solid currentColor !important;
+  font-weight: 500;
+}
+
+/* Request Types (Posts/Hub) */
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="looking"] {
+  color: #0A84FF !important;
+  border-color: #0A84FF !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="looking"].active {
+  background: #0A84FF !important;
+  color: #FFFFFF !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="offering"] {
+  color: #34C759 !important;
+  border-color: #34C759 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="offering"].active {
+  background: #34C759 !important;
+  color: #FFFFFF !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="showcase"] {
+  color: #FF9500 !important;
+  border-color: #FF9500 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="showcase"].active {
+  background: #FF9500 !important;
+  color: #FFFFFF !important;
+}
+
+/* People Types (Feed) */
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="networking"] {
+  color: #A855F7 !important;
+  border-color: #A855F7 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="networking"].active {
+  background: #A855F7 !important;
+  color: #FFFFFF !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="open_to_work"] {
+  color: #10B981 !important;
+  border-color: #10B981 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="open_to_work"].active {
+  background: #10B981 !important;
+  color: #FFFFFF !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="hiring"] {
+  color: #3B82F6 !important;
+  border-color: #3B82F6 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="hiring"].active {
+  background: #3B82F6 !important;
+  color: #FFFFFF !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="open_to_gigs"] {
+  color: #F59E0B !important;
+  border-color: #F59E0B !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-tag[data-status="open_to_gigs"].active {
+  background: #F59E0B !important;
+  color: #FFFFFF !important;
+}
+
+/* Edit Post Screen */
+body.theme-light:not(.theme-glass-overlay) .edit-post-screen {
+  z-index: 9500 !important;
+  background: #FFFFFF !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .edit-post-header {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .edit-post-header h2 {
+  color: #111827 !important;
+}
+
+/* ============================================
+   19. LIGHT GLASS THEME
+   ============================================ */
 
 body.theme-light.theme-glass-overlay .modal-overlay {
   background: rgba(0, 0, 0, 0.40);
@@ -870,14 +1029,13 @@ body.theme-light.theme-glass-overlay .qr-link-display {
   color: #6B7280;
 }
 
-/* ==================== 2. SKILLS MODAL ==================== */
-
 body.theme-light.theme-glass-overlay #skills-modal,
-body.theme-light.theme-glass-overlay .skills-modal,
-body.theme-light.theme-glass-overlay [id*="skill"] {
-  background: rgba(255, 255, 255, 0.80) !important;
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+body.theme-light.theme-glass-overlay .skills-modal {
+  background: rgba(255, 255, 255, 0.70) !important;
+}
+
+body.theme-light.theme-glass-overlay #skills-modal .form-header {
+  background: transparent !important;
 }
 
 body.theme-light.theme-glass-overlay #skills-modal h1,
@@ -903,8 +1061,6 @@ body.theme-light.theme-glass-overlay .skill-tag.selected {
   color: #4F46E5;
 }
 
-/* ==================== 3. STATUS FILTER GROUP ==================== */
-
 body.theme-light.theme-glass-overlay .status-filter-group {
   border-bottom: none;
 }
@@ -924,7 +1080,7 @@ body.theme-light.theme-glass-overlay .status-tag.active {
   font-weight: 600;
 }
 
-/* Цвета для каждого статуса */
+/* Light Glass Status Tags */
 body.theme-light.theme-glass-overlay .status-tag[data-status="looking"] {
   border-color: rgba(10, 132, 255, 0.3);
   color: #0A84FF;
@@ -1002,8 +1158,6 @@ body.theme-light.theme-glass-overlay .status-tag[data-status="opentogigs"].activ
   border-color: #FF9F0A;
 }
 
-/* ==================== 4. CREATE POST MODAL ==================== */
-
 body.theme-light.theme-glass-overlay #create-post-modal,
 body.theme-light.theme-glass-overlay .post-form-modal {
   background: rgba(255, 255, 255, 0.80) !important;
@@ -1022,8 +1176,6 @@ body.theme-light.theme-glass-overlay .edit-post-header h2 {
   color: #0F172A !important;
   text-shadow: none;
 }
-
-/* ==================== 5. REACT SHEET CONTENT (GENERIC) ==================== */
 
 body.theme-light.theme-glass-overlay .react-sheet-content {
   background-color: rgba(255, 255, 255, 0.85) !important;
@@ -1072,8 +1224,6 @@ body.theme-light.theme-glass-overlay .react-sheet-handle-bar {
   backdrop-filter: blur(5px);
 }
 
-/* ==================== 6. SHEET FOOTER (GENERIC) ==================== */
-
 body.theme-light.theme-glass-overlay .sheet-footer {
   background: rgba(255, 255, 255, 0.90);
   backdrop-filter: blur(20px);
@@ -1101,8 +1251,6 @@ body.theme-light.theme-glass-overlay .sheet-footer .action-button.secondary:acti
   transform: scale(0.98);
 }
 
-/* ==================== 7. FAB MODAL SAVE BUTTON ==================== */
-
 body.theme-light.theme-glass-overlay .fab-modal-save-container .action-button,
 body.theme-light.theme-glass-overlay #save-post-button,
 body.theme-light.theme-glass-overlay #save-skills-modal-button,
@@ -1114,12 +1262,18 @@ body.theme-light.theme-glass-overlay .action-button.fab-modal-save {
   opacity: 1 !important;
 }
 
+body.theme-light.theme-glass-overlay .fab-modal-save-container {
+  position: fixed !important;
+  bottom: 25px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 9999 !important;
+}
+
 body.theme-light.theme-glass-overlay .action-button:active {
   transform: scale(0.96);
   filter: brightness(1.1);
 }
-
-/* ==================== 8. EDIT POST SCREEN ==================== */
 
 body.theme-light.theme-glass-overlay .edit-post-screen {
   background: rgba(255, 255, 255, 0.80) !important;
@@ -1137,8 +1291,6 @@ body.theme-light.theme-glass-overlay .edit-post-header h2 {
   color: #0F172A !important;
   text-shadow: none;
 }
-
-/* ==================== 9. STATUS HINT BUBBLE ==================== */
 
 body.theme-light.theme-glass-overlay .status-hint-bubble {
   background: rgba(255, 255, 255, 0.90);

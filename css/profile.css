@@ -1,171 +1,379 @@
 /* css/profile.css */
-/* ОБНОВЛЕНО: Добавлены стили для заголовка "Ваш профиль" между кнопками */
 
-/* --- КАРТОЧКА ПРОФИЛЯ (СВОЕГО И ЧУЖОГО) --- */
+/* ============================================
+   1. PROFILE CARD (Базовая карточка)
+   ============================================ */
+
 .profile-card {
-    background: rgba(30, 30, 35, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    padding: 20px;
-    
-    /* ✅ FIX: Отступ сверху под кнопки и заголовок */
-    /* Safe Area + отступ кнопок (20px) + высота кнопок (40px) = ~60-80px */
-    padding-top: calc(env(safe-area-inset-top, 20px) + 60px) !important;
-    
-    text-align: center; width: 100%; position: relative; color: #fff; margin-bottom: 20px;
+  background: rgba(30, 30, 35, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  padding-top: calc(env(safe-area-inset-top, 20px) + 60px) !important;
+  text-align: center;
+  width: 100%;
+  position: relative;
+  color: #fff;
+  margin-bottom: 20px;
 }
 
-/* --- ЗАГОЛОВОК ВНУТРИ ПРОФИЛЯ ("Ваш профиль") --- */
+/* Internal Title */
 .profile-internal-title {
-    font-size: 17px !important; /* Размер как в хедере */
-    font-weight: 700 !important;
-    text-align: center;
-    color: #fff;
-    margin: 0 !important;
-    padding: 0 !important;
-    
-    /* ✅ АБСОЛЮТНОЕ ПОЗИЦИОНИРОВАНИЕ */
-    /* Ставим его ровно по центру между кнопками QR и Edit */
-    position: absolute;
-    /* Кнопки имеют top ~20px + safe. Ставим заголовок чуть ниже (28px), чтобы попасть в центр кнопок (высота 40px) */
-    top: calc(env(safe-area-inset-top, 20px) + 28px); 
-    left: 0;
-    right: 0;
-    z-index: 10;
-    pointer-events: none; /* Чтобы сквозь него можно было тыкать, если что */
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  text-align: center;
+  color: #fff;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 20px) + 28px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .detail-card-content {
-    /* Уменьшаем отступ сверху */
-    padding-top: 25px; 
-    /* Уменьшаем отступ снизу для FAB */
-    padding-bottom: 70px; 
+  padding-top: 25px;
+  padding-bottom: 70px;
 }
-/* Убеждаемся, что h2 под фото отображается */
+
 .detail-card-content h2#detail-username {
-    display: block;
+  display: block;
 }
+
+/* ============================================
+   2. AVATAR & BIO
+   ============================================ */
 
 .profile-card img#profile-avatar,
 .detail-avatar-container img#detail-avatar {
-    width: 100px;
-    height: 100px;
-    display: block;
-    border-radius: 50%;
-    border: 4px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff));
-    object-fit: cover;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 100px;
+  height: 100px;
+  display: block;
+  border-radius: 50%;
+  border: 4px solid var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
 .profile-card h2 {
-    /* Сбрасываем старые маржины */
-    margin: 0; 
-    font-size: 24px; font-weight: 600;
-    word-break: break-word;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  word-break: break-word;
 }
+
 .profile-card p#profile-bio,
 .profile-card p#detail-bio {
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-    /* Уменьшаем отступы вокруг био */
-    margin-top: 10px; 
-    margin-bottom: 10px;
-    min-height: 20px; line-height: 1.5; white-space: pre-wrap; opacity: 0.8;
-    text-align: center;
+  color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+  margin-top: 10px;
+  margin-bottom: 10px;
+  min-height: 20px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  opacity: 0.8;
+  text-align: center;
 }
+
 .profile-card p#profile-bio:empty,
 .profile-card p#detail-bio:empty {
-    display: none;
-    margin-top: 0;
-    margin-bottom: 0;
+  display: none;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .profile-avatar-container,
 .detail-avatar-container {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    margin: 0 auto; /* Было 0 auto */
-    
-    /* ✅ FIX: Отступ сверху от воображаемой линии кнопок/заголовка */
-    margin-top: 20px !important;
-    margin-bottom: 15px;
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+  margin-top: 20px !important;
+  margin-bottom: 15px;
 }
 
+/* ============================================
+   3. PROFILE STATS
+   ============================================ */
 
-/* === Секции Опыта и Образования в профиле === */
+.profile-stats-container {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  border-top: none;
+  border-bottom: none;
+  padding: 0;
+  margin: 10px 0 15px 0;
+}
+
+body.theme-dark .profile-stats-container {
+  border-top-color: var(--secondary-bg-color);
+  border-bottom-color: var(--secondary-bg-color);
+}
+
+.profile-card p#profile-bio:empty + .profile-stats-container,
+.profile-card p#detail-bio:empty + .profile-stats-container {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.stat-item {
+  text-align: center;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+  flex-grow: 1;
+  padding: 0 15px;
+  border-right: 1px solid var(--main-bg-color, #fff);
+}
+
+.stat-item:last-child {
+  border-right: none;
+}
+
+.stat-item:active {
+  opacity: 0.7;
+}
+
+.stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--main-text-color);
+}
+
+.stat-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--main-hint-color);
+  opacity: var(--main-hint-opacity, 1);
+}
+
+body.theme-dark .stat-item {
+  border-right-color: var(--secondary-bg-color);
+}
+
+/* ============================================
+   4. SKILLS CONTAINER
+   ============================================ */
+
+.skills-container {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 15px 0 0 0;
+  padding-bottom: 4px;
+  display: none;
+  align-content: flex-start;
+  transition: none;
+  overflow: hidden;
+}
+
+.skills-container:not(.is-empty) {
+  display: flex;
+}
+
+.skills-container:not(.expanded) {
+  max-height: calc(56px * var(--ui-scale, 1) + 8px);
+}
+
+.skills-container.expanded {
+  max-height: none;
+  overflow: visible;
+}
+
+.show-more-skills-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.skills-container.is-empty + .show-more-skills-container {
+  display: none;
+}
+
+.show-more-skills-button {
+  background: none;
+  border: none;
+  color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.show-more-skills-button .arrow {
+  display: inline-block;
+}
+
+.show-more-skills-button .arrow::before {
+  content: '▼';
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.show-more-skills-button.less .arrow::before {
+  transform: rotate(180deg);
+}
+
+/* ============================================
+   5. PROFILE SECTIONS (Experience, Education)
+   ============================================ */
+
 .profile-section {
-    margin-top: 15px; 
-    text-align: left;
-    padding-top: 20px;
-    border-top: 1.5px solid var(--main-bg-color, #fff);
-    display: none;
-    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+  margin-top: 15px;
+  text-align: left;
+  padding-top: 20px;
+  border-top: 1.5px solid var(--main-bg-color, #fff);
+  display: none;
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+  border-radius: 12px;
+  padding: 20px;
+  border-top: none;
 }
+
 .profile-section:not(.is-empty) {
-    display: block;
-    min-height: 50px; /* Защита от "схлопывания" */
+  display: block;
+  min-height: 50px;
 }
-/* Уменьшаем отступы между блоками */
+
 .skills-container:not(.is-empty) + .profile-section:not(.is-empty),
 .show-more-skills-container + .profile-section:not(.is-empty),
 .skills-container.is-empty + .profile-section:not(.is-empty),
 .profile-stats-container + .skills-container.is-empty + .profile-section:not(.is-empty),
-.profile-stats-container + .skills-container:not(.is-empty) + .profile-section:not(.is-empty)
-{
-    margin-top: 15px;
+.profile-stats-container + .skills-container:not(.is-empty) + .profile-section:not(.is-empty),
+.profile-section + .profile-section {
+  margin-top: 15px;
 }
-body.theme-dark .profile-section { border-top-color: var(--secondary-bg-color); }
+
+body.theme-dark .profile-section {
+  border-top-color: var(--secondary-bg-color);
+}
+
 .profile-section-title {
-    font-size: 18px; font-weight: 600; color: var(--main-text-color);
-    margin: 0 0 15px 0; opacity: 0.9;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--main-text-color);
+  margin: 0 0 15px 0;
+  opacity: 0.9;
+  margin: -5px 0 15px 0;
+  font-size: 19px;
+  opacity: 1.0;
 }
+
 .profile-item {
-    margin-bottom: 18px; padding-bottom: 18px;
-    border-bottom: 1px solid var(--main-bg-color, #fff);
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--main-bg-color, #fff);
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 20px;
 }
-.profile-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-body.theme-dark .profile-item { border-bottom-color: var(--secondary-bg-color); }
-.profile-item p { margin: 0; padding: 0; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
-.item-title { font-size: 16px; font-weight: 600; color: var(--main-text-color); margin-bottom: 2px; }
-.item-subtitle { font-size: 15px; font-weight: 400; color: var(--main-text-color); opacity: 0.8; margin-bottom: 4px; }
-.item-period { font-size: 13px; font-weight: 400; color: var(--main-hint-color); opacity: var(--main-hint-opacity, 1); margin-bottom: 8px; }
-.item-description { font-size: 14px; font-weight: 400; color: var(--main-text-color); opacity: 0.7; }
 
+.profile-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
 
-/* --- Ссылки --- */
-#profile-links, #detail-links {
-    margin-top: 15px; 
-    flex-direction: column; gap: 10px;
-    border-top: 1.5px solid var(--main-bg-color, #fff);
-    padding-top: 20px;
-    display: none;
-    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+body.theme-dark .profile-item {
+  border-bottom-color: var(--secondary-bg-color);
 }
-#profile-links:not(.is-empty), #detail-links:not(.is-empty) {
-    display: flex;
+
+.profile-item p {
+  margin: 0;
+  padding: 0;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
-/* Уменьшаем отступы */
+
+.item-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--main-text-color);
+  margin-bottom: 2px;
+}
+
+.item-subtitle {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--main-text-color);
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.item-period {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--main-hint-color);
+  opacity: var(--main-hint-opacity, 1);
+  margin-bottom: 8px;
+}
+
+.item-description {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--main-text-color);
+  opacity: 0.7;
+}
+
+/* ============================================
+   6. PROFILE LINKS
+   ============================================ */
+
+#profile-links,
+#detail-links {
+  margin-top: 15px;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1.5px solid var(--main-bg-color, #fff);
+  padding-top: 20px;
+  display: none;
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+  background-color: var(--main-bg-color, var(--tg-theme-bg-color, #fff));
+  border-radius: 12px;
+  padding: 20px;
+  border-top: none;
+}
+
+#profile-links:not(.is-empty),
+#detail-links:not(.is-empty) {
+  display: flex;
+}
+
 .skills-container:not(.is-empty) + #profile-links:not(.is-empty),
 .show-more-skills-container + #profile-links:not(.is-empty),
 .profile-section:not(.is-empty) + #profile-links:not(.is-empty),
 .skills-container.is-empty + .profile-section.is-empty + #profile-links:not(.is-empty),
 .profile-stats-container + .skills-container.is-empty + .profile-section.is-empty + #profile-links:not(.is-empty),
-.profile-stats-container + .skills-container:not(.is-empty) + #profile-links:not(.is-empty)
-{
-    margin-top: 15px;
+.profile-stats-container + .skills-container:not(.is-empty) + #profile-links:not(.is-empty),
+.profile-section + #profile-links,
+.profile-section + #detail-links {
+  margin-top: 15px;
 }
-body.theme-dark #profile-links,
-body.theme-dark #detail-links { border-top-color: var(--secondary-bg-color); }
 
-/* ✅ ИСПРАВЛЕНИЕ (Item 5): Стили для кнопок-ссылок */
+body.theme-dark #profile-links,
+body.theme-dark #detail-links {
+  border-top-color: var(--secondary-bg-color);
+}
+
 .profile-link-button {
   background-color: var(--secondary-bg-color, #161616);
   padding: 12px 16px;
   border-radius: 10px;
   text-decoration: none;
-  color: #e5e7eb; /* вместо main-link-color */
+  color: #e5e7eb;
   font-weight: 500;
   font-size: 15px;
   display: flex;
@@ -181,453 +389,228 @@ body.theme-dark .profile-link-button {
   border-color: rgba(55, 65, 81, 0.9);
 }
 
-/* Переопределения для тем */
 body.theme-dark .profile-link-button,
-.profile-link-button:active { 
-    transform: scale(0.98); 
-}
-.link-icon { font-size: 18px; flex-shrink: 0; }
-.link-text { 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-    white-space: nowrap; 
-    /* --- ИСПРАВЛЕНИЕ 2 (ОСТАЕТСЯ) --- */
-    min-width: 0; /* Позволяем тексту сжиматься внутри кнопки */
+.profile-link-button:active {
+  transform: scale(0.98);
 }
 
+.link-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
 
-/* --- БЛОК КНОПОК В СВОЕМ ПРОФИЛЕ --- */
+.link-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ============================================
+   7. PROFILE ACTIONS
+   ============================================ */
+
 .profile-actions {
-    margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-    border-top: 1.5px solid var(--main-bg-color, #fff); padding-top: 15px;
-}
-body.theme-dark .profile-actions { border-top-color: var(--secondary-bg-color); }
-.profile-actions .action-button:last-child { grid-column: 1 / -1; }
-.contact-button { margin-top: 20px; width: 100%; }
-
-
-/* --- СТАТИСТИКА ПРОФИЛЯ --- */
-.profile-stats-container {
-    display: flex;
-    justify-content: center;
-    gap: 0;
-    border-top: none; /* <-- ИЗМЕНЕНИЕ */
-    border-bottom: none; /* <-- ИЗМЕНЕНИЕ */
-    padding: 0; /* <-- ИЗМЕНЕНИЕ */
-    margin: 10px 0 15px 0; /* <-- ИЗМЕНЕНИЕ (10px сверху, 15px снизу) */
-}
-body.theme-dark .profile-stats-container {
-     border-top-color: var(--secondary-bg-color);
-     border-bottom-color: var(--secondary-bg-color);
-}
-.profile-card p#profile-bio:empty + .profile-stats-container,
-.profile-card p#detail-bio:empty + .profile-stats-container {
-    margin-top: 15px;
-    margin-bottom: 15px;
-}
-.stat-item {
-    text-align: center;
-    cursor: pointer;
-    opacity: 0.9;
-    transition: opacity 0.2s ease;
-    flex-grow: 1; 
-    padding: 0 15px;
-    border-right: 1px solid var(--main-bg-color, #fff);
-}
-.stat-item:last-child {
-    border-right: none;
-}
-.stat-item:active { opacity: 0.7; }
-.stat-value {
-    display: block; font-size: 18px; font-weight: 600;
-    color: var(--main-text-color);
-}
-.stat-label {
-    display: block; font-size: 13px; font-weight: 400;
-    color: var(--main-hint-color);
-    opacity: var(--main-hint-opacity, 1);
-}
-body.theme-dark .stat-item { border-right-color: var(--secondary-bg-color); }
-
-/* --- Контейнер навыков --- */
-.skills-container {
-    flex-wrap: wrap; 
-    justify-content: center; 
-    gap: 6px; 
-    margin: 15px 0 0 0; 
-    padding-bottom: 4px; /* Отступ снизу для развернутого состояния */
-    
-    /* Скрыто по умолчанию */
-    display: none; 
-    align-content: flex-start;
-    transition: none; 
-    overflow: hidden;
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border-top: 1.5px solid var(--main-bg-color, #fff);
+  padding-top: 15px;
 }
 
-.skills-container:not(.is-empty) {
-    display: flex;
+body.theme-dark .profile-actions {
+  border-top-color: var(--secondary-bg-color);
 }
 
-/* --- ВЫСОТА ДЛЯ СВЕТЛОЙ ТЕМЫ (По умолчанию) --- */
-.skills-container:not(.expanded) { 
-    /* Та же формула: 56px * scale + 8px */
-    max-height: calc(56px * var(--ui-scale, 1) + 8px);
+.profile-actions .action-button:last-child {
+  grid-column: 1 / -1;
 }
 
-/* --- РАЗВЕРНУТОЕ СОСТОЯНИЕ --- */
-.skills-container.expanded { 
-    max-height: none; 
-    overflow: visible; /* Чтобы тени не обрезались */
+.contact-button {
+  margin-top: 20px;
+  width: 100%;
 }
 
-.show-more-skills-container {
-    display: flex; /* <-- ДОБАВЬ ЭТО */
-    justify-content: center; /* <-- ДОБАВЬ ЭТО */
-    margin-top: 10px;
-    margin-bottom: 15px;
-}
-.skills-container.is-empty + .show-more-skills-container {
-    display: none;
-}
-.show-more-skills-button {
-    background: none; border: none;
-    color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-    font-size: 14px; font-weight: 500; cursor: pointer; padding: 5px;
-    display: inline-flex; align-items: center; gap: 4px;
-}
-.show-more-skills-button .arrow { display: inline-block; }
-.show-more-skills-button .arrow::before {
-    content: '▼'; display: inline-block; transition: transform 0.3s ease;
-}
-.show-more-skills-button.less .arrow::before {
-    transform: rotate(180deg);
-}
+/* ============================================
+   8. FAB BUTTONS (Floating Action Buttons)
+   ============================================ */
 
-
-/* --- Плавающие Кнопки (FAB) --- */
-/* ✅ ИСПРАВЛЕНИЕ (Item 2): .fab-container снова position: fixed */
 .fab-container {
-    position: fixed; /* БЫЛО: absolute */
-    bottom: 30px;    /* БЫЛО: 20px */
-    right: 20px;     /* БЫЛО: 16px */
-    z-index: 1001;   /* Выше, чем .react-sheet-content (z-index 1000) */
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  position: fixed;
+  bottom: 30px;
+  right: 20px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* ИЗМЕНЕНИЕ: (№3) Стиль .fab-button изменен для SVG */
 .fab-button {
-    width: 56px; height: 56px; border-radius: 50%; border: none;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer;
-    
-    /* Добавлено: Центрируем SVG внутри */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* ✅ ИСПРАВЛЕНИЕ (Item 3): Добавлен font-size для эмодзи */
-    font-size: 24px;
-    
-    /* ИЗМЕНЕНИЕ: (№3) Добавлен transition для background-color */
-    transition: transform 0.2s ease, background-color 0.2s ease;
-}
-/* ИЗМЕНЕНИЕ: (№3) Добавлен этот блок */
-.fab-button svg {
-    /* ✅ ИСПРАВЛЕНИЕ (Item 3): Увеличен размер SVG (на всякий случай) */
-    width: 30px;
-    height: 30px;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-/* (№3) Класс для управления анимацией смены иконки */
-.fab-button.is-swapping svg {
-    animation: iconSwapOut 0.2s ease forwards;
-}
-.fab-button.is-swapping svg.icon-new {
-    animation: iconSwapIn 0.2s ease 0.1s forwards;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-.fab-button:active { transform: scale(0.92); }
+.fab-button svg {
+  width: 30px;
+  height: 30px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fab-button.is-swapping svg {
+  animation: iconSwapOut 0.2s ease forwards;
+}
+
+.fab-button.is-swapping svg.icon-new {
+  animation: iconSwapIn 0.2s ease 0.1s forwards;
+}
+
+.fab-button:active {
+  transform: scale(0.92);
+}
+
 .fab-button.fab-primary {
-    background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-    color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
+  background-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+  color: var(--main-button-text-color, var(--tg-theme-button-text-color, #ffffff));
 }
+
 .fab-button.fab-secondary {
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
-    opacity: 0.95;
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+  opacity: 0.95;
 }
+
 .fab-button.fab-primary.is-unfollow {
-    background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    color: var(--main-text-color, var(--tg-theme-text-color, #000000));
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  color: var(--main-text-color, var(--tg-theme-text-color, #000000));
 }
+
 body.theme-dark .fab-button.fab-secondary,
 body.theme-dark .fab-button.fab-primary.is-unfollow {
-    background-color: #2c2c2e;
-    color: #ffffff;
+  background-color: #2c2c2e;
+  color: #ffffff;
 }
 
-/* === УЛУЧШЕНИЯ ДИЗАЙНА (ТЕМНАЯ ТЕМА) - Карточки в карточке === */
-body.theme-dark .profile-card p#profile-bio,
-body.theme-dark .profile-card p#detail-bio { opacity: 0.95; }
-body.theme-dark .item-subtitle { opacity: 0.9; }
-body.theme-dark .item-period { color: var(--main-hint-color); opacity: 0.8; }
-body.theme-dark .item-description { opacity: 0.85; }
-body.theme-dark .stat-label { opacity: 0.8; font-weight: 500; }
-body.theme-dark .stat-value { opacity: 1.0; }
-.profile-section, #profile-links, #detail-links {
-    /* Фон для эффекта вложенной карточки */
-    background-color: var(--main-bg-color, var(--tg-theme-bg-color, #fff));
-    border-radius: 12px; padding: 20px; margin-top: 15px;
-    border-top: none; padding-top: 20px;
-}
-.profile-section + .profile-section, .profile-section + #profile-links, .profile-section + #detail-links {
-    margin-top: 15px;
-}
-.profile-item { border-bottom: none; padding-bottom: 0; margin-bottom: 20px; }
-.profile-item:last-child { margin-bottom: 0; }
-.profile-section-title { margin: -5px 0 15px 0; font-size: 19px; opacity: 1.0; }
-
-/* --- FAB ДЛЯ ДВУХ КНОПОК (ИСПРАВЛЕНО) --- */
+/* FAB Main Container (2 buttons) */
 .fab-main-container {
-    position: fixed;
-    bottom: 25px;
-    z-index: 100;
-    
-    /* Центрируем контейнер по горизонтали */
-    left: 50%;
-    transform: translateX(-50%);
-    
-    /* Кнопки рядом друг с другом */
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    
-    /* Ограничиваем ширину контейнера */
-    max-width: calc(100% - 40px); /* 20px отступ с каждой стороны */
+  position: fixed;
+  bottom: 25px;
+  z-index: 100;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  max-width: calc(100% - 40px);
 }
 
 .fab-main-button {
-    /* ГЛАВНЫЙ ФИКС: Убираем width из .action-button */
-    width: auto !important; 
-    
-    /* Запрещаем растягивание */
-    flex-grow: 0;
-    flex-shrink: 1; /* Разрешаем сжатие на узких экранах */
-    flex-basis: auto;
-
-    /* Стили формы */
-    padding: 14px 24px;
-    border-radius: 28px; 
-    font-size: 16px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
-    
-    /* Анимация пульсации */
-    animation: fab-pulse-main 2.5s infinite ease-in-out;
-    text-align: center;
-    white-space: nowrap; /* Запрещаем перенос текста */
+  width: auto !important;
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: auto;
+  padding: 14px 24px;
+  border-radius: 28px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: fab-pulse-main 2.5s infinite ease-in-out;
+  text-align: center;
+  white-space: nowrap;
 }
 
-/* Задержка для второй кнопки */
 .fab-main-button:last-child {
-    animation-delay: -1.25s;
+  animation-delay: -1.25s;
 }
 
-/* Новая keyframe для FAB (без transform, т.к. он уже используется для центрирования) */
 @keyframes fab-pulse-main {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    50% {
-        transform: scale(1.03);
-        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
 }
 
-/* Адаптив для узких экранов */
 @media (max-width: 400px) {
-    .fab-main-button {
-        padding: 12px 18px;
-        font-size: 15px;
-    }
-}
-
-/* --- (НОВЫЙ БЛОК) Стили для "Стекла" --- */
-body.theme-glass-overlay .profile-card {
-    background-color: var(--glass-bg);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    border-radius: var(--glass-radius-main);
-}
-body.theme-glass-overlay .profile-section,
-body.theme-glass-overlay #profile-links, 
-body.theme-glass-overlay #detail-links {
-    background-color: var(--glass-bg-secondary);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: var(--glass-border);
-    border-radius: var(--glass-radius-nested);
-    border-top: none;
-}
-body.theme-glass-overlay .profile-item {
-    border-bottom: none;
-}
-body.theme-glass-overlay .profile-stats-container {
-    margin-top: 15px;
-    margin-bottom: 20px;
-}
-body.theme-glass-overlay .stat-item {
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-body.theme-glass-overlay .stat-item:last-child {
-    border-right: none;
-}
-/* ✅ ИСПРАВЛЕНИЕ (Item 5): Стили для "стеклянных" ссылок */
-body.theme-glass-overlay .profile-link-button {
-    background-color: var(--glass-bg-input);
-    border: var(--glass-border);
-    color: var(--main-text-color);
-    border-radius: 12px;
-}
-body.theme-glass-overlay .fab-button {
-    background-color: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    color: var(--main-text-color);
-}
-body.theme-glass-overlay .fab-button.fab-primary {
-    background-color: var(--main-button-color);
-    color: var(--main-button-text-color);
-    border: none;
-}
-body.theme-glass-overlay .fab-button.fab-primary.is-unfollow {
-    background-color: var(--glass-bg);
-    color: var(--main-text-color);
-    border: var(--glass-border);
-}
-body.theme-glass-overlay .fab-main-button {
-    background-color: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    color: var(--main-text-color);
-    border-radius: 30px;
-}
-body.theme-glass-overlay .fab-main-button:last-child {
-    background-color: var(--main-button-color);
-    color: var(--main-button-text-color);
-    border: none;
-}
-
-
-/* --- ✅ НОВОЕ (Task 1): Стили для ряда кнопок в PostDetailSheet --- */
-.post-detail-actions-row {
-    display: grid;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-/* Стилизация кнопок в этом ряду */
-.post-detail-actions-row .action-button {
-    /* Немного уменьшаем, чтобы выглядели легче */
-    padding: 12px;
+  .fab-main-button {
+    padding: 12px 18px;
     font-size: 15px;
-    font-weight: 500;
-    border-radius: 10px;
-    
-    /* Добавляем иконки для наглядности */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+  }
 }
 
-/* === 🚫 ANTI-SELECT ДЛЯ FAB И КОНТЕЙНЕРОВ ПРОФИЛЯ 🚫 === */
-.fab-main-container *,
-.fab-main-button,
-.fab-container *,
-.fab-button {
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-    -webkit-touch-callout: none !important;
-    -webkit-user-drag: none !important;
-    user-drag: none !important;
-    -webkit-tap-highlight-color: transparent !important;
-}
+/* ============================================
+   9. ICON BUTTONS (QR, Share, Settings)
+   ============================================ */
 
-/* --- КНОПКИ ДЕЙСТВИЙ ПРОФИЛЯ (QR, Share, Settings) --- */
 .icon-button {
-    /* Базовые стили */
-    background: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
-    color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
-    border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
-    
-    /* Размеры и форма */
-    width: 40px; 
-    height: 40px; 
-    border-radius: 50%;
-    
-    /* Центрирование иконки */
-    display: inline-flex; 
-    align-items: center; 
-    justify-content: center;
-    padding: 0; 
-    cursor: pointer; 
-    
-    /* Позиционирование */
-    position: absolute;
-    /* ✅ Динамический отступ от верха (Safe Area) */
-    top: calc(env(safe-area-inset-top, 20px) + 20px);
-    z-index: 100; 
-    
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease, background-color 0.2s;
+  background: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
+  color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
+  border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 20px) + 20px);
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, background-color 0.2s;
 }
 
 .icon-button:active {
-    transform: scale(0.95);
+  transform: scale(0.95);
 }
 
-.icon-button svg { 
-    width: 18px; 
-    height: 18px; 
-    stroke: currentColor;
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
 }
 
-/* Позиционирование по горизонтали */
-.qr-icon { left: 15px; }
-.share-icon { left: 65px; }
-
-.settings-icon { right: 15px; }
-.edit-icon { right: 15px; } /* Изменено с 65px на 15px, так как settings убрали */
-
-/* Специфика для иконки настроек (чуть крупнее) */
-.icon-button.settings-icon svg { width: 20px; height: 20px; }
-
-
-/* --- СТИЛИ ДЛЯ РЕЖИМА "СТЕКЛО" --- */
-body.theme-glass-overlay .icon-button {
-    background: var(--glass-bg-secondary);
-    border: var(--glass-border);
-    backdrop-filter: blur(10px);
-    color: var(--main-text-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+.qr-icon {
+  left: 15px;
 }
 
-/* === MyProfileScreen (Dashboard Style) === */
+.share-icon {
+  left: 65px;
+}
+
+.settings-icon {
+  right: 15px;
+}
+
+.edit-icon {
+  right: 15px;
+}
+
+.icon-button.settings-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================
+   10. DASHBOARD (MyProfileScreen)
+   ============================================ */
 
 .dashboard-container {
   width: 100%;
@@ -637,13 +620,13 @@ body.theme-glass-overlay .icon-button {
   box-sizing: border-box;
 }
 
-/* Верхняя панель внутри профиля */
 .dashboard-navbar {
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
 }
+
 .dashboard-title {
   font-size: 18px;
   font-weight: 700;
@@ -653,22 +636,14 @@ body.theme-glass-overlay .icon-button {
   width: 100%;
 }
 
-/* HERO-карточка профиля */
 .dashboard-hero {
   background-color: var(--secondary-bg-color, #18181b);
   border-radius: 24px;
-  padding: 40px 20px 20px; /* больше место сверху под иконки */
+  padding: 40px 20px 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   text-align: center;
-  position: relative; /* важно для абсолютного позиционирования кнопок */
-}
-
-/* Стеклянный вариант */
-body.theme-glass-overlay .dashboard-hero {
-  background-color: var(--glass-bg);
-  border: var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  position: relative;
 }
 
 .hero-icon-btn {
@@ -677,20 +652,16 @@ body.theme-glass-overlay .dashboard-hero {
   width: 52px;
   height: 52px;
   border-radius: 18px;
-
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(18, 18, 20, 0.96);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   color: #ffffff;
   padding: 0;
   cursor: pointer;
-
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
   z-index: 2;
@@ -704,12 +675,6 @@ body.theme-glass-overlay .dashboard-hero {
 .hero-icon-btn:active {
   transform: scale(0.93);
   box-shadow: 0 5px 18px rgba(0, 0, 0, 0.6);
-}
-
-/* Никаких перекрасов по темам — тёмное стекло всегда */
-body.theme-glass-overlay .hero-icon-btn {
-  background: rgba(18, 18, 20, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .hero-icon-left {
@@ -742,7 +707,6 @@ body.theme-glass-overlay .hero-icon-btn {
   text-overflow: ellipsis;
 }
 
-/* Статус-пилюля под именем */
 .hero-status-pill {
   display: inline-flex;
   align-items: center;
@@ -777,38 +741,42 @@ body.theme-glass-overlay .hero-icon-btn {
   background-color: rgba(255, 255, 255, 0.12);
 }
 
-/* Цвета под существующие статусы (синхронизируем с .profile-status-badge / .feed-status-badge) */
-.hero-status-pill.networking {
+/* Status Colors */
+.hero-status-pill.networking,
+.profile-status-badge.networking {
   color: #BF5AF2;
   border-color: rgba(191, 90, 242, 0.4);
   background-color: rgba(191, 90, 242, 0.12);
 }
 
-.hero-status-pill.open_to_work {
+.hero-status-pill.open_to_work,
+.profile-status-badge.open_to_work {
   color: #30D158;
   border-color: rgba(48, 209, 88, 0.4);
   background-color: rgba(48, 209, 88, 0.12);
 }
 
-.hero-status-pill.hiring {
+.hero-status-pill.hiring,
+.profile-status-badge.hiring {
   color: #0A84FF;
   border-color: rgba(10, 132, 255, 0.4);
   background-color: rgba(10, 132, 255, 0.12);
 }
 
-.hero-status-pill.open_to_gigs {
+.hero-status-pill.open_to_gigs,
+.profile-status-badge.open_to_gigs {
   color: #FF9F0A;
   border-color: rgba(255, 159, 10, 0.4);
   background-color: rgba(255, 159, 10, 0.12);
 }
 
-.hero-status-pill.busy {
+.hero-status-pill.busy,
+.profile-status-badge.busy {
   color: #98989D;
   border-color: rgba(152, 152, 157, 0.4);
   background-color: rgba(152, 152, 157, 0.12);
 }
 
-/* Статистика подписчиков */
 .hero-stats {
   display: flex;
   align-items: center;
@@ -839,7 +807,6 @@ body.theme-glass-overlay .hero-icon-btn {
   background-color: rgba(255, 255, 255, 0.16);
 }
 
-/* Кнопка "Edit profile" */
 .dashboard-edit-btn {
   margin-top: 4px;
   width: 100%;
@@ -861,7 +828,7 @@ body.theme-glass-overlay .hero-icon-btn {
   box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
 }
 
-/* TABы (posts / about) */
+/* Tabs */
 .dashboard-tabs-wrapper {
   margin-top: 18px;
   margin-bottom: 10px;
@@ -894,7 +861,6 @@ body.theme-glass-overlay .hero-icon-btn {
   transform: translateY(-1px);
 }
 
-/* Контентная часть */
 .dashboard-content {
   min-height: 160px;
   display: flex;
@@ -910,7 +876,6 @@ body.theme-glass-overlay .hero-icon-btn {
   padding-bottom: 12px;
 }
 
-/* Лоадер и пустое состояние */
 .dashboard-loading,
 .loader-placeholder,
 .empty-state-dashboard {
@@ -929,7 +894,7 @@ body.theme-glass-overlay .hero-icon-btn {
   margin: 0;
 }
 
-/* Блок "About Me" (резюме) */
+/* Resume View */
 .resume-view {
   display: flex;
   flex-direction: column;
@@ -975,11 +940,10 @@ body.theme-glass-overlay .hero-icon-btn {
   color: var(--main-hint-color, #9ca3af);
 }
 
-/* === MyProfileScreen: compact posts row === */
-
+/* My Post Row */
 .my-post-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
   width: 100%;
   margin-top: 4px;
@@ -990,11 +954,18 @@ body.theme-glass-overlay .hero-icon-btn {
   min-width: 0;
 }
 
+.my-post-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+}
+
 .my-post-icon-btn {
-  width: 40px;
-  min-width: 40px;
-  height: 64px;
-  border-radius: 16px;
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  border-radius: 14px;
   border: none;
   outline: none;
   display: inline-flex;
@@ -1002,44 +973,113 @@ body.theme-glass-overlay .hero-icon-btn {
   justify-content: center;
   cursor: pointer;
   padding: 0;
-  background: rgba(24, 24, 27, 0.95);
+  background: transparent;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+  box-shadow: none;
+  transition: transform 0.15s ease, background-color 0.2s ease;
 }
 
 .my-post-icon-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
-/* 🔴 Явно красим корзину */
+.my-post-icon-btn:active {
+  transform: scale(0.92);
+}
+
 .my-post-row .my-post-icon-btn.destructive {
   background-color: #ff3b30 !important;
   color: #ffffff !important;
 }
 
-/* 🟢 Явно красим карандаш */
 .my-post-row .my-post-icon-btn.edit {
   background-color: #30d158 !important;
   color: #ffffff !important;
 }
 
-/* Немного ужимаем карточку, чтобы ряд смотрелся плотнее */
 .my-post-card-wrapper .react-feed-card-wrapper {
   margin: 0;
 }
 
-/* Профиль: нормальная тёмная карточка, когда стекло выключено */
+/* ============================================
+   11. POST DETAIL ACTIONS ROW
+   ============================================ */
+
+.post-detail-actions-row {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.post-detail-actions-row .action-button {
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ============================================
+   12. ANTI-SELECT (Prevents text selection on buttons)
+   ============================================ */
+
+.fab-main-container *,
+.fab-main-button,
+.fab-container *,
+.fab-button {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* ============================================
+   13. DARK THEME IMPROVEMENTS
+   ============================================ */
+
+body.theme-dark .profile-card p#profile-bio,
+body.theme-dark .profile-card p#detail-bio {
+  opacity: 0.95;
+}
+
+body.theme-dark .item-subtitle {
+  opacity: 0.9;
+}
+
+body.theme-dark .item-period {
+  color: var(--main-hint-color);
+  opacity: 0.8;
+}
+
+body.theme-dark .item-description {
+  opacity: 0.85;
+}
+
+body.theme-dark .stat-label {
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+body.theme-dark .stat-value {
+  opacity: 1.0;
+}
+
 body.theme-dark:not(.theme-glass-overlay) .profile-card {
-  background: #020617;                 /* матовый фон */
+  background: #020617;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border: 1px solid #111827;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
 }
 
-/* Вложенные секции в профиле — чуть светлее блока */
 body.theme-dark:not(.theme-glass-overlay) .profile-section,
 body.theme-dark:not(.theme-glass-overlay) #profile-links,
 body.theme-dark:not(.theme-glass-overlay) #detail-links {
@@ -1048,11 +1088,115 @@ body.theme-dark:not(.theme-glass-overlay) #detail-links {
   border: none;
 }
 
-/* ==================== LIGHT THEME — PROFILE & DASHBOARD ==================== */
+/* ============================================
+   14. GLASS THEME (body.theme-glass-overlay)
+   ============================================ */
 
-/* ==================== 1. PROFILE CARD ==================== */
+body.theme-glass-overlay .profile-card {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--glass-radius-main);
+}
 
-/* Light без glass */
+body.theme-glass-overlay .profile-section,
+body.theme-glass-overlay #profile-links,
+body.theme-glass-overlay #detail-links {
+  background-color: var(--glass-bg-secondary);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: var(--glass-border);
+  border-radius: var(--glass-radius-nested);
+  border-top: none;
+}
+
+body.theme-glass-overlay .profile-item {
+  border-bottom: none;
+}
+
+body.theme-glass-overlay .profile-stats-container {
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+
+body.theme-glass-overlay .stat-item {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.theme-glass-overlay .stat-item:last-child {
+  border-right: none;
+}
+
+body.theme-glass-overlay .profile-link-button {
+  background-color: var(--glass-bg-input);
+  border: var(--glass-border);
+  color: var(--main-text-color);
+  border-radius: 12px;
+}
+
+body.theme-glass-overlay .fab-button {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: var(--main-text-color);
+}
+
+body.theme-glass-overlay .fab-button.fab-primary {
+  background-color: var(--main-button-color);
+  color: var(--main-button-text-color);
+  border: none;
+}
+
+body.theme-glass-overlay .fab-button.fab-primary.is-unfollow {
+  background-color: var(--glass-bg);
+  color: var(--main-text-color);
+  border: var(--glass-border);
+}
+
+body.theme-glass-overlay .fab-main-button {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: var(--main-text-color);
+  border-radius: 30px;
+}
+
+body.theme-glass-overlay .fab-main-button:last-child {
+  background-color: var(--main-button-color);
+  color: var(--main-button-text-color);
+  border: none;
+}
+
+body.theme-glass-overlay .icon-button {
+  background: var(--glass-bg-secondary);
+  border: var(--glass-border);
+  backdrop-filter: blur(10px);
+  color: var(--main-text-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.theme-glass-overlay .dashboard-hero {
+  background-color: var(--glass-bg);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+body.theme-glass-overlay .hero-icon-btn {
+  background: rgba(18, 18, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* ============================================
+   15. LIGHT THEME (body.theme-light)
+   ============================================ */
+
+/* Profile Card */
 body.theme-light .profile-card {
   background: #FFFFFF;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -1069,30 +1213,7 @@ body.theme-light .profile-section-title {
   color: #111827;
 }
 
-/* Light glass */
-body.theme-light.theme-glass-overlay .profile-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: var(--glass-border);
-  box-shadow: var(--glass-shadow);
-}
-
-body.theme-light.theme-glass-overlay .profile-section,
-body.theme-light.theme-glass-overlay #profile-links,
-body.theme-light.theme-glass-overlay #detail-links {
-  background: var(--glass-bg-secondary);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: var(--glass-border);
-}
-
-body.theme-light.theme-glass-overlay .profile-section-title {
-  color: #0F172A;
-}
-
-/* ==================== 2. PROFILE STATS ==================== */
-
+/* Profile Stats */
 body.theme-light .stat-value {
   color: #111827;
 }
@@ -1105,38 +1226,11 @@ body.theme-light .stat-item {
   border-right: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-body.theme-light.theme-glass-overlay .stat-value {
-  color: #0F172A;
-}
-
-body.theme-light.theme-glass-overlay .stat-label {
-  color: #64748B;
-}
-
-body.theme-light.theme-glass-overlay .stat-item {
-  border-right: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-/* ==================== 3. PROFILE LINK BUTTON ==================== */
-
+/* Links */
 body.theme-light .profile-link-button {
   background: #F3F4F6;
   color: #111827;
   border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-body.theme-light.theme-glass-overlay .profile-link-button {
-  background: var(--glass-bg-input);
-  border: var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-body.theme-light.theme-glass-overlay .profile-link-chip {
-  background: rgba(255, 255, 255, 0.50);
-  border: var(--glass-border);
-  color: #6366F1;
-  backdrop-filter: blur(8px);
 }
 
 body.theme-light .profile-link-chip {
@@ -1145,8 +1239,7 @@ body.theme-light .profile-link-chip {
   color: #6366F1;
 }
 
-/* ==================== 4. ICON BUTTONS (QR, SHARE, SETTINGS) ==================== */
-
+/* Icon Buttons */
 body.theme-light .icon-button {
   background: #FFFFFF;
   color: #6B7280;
@@ -1159,21 +1252,7 @@ body.theme-light .icon-button:active {
   transform: scale(0.96);
 }
 
-body.theme-light.theme-glass-overlay .icon-button {
-  background: var(--glass-bg-secondary);
-  border: var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: #111827;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-body.theme-light.theme-glass-overlay .icon-button:active {
-  background: rgba(255, 255, 255, 0.65);
-}
-
-/* ==================== 5. DASHBOARD CONTAINER ==================== */
-
+/* Dashboard */
 body.theme-light .dashboard-container {
   background: transparent;
 }
@@ -1182,24 +1261,10 @@ body.theme-light .dashboard-title {
   color: #111827;
 }
 
-body.theme-light.theme-glass-overlay .dashboard-title {
-  color: #0F172A;
-}
-
-/* ==================== 6. DASHBOARD HERO ==================== */
-
 body.theme-light .dashboard-hero {
   background: #FFFFFF;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-body.theme-light.theme-glass-overlay .dashboard-hero {
-  background: var(--glass-bg);
-  border: var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 body.theme-light .hero-icon-btn {
@@ -1207,13 +1272,6 @@ body.theme-light .hero-icon-btn {
   border: 1px solid rgba(0, 0, 0, 0.08);
   color: #111827;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-body.theme-light.theme-glass-overlay .hero-icon-btn {
-  background: rgba(255, 255, 255, 0.70);
-  border: var(--glass-border);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 
 body.theme-light .hero-icon-btn:active {
@@ -1225,25 +1283,13 @@ body.theme-light .hero-name {
   color: #111827;
 }
 
-body.theme-light.theme-glass-overlay .hero-name {
-  color: #0F172A;
-}
-
-/* ==================== 7. HERO STATUS PILL ==================== */
-
+/* Status Pill */
 body.theme-light .hero-status-pill {
   background: rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.08);
   color: #374151;
 }
 
-body.theme-light.theme-glass-overlay .hero-status-pill {
-  background: rgba(255, 255, 255, 0.40);
-  border: var(--glass-border);
-  backdrop-filter: blur(8px);
-}
-
-/* Цвета статусов сохраняем */
 body.theme-light .hero-status-pill.networking {
   color: #BF5AF2;
   border-color: rgba(191, 90, 242, 0.3);
@@ -1274,8 +1320,7 @@ body.theme-light .hero-status-pill.busy {
   background-color: rgba(152, 152, 157, 0.10);
 }
 
-/* ==================== 8. HERO STATS ==================== */
-
+/* Stats */
 body.theme-light .hero-stats {
   color: #6B7280;
 }
@@ -1288,16 +1333,7 @@ body.theme-light .stat-divider {
   background-color: rgba(0, 0, 0, 0.08);
 }
 
-body.theme-light.theme-glass-overlay .hero-stats {
-  color: #64748B;
-}
-
-body.theme-light.theme-glass-overlay .stat-box b {
-  color: #0F172A;
-}
-
-/* ==================== 9. DASHBOARD EDIT BUTTON ==================== */
-
+/* Edit Button */
 body.theme-light .dashboard-edit-btn {
   background: #6366F1;
   color: #FFFFFF;
@@ -1309,18 +1345,10 @@ body.theme-light .dashboard-edit-btn:active {
   background: #4F46E5;
 }
 
-/* ==================== 10. SEGMENTED CONTROL (TABS) ==================== */
-
+/* Segmented Control */
 body.theme-light .segmented-control {
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-body.theme-light.theme-glass-overlay .segmented-control {
-  background: rgba(255, 255, 255, 0.30);
-  border: var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 body.theme-light .segment-btn {
@@ -1334,14 +1362,7 @@ body.theme-light .segment-btn.active {
   box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
 }
 
-body.theme-light.theme-glass-overlay .segment-btn.active {
-  background: rgba(255, 255, 255, 0.70);
-  color: #6366F1;
-  backdrop-filter: blur(8px);
-}
-
-/* ==================== 11. RESUME VIEW ==================== */
-
+/* Resume */
 body.theme-light .resume-view {
   background: transparent;
 }
@@ -1352,27 +1373,12 @@ body.theme-light .resume-block {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-body.theme-light.theme-glass-overlay .resume-block {
-  background: rgba(255, 255, 255, 0.60);
-  border: var(--glass-border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
 body.theme-light .resume-block h4 {
   color: #111827;
 }
 
 body.theme-light .resume-block p {
   color: #374151;
-}
-
-body.theme-light.theme-glass-overlay .resume-block h4 {
-  color: #0F172A;
-}
-
-body.theme-light.theme-glass-overlay .resume-block p {
-  color: #334155;
 }
 
 body.theme-light .resume-exp-title {
@@ -1383,26 +1389,11 @@ body.theme-light .resume-exp-sub {
   color: #6B7280;
 }
 
-body.theme-light.theme-glass-overlay .resume-exp-title {
-  color: #0F172A;
-}
-
-body.theme-light.theme-glass-overlay .resume-exp-sub {
-  color: #64748B;
-}
-
-/* ==================== 12. MY POST ROW ==================== */
-
+/* My Post Row */
 body.theme-light .my-post-row {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-body.theme-light.theme-glass-overlay .my-post-row {
-  background: rgba(255, 255, 255, 0.60);
-  border: var(--glass-border);
-  backdrop-filter: blur(12px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 body.theme-light .my-post-icon-btn {
@@ -1421,61 +1412,23 @@ body.theme-light .my-post-icon-btn.edit {
   color: #FFFFFF !important;
 }
 
-body.theme-light.theme-glass-overlay .my-post-icon-btn {
-  background: rgba(255, 255, 255, 0.70);
-  backdrop-filter: blur(10px);
-  border: var(--glass-border);
-}
-
-body.theme-light.theme-glass-overlay .my-post-icon-btn:active {
-  background: rgba(255, 255, 255, 0.85);
-}
-
-/* ==================== 13. FAB MAIN CONTAINER ==================== */
-
+/* FAB */
 body.theme-light .fab-main-button {
   background: #6366F1;
   color: #FFFFFF;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-body.theme-light.theme-glass-overlay .fab-main-button {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  border: var(--glass-border);
-  color: #111827;
-}
-
-body.theme-light.theme-glass-overlay .fab-main-button:last-child {
-  background: #6366F1;
-  color: #FFFFFF;
-  border: none;
-}
-
-/* ==================== 14. PROFILE BIO TEXT ==================== */
-
 body.theme-light .profile-bio-text {
   color: #374151;
 }
 
-body.theme-light.theme-glass-overlay .profile-bio-text {
-  color: #334155;
-}
-
-/* ==================== 15. PROFILE STATUS BADGE ==================== */
-
+/* Profile Status Badge */
 body.theme-light .profile-status-badge {
   background: rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-body.theme-light.theme-glass-overlay .profile-status-badge {
-  background: rgba(255, 255, 255, 0.40);
-  border: var(--glass-border);
-  backdrop-filter: blur(8px);
-}
-
-/* Цвета сохраняем как в статусах */
 body.theme-light .profile-status-badge.networking {
   color: #BF5AF2;
   border-color: rgba(191, 90, 242, 0.3);
@@ -1505,4 +1458,299 @@ body.theme-light .profile-status-badge.busy {
   color: #98989D;
   border-color: rgba(152, 152, 157, 0.3);
   background-color: rgba(152, 152, 157, 0.1);
+}
+
+/* ============================================
+   16. LIGHT GLASS THEME
+   ============================================ */
+
+body.theme-light.theme-glass-overlay .profile-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+body.theme-light.theme-glass-overlay .profile-section,
+body.theme-light.theme-glass-overlay #profile-links,
+body.theme-light.theme-glass-overlay #detail-links {
+  background: var(--glass-bg-secondary);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .profile-section-title {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .stat-value {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .stat-label {
+  color: #64748B;
+}
+
+body.theme-light.theme-glass-overlay .stat-item {
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .profile-link-button {
+  background: var(--glass-bg-input);
+  border: var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.theme-light.theme-glass-overlay .profile-link-chip {
+  background: rgba(255, 255, 255, 0.50);
+  border: var(--glass-border);
+  color: #6366F1;
+  backdrop-filter: blur(8px);
+}
+
+body.theme-light.theme-glass-overlay .icon-button {
+  background: var(--glass-bg-secondary);
+  border: var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #111827;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light.theme-glass-overlay .icon-button:active {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+body.theme-light.theme-glass-overlay .dashboard-title {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .dashboard-hero {
+  background: var(--glass-bg);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+body.theme-light.theme-glass-overlay .hero-icon-btn {
+  background: rgba(255, 255, 255, 0.70);
+  border: var(--glass-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body.theme-light.theme-glass-overlay .hero-name {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .hero-status-pill {
+  background: rgba(255, 255, 255, 0.40);
+  border: var(--glass-border);
+  backdrop-filter: blur(8px);
+}
+
+body.theme-light.theme-glass-overlay .hero-stats {
+  color: #64748B;
+}
+
+body.theme-light.theme-glass-overlay .stat-box b {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .segmented-control {
+  background: rgba(255, 255, 255, 0.30);
+  border: var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.theme-light.theme-glass-overlay .segment-btn.active {
+  background: rgba(255, 255, 255, 0.70);
+  color: #6366F1;
+  backdrop-filter: blur(8px);
+}
+
+body.theme-light.theme-glass-overlay .resume-block {
+  background: rgba(255, 255, 255, 0.60);
+  border: var(--glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body.theme-light.theme-glass-overlay .resume-block h4 {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .resume-block p {
+  color: #334155;
+}
+
+body.theme-light.theme-glass-overlay .resume-exp-title {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .resume-exp-sub {
+  color: #64748B;
+}
+
+body.theme-light.theme-glass-overlay .my-post-row {
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+}
+
+body.theme-light.theme-glass-overlay .my-post-icon-btn {
+  background: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(10px);
+  border: var(--glass-border);
+}
+
+body.theme-light.theme-glass-overlay .my-post-icon-btn:active {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+body.theme-light.theme-glass-overlay .fab-main-button {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: var(--glass-border);
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .fab-main-button:last-child {
+  background: #6366F1;
+  color: #FFFFFF;
+  border: none;
+}
+
+body.theme-light.theme-glass-overlay .profile-bio-text {
+  color: #334155;
+}
+
+body.theme-light.theme-glass-overlay .profile-status-badge {
+  background: rgba(255, 255, 255, 0.40);
+  border: var(--glass-border);
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================
+   17. LIGHT БЕЗ СТЕКЛА (Финальные фиксы)
+   ============================================ */
+
+body.theme-light:not(.theme-glass-overlay) .status-picker-sheet {
+  background: #FFFFFF !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-picker-title {
+  color: #111827 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-option {
+  background: #F3F4F6 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-option.selected {
+  background: #E0E7FF !important;
+  border-color: #6366F1 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-label {
+  color: #111827 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .status-drag-handle {
+  background-color: rgba(0, 0, 0, 0.20) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .fab-button {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #374151 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .fab-button.fab-primary {
+  background: #6366F1 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .fab-button svg {
+  stroke: currentColor !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .fab-button.fab-secondary svg {
+  stroke: #DC2626 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .fab-button.fab-primary svg,
+body.theme-light:not(.theme-glass-overlay) .icon-action-btn svg {
+  stroke: currentColor !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .profile-name {
+  color: #111827 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .profile-headline {
+  color: #6B7280 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .profile-bio-text {
+  color: #374151 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .skill-tag {
+  background: #F3F4F6 !important;
+  color: #374151 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .skill-tag.selected,
+body.theme-light:not(.theme-glass-overlay) .skill-tag:active {
+  background: #6366F1 !important;
+  color: #FFFFFF !important;
+  border-color: #6366F1 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .skills-container {
+  margin-bottom: 8px !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .show-more-skills-container {
+  margin-bottom: 8px !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .profile-section {
+  margin-top: 12px !important;
+}
+
+/* Follow button states - ЯРЧЕ когда подписан */
+.icon-action-btn.follow-btn {
+  transition: all 0.2s;
+}
+
+/* Light theme */
+body.theme-light .icon-action-btn.follow-btn.is-followed {
+  background: #E8F5E9 !important;
+  color: #2E7D32 !important;
+}
+
+/* Dark theme */
+body.theme-dark .icon-action-btn.follow-btn.is-followed {
+  background: rgba(76, 175, 80, 0.2) !important;
+  color: #4CAF50 !important;
+}
+
+/* Glass theme */
+body.theme-glass-overlay .icon-action-btn.follow-btn.is-followed {
+  background: rgba(76, 175, 80, 0.25) !important;
+  color: #81C784 !important;
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.3) !important;
 }

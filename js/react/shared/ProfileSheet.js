@@ -1,10 +1,10 @@
 // react/shared/ProfileSheet.js
 // ОБНОВЛЕНО: Добавлена поддержка light theme через getThemeColors()
 
-import React, { useState, useMemo, useRef } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
+import React, { useState, useMemo, useRef, useEffect } from 'https://cdn.jsdelivr.net/npm/react@18.2.0/+esm';
 import { createPortal } from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/+esm';
 import { motion, AnimatePresence } from 'https://cdn.jsdelivr.net/npm/framer-motion@10.16.5/+esm';
-import { tg, isIOS, t, postJSON, useSheetLogic, SheetControls, getThemeColors } from '../shared/react_shared_utils.js';
+import { tg, isIOS, t, postJSON, useSheetLogic, SheetControls, getThemeColors, ProfilesManager } from '../shared/react_shared_utils.js';
 
 const h = React.createElement;
 
@@ -24,7 +24,7 @@ const getHeadline = (experience) => {
   return latest.job_title || latest.company || '';
 };
 
-export function ProfileSheet({ user, onClose }) {
+export function ProfileSheet({ user, onClose, }) {
   const isMyProfile = String(user.user_id) === String(window.__CURRENT_USER_ID);
   const { controlMode, dragControls, sheetProps } = useSheetLogic(onClose);
   const colors = getThemeColors(); // Получаем цвета темы
@@ -34,6 +34,21 @@ export function ProfileSheet({ user, onClose }) {
   const [isStatusPickerOpen, setStatusPickerOpen] = useState(false);
   const [isStatusHintVisible, setStatusHintVisible] = useState(false);
   const statusHintTimeoutRef = useRef(null);
+
+  const cachedProfile = ProfilesManager.get(user.user_id) || user;
+  const [isFollowed, setIsFollowed] = useState(cachedProfile.is_followed_by_viewer || false);
+  const [followersCount, setFollowersCount] = useState(cachedProfile.followers_count || 0);
+
+  // Подписываемся на изменения из кэша
+  useEffect(() => {
+    const unsubscribe = ProfilesManager.subscribe((id, updated) => {
+      if (id === String(user.user_id)) {
+        setIsFollowed(updated.is_followed_by_viewer || false);
+        setFollowersCount(updated.followers_count || 0);
+      }
+    });
+    return unsubscribe;
+  }, [user.user_id]);
 
   const avatar = user.photo_path
     ? `${window.__CONFIG?.backendUrl || location.origin}/${user.photo_path}`
@@ -157,6 +172,35 @@ export function ProfileSheet({ user, onClose }) {
     }
   };
 
+  const handleFollow = async () => {
+    if (tg?.HapticFeedback?.impactOccurred) {
+      tg.HapticFeedback.impactOccurred('light');
+    }
+    
+    const wasFollowed = isFollowed;
+    const delta = wasFollowed ? -1 : 1;
+    
+    setIsFollowed(!wasFollowed);
+    setFollowersCount(prev => prev + delta);
+    
+    // Обновляем глобальный кэш
+    ProfilesManager.updateFollowStatus(user.user_id, !wasFollowed, delta);
+    
+    try {
+      const endpoint = wasFollowed ? '/unfollow' : '/follow';
+      await postJSON(`${window.__CONFIG.backendUrl}${endpoint}`, {
+        initData: tg.initData,
+        target_user_id: user.user_id
+      });
+    } catch (e) {
+      console.error('Follow failed:', e);
+      // Откат при ошибке
+      setIsFollowed(wasFollowed);
+      setFollowersCount(prev => prev - delta);
+      ProfilesManager.updateFollowStatus(user.user_id, wasFollowed, -delta);
+    }
+  };
+
   // --- Render ---
   return createPortal(
     h(
@@ -243,7 +287,7 @@ export function ProfileSheet({ user, onClose }) {
               h(
                 'div',
                 { className: 'profile-mini-stats' },
-                `${user.followers_count || 0} ${t('followers') || 'subs'} • ${
+                `${followersCount} ${t('followers') || 'subs'} • ${
                   user.following_count || 0
                 } ${t('following') || 'following'}`
               )
@@ -335,11 +379,11 @@ export function ProfileSheet({ user, onClose }) {
                 )
             )
           ),
-          // 3. FOOTER
-          h(
-            'div',
-            { className: `sheet-sticky-footer ${isIOS ? 'is-ios' : ''}` },
-            !isMyProfile &&
+            // 3. FOOTER
+            h(
+              'div',
+              { className: `sheet-sticky-footer ${isIOS ? 'is-ios' : ''}` },
+              !isMyProfile &&
               h(
                 'button',
                 { className: 'icon-action-btn destructive', onClick: handleReport },
@@ -359,37 +403,69 @@ export function ProfileSheet({ user, onClose }) {
                   h('line', { x1: 4, y1: 22, x2: 4, y2: 15 })
                 )
               ),
-            h(
-              'button',
-              { className: 'icon-action-btn', onClick: handleShare },
+              // НОВАЯ КНОПКА ПОДПИСКИ
+              !isMyProfile &&
               h(
-                'svg',
-                {
-                  width: 24,
-                  height: 24,
-                  viewBox: '0 0 24 24',
-                  fill: 'none',
-                  stroke: 'currentColor',
-                  strokeWidth: 2
+                'button',
+                { 
+                  className: `icon-action-btn follow-btn ${isFollowed ? 'is-followed' : ''}`, 
+                  onClick: handleFollow 
                 },
-                h('circle', { cx: 18, cy: 5, r: 3 }),
-                h('circle', { cx: 6, cy: 12, r: 3 }),
-                h('circle', { cx: 18, cy: 19, r: 3 }),
-                h('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
-                h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
+                h(
+                  'svg',
+                  {
+                    width: 24,
+                    height: 24,
+                    viewBox: '0 0 24 24',
+                    fill: 'none',
+                    stroke: 'currentColor',
+                    strokeWidth: 2
+                  },
+                  isFollowed
+                    ? [
+                        h('path', { key: 1, d: 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
+                        h('circle', { key: 2, cx: 8.5, cy: 7, r: 4 }),
+                        h('polyline', { key: 3, points: '17 11 19 13 23 9' })
+                      ]
+                    : [
+                        h('path', { key: 1, d: 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
+                        h('circle', { key: 2, cx: 8.5, cy: 7, r: 4 }),
+                        h('line', { key: 3, x1: 20, y1: 8, x2: 20, y2: 14 }),
+                        h('line', { key: 4, x1: 17, y1: 11, x2: 23, y2: 11 })
+                      ]
+                )
+              ),
+              h(
+                'button',
+                { className: 'icon-action-btn', onClick: handleShare },
+                h(
+                  'svg',
+                  {
+                    width: 24,
+                    height: 24,
+                    viewBox: '0 0 24 24',
+                    fill: 'none',
+                    stroke: 'currentColor',
+                    strokeWidth: 2
+                  },
+                  h('circle', { cx: 18, cy: 5, r: 3 }),
+                  h('circle', { cx: 6, cy: 12, r: 3 }),
+                  h('circle', { cx: 18, cy: 19, r: 3 }),
+                  h('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
+                  h('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
+                )
+              ),
+              h(
+                'button',
+                {
+                  className: `main-action-btn ${isMyProfile ? 'secondary' : 'primary'}`,
+                  onClick: handleMessage
+                },
+                isMyProfile
+                  ? (t('action_close') || 'Закрыть')
+                  : (t('action_message') || 'Message')
               )
             ),
-            h(
-              'button',
-              {
-                className: `main-action-btn ${isMyProfile ? 'secondary' : 'primary'}`,
-                onClick: handleMessage
-              },
-              isMyProfile
-                ? (t('action_close') || 'Закрыть')
-                : (t('action_message') || 'Message')
-            )
-          ),
           // 4. STATUS HINT OVERLAY
           !isMyProfile &&
             isStatusHintVisible &&

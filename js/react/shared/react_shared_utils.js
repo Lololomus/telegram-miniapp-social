@@ -674,3 +674,76 @@ export function getTypeColors() {
     };
   }
 }
+
+/* ============================================
+   PROFILES MANAGER - Единый источник данных профилей
+   ============================================ */
+
+const profilesCache = new Map();
+const profileListeners = new Set();
+
+export const ProfilesManager = {
+  get(userId) {
+    return profilesCache.get(String(userId));
+  },
+
+  update(userId, profileData) {
+    const id = String(userId);
+    const existing = profilesCache.get(id) || {};
+    const updated = { ...existing, ...profileData };
+    profilesCache.set(id, updated);
+    
+    // Уведомляем всех слушателей
+    profileListeners.forEach(listener => {
+      listener(id, updated);
+    });
+    
+    return updated;
+  },
+
+  updateFollowStatus(userId, isFollowed, followersDelta = 0) {
+    const id = String(userId);
+    const profile = this.get(id) || { user_id: id, followers_count: 0 };
+    
+    return this.update(id, {
+      is_followed_by_viewer: isFollowed,
+      followers_count: (profile.followers_count || 0) + followersDelta
+    });
+  },
+
+  loadMany(profiles) {
+    profiles.forEach(p => {
+      if (p.user_id) {
+        profilesCache.set(String(p.user_id), p);
+      }
+    });
+  },
+
+  subscribe(callback) {
+    profileListeners.add(callback);
+    return () => profileListeners.delete(callback);
+  },
+
+  clear() {
+    profilesCache.clear();
+  }
+};
+
+/**
+ * React Hook для работы с профилем из кэша
+ */
+export function useProfile(userId) {
+  const [profile, setProfile] = useState(() => ProfilesManager.get(userId));
+
+  useEffect(() => {
+    const unsubscribe = ProfilesManager.subscribe((id, updatedProfile) => {
+      if (id === String(userId)) {
+        setProfile(updatedProfile);
+      }
+    });
+
+    return unsubscribe;
+  }, [userId]);
+
+  return profile;
+}

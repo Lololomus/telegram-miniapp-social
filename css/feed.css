@@ -1,639 +1,680 @@
 /* css/feed.css */
-/* ОБНОВЛЕНО: Восстановлены Context Menu styles */
-/* ОБНОВЛЕНО: Исправлена размытость текста */
 
-/* --- 1. ВЕРХНИЕ ТЕГИ (QUICK FILTERS) --- */
+/* ============================================
+   1. QUICK FILTERS (Верхние теги)
+   ============================================ */
+
 .quick-filters {
-    display: flex;
-    flex-wrap: nowrap !important;
-    justify-content: flex-start;
-    gap: 8px;
-    overflow-x: auto;
-    margin-left: 0; 
-    margin-right: -16px;
-    padding: 4px 0 10px 0;
-    -webkit-mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
-    mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    margin-bottom: 0;
+  display: flex;
+  flex-wrap: nowrap !important;
+  justify-content: flex-start;
+  gap: 8px;
+  overflow-x: auto;
+  margin-left: 0;
+  margin-right: -16px;
+  padding: 4px 0 10px 0;
+  -webkit-mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
+  mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin-bottom: 0;
 }
-.quick-filters::-webkit-scrollbar { display: none; }
+
+.quick-filters::-webkit-scrollbar {
+  display: none;
+}
+
 .quick-filters::after {
-    content: ''; display: block; flex-shrink: 0; width: 20px; height: 1px;
+  content: '';
+  display: block;
+  flex-shrink: 0;
+  width: 20px;
+  height: 1px;
 }
 
-/* --- 2. КОНТЕЙНЕР ЛЕНТЫ --- */
+/* ============================================
+   2. FEED LIST (Контейнер ленты)
+   ============================================ */
+
 .feed-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    padding-bottom: 120px; 
-    padding-top: 0 !important;
-    position: relative;
-    min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  padding-bottom: 120px;
+  padding-top: 0 !important;
+  position: relative;
+  min-height: 100px;
 }
 
-/* --- 3. ГЛАВНАЯ КАРТОЧКА (В ЛЕНТЕ) --- */
+/* ============================================
+   3. FEED CARD (Карточка в ленте)
+   ============================================ */
+
 .react-feed-card {
-    background: var(--secondary-bg-color);
-    border: 1px solid transparent;
-    border-radius: 24px !important;
-    padding: 18px;
-    position: relative;
-    overflow: hidden;
-    color: var(--main-text-color);
-    transition: transform 0.1s ease, background-color 0.2s;
+  background: var(--secondary-bg-color);
+  border: 1px solid transparent;
+  border-radius: 24px !important;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  color: var(--main-text-color);
+  transition: transform 0.1s ease, background-color 0.2s;
 }
 
-body.theme-glass-overlay .react-feed-card {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: var(--glass-border) !important;
-  
-  /* Заменяем border-radius на clip-path */
-  border-radius: none !important;
-  clip-path: inset(0 round 24px);
-
-  /* Тень + внутренняя "обводка" */
-  box-shadow: 
-    0 0 0 1px rgba(255, 255, 255, 0.1), /* "Обводка" */
-    0 4px 20px rgba(0, 0, 0, 0.2);      /* Тень */
-  
-  transform: translate3d(0, 0, 0);
-}
-.react-feed-card:active { transform: scale(0.98); }
-body.theme-glass-overlay .react-feed-card:active {
-    background: rgba(255, 255, 255, 0.07) !important;
+.react-feed-card:active {
+  transform: scale(0.98);
 }
 
-/* --- 4. ВНУТРЕННОСТИ КАРТОЧКИ (ЛЕНТА) --- */
 .react-feed-card img {
-    width: 44px; height: 44px; border-radius: 14px !important;
-    object-fit: cover; border: 1px solid rgba(255,255,255,0.1); display: block;
-}
-.post-content-clamped {
-    font-size: 14px !important; line-height: 1.5 !important;
-    color: #e4e4e7 !important; margin-bottom: 16px; font-weight: 400;
-    max-height: 4.5em; overflow: hidden;
-    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-}
-.feed-card-skills-container {
-    display: flex; flex-wrap: nowrap; gap: 8px; overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
-    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  width: 44px;
+  height: 44px;
+  border-radius: 14px !important;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: block;
 }
 
-/* --- 5. PILLS (КНОПКИ ОПЫТА) --- */
-.experience-pills-container { margin-top: 8px; }
+.post-content-clamped {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #e4e4e7 !important;
+  margin-bottom: 16px;
+  font-weight: 400;
+  max-height: 4.5em;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.feed-card-skills-container {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+
+/* ============================================
+   4. EXPERIENCE PILLS
+   ============================================ */
+
+.experience-pills-container {
+  margin-top: 8px;
+}
+
 .exp-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   padding: 8px 14px;
   border-radius: 20px;
-
   border: 1px solid var(--secondary-bg-color);
   background-color: var(--main-bg-color);
   color: var(--main-hint-color);
-
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .exp-pill.selected {
   border-color: #4b5563 !important;
   background-color: #1f2933 !important;
   color: #f9fafb !important;
   box-shadow: none;
 }
-body.theme-glass-overlay .exp-pill {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #ffffff !important;
-}
-body.theme-glass-overlay .exp-pill.selected {
-    background-color: #007AFF !important;
-    border-color: #007AFF !important;
-}
 
-
-/* ==========================================
-   🔥 UNIFIED CARD (DETAIL VIEW)
-   ========================================== */
+/* ============================================
+   5. POST DETAIL SHEET (Unified Card)
+   ============================================ */
 
 .post-sheet-unified {
-    padding: 0 !important; 
-    background-color: #121212 !important; /* Fallback */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-/* ✅ FIX: Оптимизированный стиль для стекла (Четкий текст) */
-body.theme-glass-overlay .post-sheet-unified {
-    /* 1. Фон плотнее (94%), чтобы не просвечивал мусор */
-    background-color: rgba(18, 18, 18, 0.94) !important;
-    
-    /* 2. Блюр меньше (15px), чтобы не мылить контент на Windows */
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
-    
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    
-    /* 3. Аппаратное ускорение */
-    backface-visibility: hidden;
-    transform: translateZ(0);
+  padding: 0 !important;
+  background-color: #121212 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* HEADER */
 .post-sheet-header {
-    padding: 20px 20px 10px 20px; 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-    margin-top: 20px;
-    position: relative; z-index: 2;
+  padding: 20px 20px 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 20px;
+  position: relative;
+  z-index: 2;
 }
 
 .header-left {
-    display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
 }
 
 .header-avatar img {
-    width: 52px; height: 52px; border-radius: 18px; 
-    object-fit: cover; border: 1px solid rgba(255,255,255,0.1);
-    background-color: #2c2c2e;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #2c2c2e;
 }
 
 .header-info {
-    display: flex; flex-direction: column; gap: 4px; min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .header-name {
-    font-size: 19px; font-weight: 700; color: #ffffff;
-    line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 19px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-subtitle {
-    font-size: 14px; color: #9ca3af; font-weight: 500;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 14px;
+  color: #9ca3af;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-badge {
-    width: 40px; height: 40px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    border: 1px solid; flex-shrink: 0; margin-left: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid;
+  flex-shrink: 0;
+  margin-left: 12px;
 }
 
 /* SCROLL AREA */
 .post-sheet-scroll-area {
-    flex: 1; overflow-y: auto;
-    padding: 10px 20px 100px 20px; 
-    -webkit-overflow-scrolling: touch;
-    position: relative; z-index: 2;
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 20px 100px 20px;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  z-index: 2;
 }
 
-/* ✅ FIX: Вдавленный контент (Сплошной фон для четкости) */
+/* CONTENT INSET */
 .post-content-inset {
-    background-color: #1c1c1e; /* Сплошной цвет! */
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    padding: 14px 20px 12px;
-    
-    text-align: left;
-    display: flex; flex-direction: column; align-items: flex-start;
-    
-    /* Отключаем блюр внутри блока, чтобы текст был резким */
-    backdrop-filter: none;
-    transform: translateZ(0); 
+  background-color: #1c1c1e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 14px 20px 12px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  backdrop-filter: none;
+  transform: translateZ(0);
 }
 
-/* ТИПОГРАФИКА */
+/* TYPOGRAPHY */
 .post-text-title {
-    display: block; width: 100%;
-    font-size: 20px; line-height: 1.3; color: #ffffff; font-weight: 800;
-    margin: 0 0 16px 0; word-wrap: break-word; text-align: left;
+  display: block;
+  width: 100%;
+  font-size: 20px;
+  line-height: 1.3;
+  color: #ffffff;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+  word-wrap: break-word;
+  text-align: left;
 }
 
 .post-text-body {
-    display: block; width: 100%;
-    font-size: 16px; line-height: 1.6; color: #d4d4d8; font-weight: 400;
-    margin: 0; white-space: pre-wrap; word-wrap: break-word; text-align: left;
+  display: block;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #d4d4d8;
+  font-weight: 400;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: left;
 }
 
 .content-divider {
   height: 1px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   margin: 8px 0 6px;
   width: 100%;
 }
 
 .post-tags-cloud.bottom {
-    margin-top: 20px !important; margin-bottom: 0; width: 100%; justify-content: flex-start;
+  margin-top: 20px !important;
+  margin-bottom: 0;
+  width: 100%;
+  justify-content: flex-start;
 }
 
 /* META ROW */
 .post-meta-row {
-    display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; width: 100%; margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  width: 100%;
+  margin-top: auto;
 }
+
 .meta-item {
-    display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: #a1a1aa; white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #a1a1aa;
+  white-space: nowrap;
 }
-.meta-item.budget { color: #e4e4e7; font-weight: 600; }
-.meta-item.date { margin-left: auto; opacity: 0.6; font-size: 12px; }
+
+.meta-item.budget {
+  color: #e4e4e7;
+  font-weight: 600;
+}
+
+.meta-item.date {
+  margin-left: auto;
+  opacity: 0.6;
+  font-size: 12px;
+}
 
 /* FOOTER */
 .sheet-sticky-footer {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    padding: 16px 20px calc(env(safe-area-inset-bottom, 20px) + 16px) 20px;
-    
-    /* Плотный фон футера */
-    background: rgba(18, 18, 18, 0.96);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    display: flex; gap: 12px; z-index: 50;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px calc(env(safe-area-inset-bottom, 20px) + 16px) 20px;
+  background: rgba(18, 18, 18, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  gap: 12px;
+  z-index: 50;
 }
 
 .icon-action-btn {
-    width: 52px; height: 52px; border-radius: 16px;
-    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex; align-items: center; justify-content: center;
-    color: #ffffff; cursor: pointer; flex-shrink: 0; transition: all 0.2s;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
 }
-.icon-action-btn:active { background: rgba(255, 255, 255, 0.1); transform: scale(0.95); }
 
-/* НОВОЕ: красный флажок для Report в карточке другого пользователя */
+.icon-action-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.95);
+}
+
 .icon-action-btn.destructive {
-  color: #FF3B30; /* iOS-стайл красный */
+  color: #FF3B30;
 }
 
-/* На всякий случай гарантируем, что svg наследует этот цвет */
 .icon-action-btn.destructive svg {
   stroke: currentColor;
 }
 
 .main-action-btn {
-    flex: 1; height: 52px; border-radius: 16px; border: none;
-    font-size: 16px; font-weight: 600;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: transform 0.2s;
-    background: #0A84FF; color: #ffffff;
-    box-shadow: 0 8px 20px rgba(10, 132, 255, 0.3);
+  flex: 1;
+  height: 52px;
+  border-radius: 16px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  background: #0A84FF;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(10, 132, 255, 0.3);
 }
-.main-action-btn:active { transform: scale(0.97); }
-.main-action-btn.edit { background: #30d158; box-shadow: 0 8px 20px rgba(48, 209, 88, 0.3); }
 
+.main-action-btn:active {
+  transform: scale(0.97);
+}
 
-/* ==========================================
-   🔥 RESTORED: CONTEXT MENU (Меню по зажатию)
-   ========================================== */
+.main-action-btn.edit {
+  background: #30d158;
+  box-shadow: 0 8px 20px rgba(48, 209, 88, 0.3);
+}
 
-/* Контейнер меню */
+/* ============================================
+   6. CONTEXT MENU (Меню по зажатию)
+   ============================================ */
+
 .post-context-menu-container {
-    background-color: #1c1c1e; 
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
-    border: 1px solid rgba(255,255,255,0.1);
-    display: flex;
-    flex-direction: column;
+  background-color: #1c1c1e;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .post-context-menu-group {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
-/* Кнопки меню */
 .post-context-menu-button {
-    width: 100%;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-    padding: 16px 20px;
-    background: none;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .post-context-menu-button:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .post-context-menu-button:active,
 .post-context-menu-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Красная кнопка */
 .post-context-menu-button.destructive {
-    color: #ff453a;
+  color: #ff453a;
 }
 
 .post-context-menu-button.destructive:active,
 .post-context-menu-button.destructive:hover {
-    background-color: rgba(255, 69, 58, 0.15);
+  background-color: rgba(255, 69, 58, 0.15);
 }
 
-/* ВОДЯНОЙ ЗНАК НА ФОНЕ КАРТОЧКИ */
+/* ============================================
+   7. WATERMARK (Водяной знак)
+   ============================================ */
+
 .post-watermark {
-    position: absolute;
-    top: -40px;
-    right: -40px;
-    width: 280px;
-    height: 280px;
-    z-index: 0; /* Лежит на дне */
-    pointer-events: none; /* Сквозь него можно кликать */
-    opacity: 0.04; /* 4% непрозрачности - едва заметно */
-    transform: rotate(-15deg);
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 280px;
+  height: 280px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  transform: rotate(-15deg);
 }
 
 .post-watermark svg {
-    width: 100% !important;  /* !important перебьет inline-стиль 20px из JS */
-    height: 100% !important;
-    /* Цвет наследуется от родителя */
+  width: 100% !important;
+  height: 100% !important;
 }
 
-/* Убедимся, что контент лежит ПОВЕРХ водяного знака */
-.post-sheet-header,
-.post-sheet-scroll-area,
-.sheet-sticky-footer {
-    position: relative;
-    z-index: 1;
-}
+/* ============================================
+   8. PROFILE SECTIONS (People детали)
+   ============================================ */
 
-/* ==========================================
-   🔥 PRO PROFILE STYLES & SKELETONS
-   ========================================== */
-
-/* HEADER ROW */
 .profile-header-row {
-    display: flex;
-    align-items: center;
-    padding: 20px 20px 10px 20px;
-    margin-top: 20px;
-    gap: 16px;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 20px 20px 10px 20px;
+  margin-top: 20px;
+  gap: 16px;
+  width: 100%;
 }
 
 .profile-avatar-squircle img {
-    width: 72px; height: 72px;
-    border-radius: 24px; object-fit: cover;
-    background-color: #2c2c2e;
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  object-fit: cover;
+  background-color: #2c2c2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .profile-info-col {
-    flex: 1; min-width: 0;
-    display: flex; flex-direction: column; justify-content: center;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .profile-name {
-    font-size: 20px; font-weight: 800; color: #ffffff;
-    line-height: 1.2; margin-bottom: 4px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-headline {
-    font-size: 14px; color: #9ca3af; font-weight: 500;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    margin-bottom: 6px;
+  font-size: 14px;
+  color: #9ca3af;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
 }
 
 .profile-mini-stats {
-    font-size: 12px; color: #52525b; font-weight: 600;
+  font-size: 12px;
+  color: #52525b;
+  font-weight: 600;
 }
 
 .profile-status-badge {
-    width: 48px; height: 48px; border-radius: 16px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+  position: relative;
+  overflow: hidden;
 }
 
-/* EXPERIENCE CARD */
-.experience-card {
-    display: flex; gap: 14px; padding: 16px;
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 16px; margin-bottom: 4px;
-    transition: background 0.2s;
+.profile-status-badge:active {
+  transform: scale(0.92);
 }
-.experience-card:active { background-color: rgba(255, 255, 255, 0.06); }
-/* Минимальный отступ у последней карточки внутри блока */
+
+/* Experience Cards */
+.experience-card {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  margin-bottom: 4px;
+  transition: background 0.2s;
+}
+
+.experience-card:active {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
 .post-content-inset .experience-card:last-child {
   margin-bottom: 0;
 }
 
 .exp-icon-box {
-    width: 40px; height: 40px; border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.05);
-    display: flex; align-items: center; justify-content: center;
-    color: #a1a1aa; flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a1a1aa;
+  flex-shrink: 0;
 }
 
-.exp-info { flex: 1; min-width: 0; }
-.exp-title { font-size: 15px; font-weight: 700; color: #ffffff; line-height: 1.3; }
-.exp-subtitle { font-size: 14px; color: #a1a1aa; margin-top: 2px; }
-.exp-date { font-size: 12px; color: #52525b; margin-top: 4px; font-weight: 500; }
-.exp-desc { margin-top: 8px; font-size: 13px; line-height: 1.4; color: #d4d4d8; opacity: 0.8; }
+.exp-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.exp-subtitle {
+  font-size: 14px;
+  color: #a1a1aa;
+  margin-top: 2px;
+}
+
+.exp-date {
+  font-size: 12px;
+  color: #52525b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.exp-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #d4d4d8;
+  opacity: 0.8;
+}
 
 .profile-links-grid {
-    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 .profile-link-chip {
-    display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px; font-size: 13px; color: #0A84FF; text-decoration: none;
-}
-
-/* SKELETON STYLES (LOADER) */
-.skeleton-tag {
-    width: 80px; height: 28px; border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.05);
-    animation: pulse 1.5s infinite ease-in-out;
-}
-.skeleton-text {
-    width: 120px; height: 14px; border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.05);
-    animation: pulse 1.5s infinite ease-in-out;
-    display: inline-block;
-}
-.experience-card.skeleton { border-color: transparent; }
-.skeleton-box {
-    background-color: rgba(255, 255, 255, 0.05);
-    animation: pulse 1.5s infinite ease-in-out;
-}
-.skeleton-line {
-    height: 12px; border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.05);
-    animation: pulse 1.5s infinite ease-in-out;
-}
-
-@keyframes pulse {
-    0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; }
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 13px;
+  color: #0A84FF;
+  text-decoration: none;
 }
 
 .empty-section {
-    font-size: 13px; color: #52525b; font-style: italic; padding: 10px 0;
+  font-size: 13px;
+  color: #52525b;
+  font-style: italic;
+  padding: 10px 0;
 }
 
-/* ==========================================
-   🖥 PC SPECIFIC FIXES (ANTI-SOAP)
-   ========================================== */
+/* ============================================
+   9. STATUS BADGES & PICKER
+   ============================================ */
 
-/* Если устройство управляется мышью (ПК), отключаем блюр для четкости */
-@media (hover: hover) and (pointer: fine) {
-    
-    body.theme-glass-overlay .post-sheet-unified {
-        /* Отключаем размытие, так как на Windows оно мылит текст */
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        
-        /* Делаем фон почти непрозрачным (98%), чтобы сохранить контраст */
-        background-color: rgba(18, 18, 18, 0.98) !important;
-        
-        /* Добавляем легкий шум или границу для сохранения стиля */
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
-    }
-
-    body.theme-glass-overlay .sheet-sticky-footer {
-        backdrop-filter: none !important;
-        /* Футер тоже делаем сплошным */
-        background-color: #121212 !important; 
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    /* Убираем вотермарк на ПК, если он создает грязь (опционально, пока оставим) */
-    .post-watermark {
-        opacity: 0.03; /* Делаем еще прозрачнее */
-    }
+/* Status Badge Colors */
+.profile-status-badge.networking,
+.feed-status-badge.networking {
+  color: #BF5AF2;
+  border-color: rgba(191, 90, 242, 0.3);
+  background-color: rgba(191, 90, 242, 0.1);
 }
 
-/* ==========================================
-   🧼 ANTI-SOAP SQUAD (ФИНАЛЬНАЯ ВЕРСИЯ)
-   ========================================== */
-
-/* Применяем хак ко всем элементам с текстом, чтобы убрать мыло на ПК */
-
-/* 1. Структурные блоки */
-.post-sheet-header,
-.profile-header-row,
-.sheet-sticky-footer,
-
-/* 2. Тексты Карточки Поста (Hub) */
-.header-name,
-.header-subtitle,
-.header-badge,          /* <-- Добавлено */
-.post-text-title,
-.post-text-body,
-.post-meta-row,
-.meta-item,
-
-/* 3. Тексты Профиля (People) */
-.profile-name,
-.profile-headline,
-.profile-mini-stats,
-.profile-status-badge,
-.profile-bio-text,      /* <-- Добавлено */
-
-/* 4. Опыт и Образование (БЫЛО ПРОПУЩЕНО) */
-.experience-card,       /* <-- ВАЖНО: Сама карточка опыта */
-.exp-info,
-.exp-title,
-.exp-subtitle,
-.exp-date,
-.exp-desc,
-
-/* 5. Общие элементы (Теги, Кнопки, Ссылки) */
-.post-tags-cloud,
-.skill-tag,             /* <-- Добавлено */
-.profile-links-grid,
-.profile-link-chip,     /* <-- Добавлено */
-.icon-action-btn,
-.main-action-btn,
-.profile-avatar-squircle,
-.header-avatar
-{
-    /* 1. Выносим на отдельный GPU-слой (Главный фикс мыла) */
-    transform: translateZ(0);
-    
-    /* 2. Максимальное сглаживание шрифтов */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    
-    /* 3. Фикс дрожания */
-    backface-visibility: hidden;
-    
-    /* 4. Гарантируем слой поверх блюра */
-    position: relative;
-    z-index: 10;
+.profile-status-badge.open_to_work,
+.feed-status-badge.open_to_work {
+  color: #30D158;
+  border-color: rgba(48, 209, 88, 0.3);
+  background-color: rgba(48, 209, 88, 0.1);
+  box-shadow: 0 0 15px rgba(48, 209, 88, 0.2);
 }
 
-/* Дополнительно для футера: делаем фон плотнее */
-.sheet-sticky-footer {
-    background-color: rgba(18, 18, 18, 0.96) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+.profile-status-badge.hiring,
+.feed-status-badge.hiring {
+  color: #0A84FF;
+  border-color: rgba(10, 132, 255, 0.3);
+  background-color: rgba(10, 132, 255, 0.1);
 }
 
-/* ==========================================
-   🌈 PROFILE STATUSES (Бейджи и Меню)
-   ========================================== */
-
-/* Базовый стиль бейджа в хедере */
-.profile-status-badge {
-    cursor: pointer;
-    transition: transform 0.2s, background-color 0.2s;
-    position: relative;
-    overflow: hidden;
-}
-.profile-status-badge:active { transform: scale(0.92); }
-
-/* ЦВЕТОВЫЕ МОДИФИКАТОРЫ */
-
-/* 🟣 Networking (Default) */
-.profile-status-badge.networking {
-    color: #BF5AF2; border-color: rgba(191, 90, 242, 0.3); background-color: rgba(191, 90, 242, 0.1);
-}
-/* 🟢 Open to Work */
-.profile-status-badge.open_to_work {
-    color: #30D158; border-color: rgba(48, 209, 88, 0.3); background-color: rgba(48, 209, 88, 0.1);
-    box-shadow: 0 0 15px rgba(48, 209, 88, 0.2); /* Glow effect */
-}
-/* 🔵 Hiring */
-.profile-status-badge.hiring {
-    color: #0A84FF; border-color: rgba(10, 132, 255, 0.3); background-color: rgba(10, 132, 255, 0.1);
-}
-/* 🟠 Gigs */
-.profile-status-badge.open_to_gigs {
-    color: #FF9F0A; border-color: rgba(255, 159, 10, 0.3); background-color: rgba(255, 159, 10, 0.1);
-}
-/* ⚪ Busy */
-.profile-status-badge.busy {
-    color: #98989D; border-color: rgba(152, 152, 157, 0.3); background-color: rgba(152, 152, 157, 0.1);
+.profile-status-badge.open_to_gigs,
+.feed-status-badge.open_to_gigs {
+  color: #FF9F0A;
+  border-color: rgba(255, 159, 10, 0.3);
+  background-color: rgba(255, 159, 10, 0.1);
 }
 
-/* --- STATUS PICKER (Меню выбора) --- */
+.profile-status-badge.busy,
+.feed-status-badge.busy {
+  color: #98989D;
+  border-color: rgba(152, 152, 157, 0.3);
+  background-color: rgba(152, 152, 157, 0.1);
+}
+
+/* Feed Status Badge (Small) */
+.feed-status-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Status Picker Sheet */
 .status-picker-overlay {
   position: fixed;
   inset: 0;
@@ -645,14 +686,15 @@ body.theme-glass-overlay .post-sheet-unified {
 }
 
 .status-picker-sheet {
-    width: 100%;
-    background-color: #1c1c1e;
-    border-top-left-radius: 24px; border-top-right-radius: 24px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding: 24px;
-    padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-    transform: translateZ(0);
+  width: 100%;
+  background-color: #1c1c1e;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 24px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  transform: translateZ(0);
 }
 
 .status-drag-handle {
@@ -664,108 +706,248 @@ body.theme-glass-overlay .post-sheet-unified {
 }
 
 .status-picker-title {
-    font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 20px; text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .status-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
-.status-grid .status-option:last-child { grid-column: 1 / -1; } /* Busy на всю ширину */
+
+.status-grid .status-option:last-child {
+  grid-column: 1 / -1;
+}
 
 .status-option {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 8px; padding: 16px;
-    border-radius: 16px; border: 1px solid transparent;
-    background-color: rgba(255,255,255,0.05);
-    cursor: pointer; transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background-color: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.status-option:active { transform: scale(0.96); }
+
+.status-option:active {
+  transform: scale(0.96);
+}
 
 .status-option.selected {
-    background-color: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.2);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-.status-icon { font-size: 24px; }
-.status-label { font-size: 14px; font-weight: 600; color: #fff; }
+.status-icon {
+  font-size: 24px;
+}
 
-/* Цвета в меню */
+.status-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Status colors in menu */
 .status-option.networking .status-icon { color: #BF5AF2; }
 .status-option.open_to_work .status-icon { color: #30D158; }
 .status-option.hiring .status-icon { color: #0A84FF; }
 .status-option.open_to_gigs .status-icon { color: #FF9F0A; }
 .status-option.busy .status-icon { color: #98989D; }
 
-/* Бейдж статуса в ленте (Маленький) */
-.feed-status-badge {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-    
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-/* Цвета для бейджа в ленте (наследуем логику) */
-.feed-status-badge.networking { color: #BF5AF2; background: rgba(191, 90, 242, 0.1); border-color: rgba(191, 90, 242, 0.2); }
-.feed-status-badge.open_to_work { color: #30D158; background: rgba(48, 209, 88, 0.1); border-color: rgba(48, 209, 88, 0.2); }
-.feed-status-badge.hiring { color: #0A84FF; background: rgba(10, 132, 255, 0.1); border-color: rgba(10, 132, 255, 0.2); }
-.feed-status-badge.open_to_gigs { color: #FF9F0A; background: rgba(255, 159, 10, 0.1); border-color: rgba(255, 159, 10, 0.2); }
-.feed-status-badge.busy { color: #98989D; background: rgba(152, 152, 157, 0.1); border-color: rgba(152, 152, 157, 0.2); }
-
-/* Контейнер оверлея подсказки статуса */
+/* Status Hint Overlay */
 .status-hint-overlay {
   position: absolute;
-  top: 14px;                 /* подгони под свои отступы в шите */
+  top: 14px;
   right: 16px;
-  z-index: 40;               /* выше контента и хедера в шите */
+  z-index: 40;
   max-width: min(320px, 90vw);
-  pointer-events: none;      /* чтобы не блокировать свайпы/клики */
+  pointer-events: none;
 }
 
-/* Внутренняя «пилюля» */
 .status-hint-bubble {
-  pointer-events: auto;      /* сам чип можно тапать, если захочешь */
+  pointer-events: auto;
   padding: 6px 12px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.82);
   border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-
   display: flex;
   align-items: flex-start;
   gap: 8px;
-
   font-size: 13px;
   color: #f9fafb;
   line-height: 1.35;
-
   white-space: normal;
   word-break: break-word;
 }
 
-/* Иконка слева в чипе */
 .status-hint-bubble .status-hint-label {
   font-size: 15px;
   margin-top: 1px;
 }
 
-/* В стеклянной теме чуть прозрачнее фон */
+/* ============================================
+   10. SKELETON LOADERS
+   ============================================ */
+
+.skeleton-tag {
+  width: 80px;
+  height: 28px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-text {
+  width: 120px;
+  height: 14px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.05);
+  animation: pulse 1.5s infinite ease-in-out;
+  display: inline-block;
+}
+
+.experience-card.skeleton {
+  border-color: transparent;
+}
+
+.skeleton-box {
+  background-color: rgba(255, 255, 255, 0.05);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.05);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0.3; }
+}
+
+/* ============================================
+   11. ANTI-SOAP FIXES (Windows/PC)
+   ============================================ */
+
+.post-sheet-header,
+.profile-header-row,
+.sheet-sticky-footer,
+.header-name,
+.header-subtitle,
+.header-badge,
+.post-text-title,
+.post-text-body,
+.post-meta-row,
+.meta-item,
+.profile-name,
+.profile-headline,
+.profile-mini-stats,
+.profile-status-badge,
+.experience-card,
+.exp-info,
+.exp-title,
+.exp-subtitle,
+.exp-date,
+.exp-desc,
+.post-tags-cloud,
+.skill-tag,
+.profile-links-grid,
+.profile-link-chip,
+.icon-action-btn,
+.main-action-btn,
+.profile-avatar-squircle,
+.header-avatar {
+  transform: translateZ(0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  backface-visibility: hidden;
+  position: relative;
+  z-index: 10;
+}
+
+/* PC-specific: отключаем блюр если мышь */
+@media (hover: hover) and (pointer: fine) {
+  body.theme-glass-overlay .post-sheet-unified {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: rgba(18, 18, 18, 0.98) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+
+  body.theme-glass-overlay .sheet-sticky-footer {
+    backdrop-filter: none !important;
+    background-color: #121212 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .post-watermark {
+    opacity: 0.03;
+  }
+}
+
+/* ============================================
+   12. GLASS THEME (body.theme-glass-overlay)
+   ============================================ */
+
+body.theme-glass-overlay .react-feed-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--glass-border) !important;
+  border-radius: none !important;
+  clip-path: inset(0 round 24px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1),
+              0 4px 20px rgba(0, 0, 0, 0.2);
+  transform: translate3d(0, 0, 0);
+}
+
+body.theme-glass-overlay .react-feed-card:active {
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+body.theme-glass-overlay .exp-pill {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+body.theme-glass-overlay .exp-pill.selected {
+  background-color: #007AFF !important;
+  border-color: #007AFF !important;
+}
+
+body.theme-glass-overlay .post-sheet-unified {
+  background-color: rgba(18, 18, 18, 0.94) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
 body.theme-glass-overlay .status-hint-bubble {
   background: rgba(15, 15, 20, 0.78);
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* ==================== LIGHT THEME — FEED ==================== */
+/* ============================================
+   13. LIGHT THEME (body.theme-light)
+   ============================================ */
 
-/* ==================== 1. QUICK FILTERS ==================== */
-
-/* Light без glass */
+/* Quick Filters */
 body.theme-light .quick-filters button,
 body.theme-light .filter-chip {
   background: #F3F4F6;
@@ -780,7 +962,98 @@ body.theme-light .filter-chip.active {
   border-color: #6366F1;
 }
 
-/* Light glass */
+/* Feed Cards */
+body.theme-light .react-feed-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: #111827;
+}
+
+body.theme-light .react-feed-card:active {
+  background: #F9FAFB;
+  transform: scale(0.98);
+}
+
+body.theme-light .post-content-clamped {
+  color: #374151 !important;
+}
+
+/* Experience Pills */
+body.theme-light .exp-pill {
+  background: #F3F4F6;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #374151;
+}
+
+body.theme-light .exp-pill.selected {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366F1;
+  color: #4F46E5;
+}
+
+/* Skeletons */
+body.theme-light .skeleton-tag,
+body.theme-light .skeleton-text,
+body.theme-light .skeleton-line,
+body.theme-light .skeleton-box {
+  background-color: rgba(0, 0, 0, 0.08);
+  animation: pulse-light 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-light {
+  0%, 100% { opacity: 0.40; }
+  50% { opacity: 0.15; }
+}
+
+body.theme-light .post-watermark {
+  opacity: 0.02;
+}
+
+body.theme-light .empty-section {
+  color: #94A3B8;
+}
+
+/* Feed Status Badge */
+body.theme-light .feed-status-badge {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .feed-status-badge.networking {
+  color: #BF5AF2;
+  background: rgba(191, 90, 242, 0.10);
+  border-color: rgba(191, 90, 242, 0.25);
+}
+
+body.theme-light .feed-status-badge.opentowork {
+  color: #30D158;
+  background: rgba(48, 209, 88, 0.10);
+  border-color: rgba(48, 209, 88, 0.25);
+}
+
+body.theme-light .feed-status-badge.hiring {
+  color: #0A84FF;
+  background: rgba(10, 132, 255, 0.10);
+  border-color: rgba(10, 132, 255, 0.25);
+}
+
+body.theme-light .feed-status-badge.opentogigs {
+  color: #FF9F0A;
+  background: rgba(255, 159, 10, 0.10);
+  border-color: rgba(255, 159, 10, 0.25);
+}
+
+body.theme-light .feed-status-badge.busy {
+  color: #98989D;
+  background: rgba(152, 152, 157, 0.10);
+  border-color: rgba(152, 152, 157, 0.25);
+}
+
+/* ============================================
+   14. LIGHT GLASS THEME
+   ============================================ */
+
 body.theme-light.theme-glass-overlay .quick-filters button,
 body.theme-light.theme-glass-overlay .filter-chip {
   background: rgba(255, 255, 255, 0.60);
@@ -798,26 +1071,6 @@ body.theme-light.theme-glass-overlay .filter-chip.active {
   border-color: transparent;
 }
 
-/* ==================== 2. FEED CARDS ==================== */
-
-/* Light без glass */
-body.theme-light .react-feed-card {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  color: #111827;
-}
-
-body.theme-light .react-feed-card:active {
-  background: #F9FAFB;
-  transform: scale(0.98);
-}
-
-body.theme-light .post-content-clamped {
-  color: #374151 !important;
-}
-
-/* Light glass */
 body.theme-light.theme-glass-overlay .react-feed-card {
   background: var(--glass-bg) !important;
   backdrop-filter: blur(15px);
@@ -830,22 +1083,6 @@ body.theme-light.theme-glass-overlay .react-feed-card:active {
   background: rgba(255, 255, 255, 0.80) !important;
 }
 
-/* ==================== 3. EXPERIENCE PILLS ==================== */
-
-/* Light без glass */
-body.theme-light .exp-pill {
-  background: #F3F4F6;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  color: #374151;
-}
-
-body.theme-light .exp-pill.selected {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: #6366F1;
-  color: #4F46E5;
-}
-
-/* Light glass */
 body.theme-light.theme-glass-overlay .exp-pill {
   background: rgba(255, 255, 255, 0.50) !important;
   border: var(--glass-border) !important;
@@ -860,9 +1097,6 @@ body.theme-light.theme-glass-overlay .exp-pill.selected {
   color: #4F46E5 !important;
 }
 
-/* ==================== 4. POST SHEET (DETAIL VIEW) ==================== */
-
-/* Light glass */
 body.theme-light.theme-glass-overlay .post-sheet-unified {
   background-color: rgba(255, 255, 255, 0.85) !important;
   backdrop-filter: blur(30px) !important;
@@ -907,13 +1141,11 @@ body.theme-light.theme-glass-overlay .header-subtitle {
   color: #64748B !important;
 }
 
-/* ==================== 5. SHEET FOOTER ==================== */
-
 body.theme-light.theme-glass-overlay .sheet-sticky-footer {
-  background: rgba(255, 255, 255, 0.90);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: var(--glass-border);
+  background: rgba(255, 255, 255, 0.90) !important;
+  backdrop-filter: blur(30px) !important;
+  -webkit-backdrop-filter: blur(30px) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
 body.theme-light.theme-glass-overlay .icon-action-btn {
@@ -926,21 +1158,22 @@ body.theme-light.theme-glass-overlay .icon-action-btn:active {
   background: rgba(255, 255, 255, 0.70);
 }
 
+body.theme-light.theme-glass-overlay .icon-action-btn.destructive {
+  color: #DC2626 !important;
+  background: rgba(220, 38, 38, 0.08) !important;
+  border: 1.5px solid rgba(220, 38, 38, 0.25) !important;
+}
+
 body.theme-light.theme-glass-overlay .main-action-btn {
-  background: #6366F1;
-  color: #FFFFFF;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+  background: #6366F1 !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
 }
 
 body.theme-light.theme-glass-overlay .main-action-btn.edit {
   background: #10B981;
   box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-}
-
-/* ==================== 6. CONTEXT MENU ==================== */
-
-body.theme-light.theme-glass-overlay .post-context-menu-backdrop {
-  background: rgba(0, 0, 0, 0.40) !important;
 }
 
 body.theme-light.theme-glass-overlay .post-context-menu-container {
@@ -969,8 +1202,6 @@ body.theme-light.theme-glass-overlay .post-context-menu-button.destructive:activ
 body.theme-light.theme-glass-overlay .post-context-menu-button.destructive:hover {
   background-color: rgba(220, 38, 38, 0.10);
 }
-
-/* ==================== 7. EXPERIENCE CARDS (PROFILE) ==================== */
 
 body.theme-light.theme-glass-overlay .experience-card {
   background: rgba(255, 255, 255, 0.40);
@@ -1001,29 +1232,6 @@ body.theme-light.theme-glass-overlay .exp-date {
 body.theme-light.theme-glass-overlay .exp-desc {
   color: #475569;
 }
-
-/* ==================== 8. SKELETON LOADERS ==================== */
-
-body.theme-light .skeleton-tag,
-body.theme-light .skeleton-text,
-body.theme-light .skeleton-line,
-body.theme-light .skeleton-box {
-  background-color: rgba(0, 0, 0, 0.08);
-  animation: pulse-light 1.5s infinite ease-in-out;
-}
-
-@keyframes pulse-light {
-  0%, 100% { opacity: 0.40; }
-  50% { opacity: 0.15; }
-}
-
-/* ==================== 9. WATERMARK ==================== */
-
-body.theme-light .post-watermark {
-  opacity: 0.02;
-}
-
-/* ==================== 10. STATUS PICKER SHEET ==================== */
 
 body.theme-light.theme-glass-overlay .status-picker-overlay {
   background: rgba(0, 0, 0, 0.40);
@@ -1060,7 +1268,6 @@ body.theme-light.theme-glass-overlay .status-label {
   color: #111827;
 }
 
-/* Сохраняем цвета иконок статусов */
 body.theme-light.theme-glass-overlay .status-option.networking .status-icon {
   color: #BF5AF2;
 }
@@ -1081,56 +1288,6 @@ body.theme-light.theme-glass-overlay .status-option.busy .status-icon {
   color: #98989D;
 }
 
-/* ==================== 11. FEED STATUS BADGE ==================== */
-
-body.theme-light .feed-status-badge {
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-body.theme-light.theme-glass-overlay .feed-status-badge {
-  background: rgba(255, 255, 255, 0.40);
-  border: var(--glass-border);
-  backdrop-filter: blur(8px);
-}
-
-/* Цвета сохраняются как есть */
-body.theme-light .feed-status-badge.networking {
-  color: #BF5AF2;
-  background: rgba(191, 90, 242, 0.10);
-  border-color: rgba(191, 90, 242, 0.25);
-}
-
-body.theme-light .feed-status-badge.opentowork {
-  color: #30D158;
-  background: rgba(48, 209, 88, 0.10);
-  border-color: rgba(48, 209, 88, 0.25);
-}
-
-body.theme-light .feed-status-badge.hiring {
-  color: #0A84FF;
-  background: rgba(10, 132, 255, 0.10);
-  border-color: rgba(10, 132, 255, 0.25);
-}
-
-body.theme-light .feed-status-badge.opentogigs {
-  color: #FF9F0A;
-  background: rgba(255, 159, 10, 0.10);
-  border-color: rgba(255, 159, 10, 0.25);
-}
-
-body.theme-light .feed-status-badge.busy {
-  color: #98989D;
-  background: rgba(152, 152, 157, 0.10);
-  border-color: rgba(152, 152, 157, 0.25);
-}
-
-/* ==================== 12. PROFILE HEADER ROW ==================== */
-
-body.theme-light.theme-glass-overlay .profile-header-row {
-  /* Стили применяются через React компонент */
-}
-
 body.theme-light.theme-glass-overlay .profile-name {
   color: #0F172A !important;
 }
@@ -1143,8 +1300,125 @@ body.theme-light.theme-glass-overlay .profile-mini-stats {
   color: #94A3B8 !important;
 }
 
-/* ==================== 13. EMPTY SECTION ==================== */
+body.theme-light.theme-glass-overlay .feed-status-badge {
+  background: rgba(255, 255, 255, 0.40);
+  border: var(--glass-border);
+  backdrop-filter: blur(8px);
+}
 
-body.theme-light .empty-section {
-  color: #94A3B8;
+/* ============================================
+   15. LIGHT THEME БЕЗ СТЕКЛА (Финальные фиксы)
+   ============================================ */
+
+body.theme-light:not(.theme-glass-overlay) .quick-filters button.active,
+body.theme-light:not(.theme-glass-overlay) .filter-chip.active {
+  background: #6366F1 !important;
+  color: #FFFFFF !important;
+  border-color: #6366F1 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .post-context-menu-container {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .post-context-menu-button {
+  color: #111827 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .post-context-menu-button:hover,
+body.theme-light:not(.theme-glass-overlay) .post-context-menu-button:active {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .post-context-menu-button.destructive {
+  color: #DC2626 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .post-sheet-unified {
+  background-color: #FFFFFF !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .post-sheet-header,
+body.theme-light:not(.theme-glass-overlay) .header-name {
+  color: #111827 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .header-subtitle {
+  color: #6B7280 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .post-text-title {
+  color: #0F172A !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .post-text-body {
+  color: #334155 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .post-content-inset {
+  background-color: #F9FAFB !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .meta-item {
+  color: #64748B !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .meta-item.budget {
+  color: #0F172A !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .sheet-sticky-footer {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .icon-action-btn {
+  background: #F3F4F6 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #111827 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .main-action-btn {
+  background: #6366F1 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .main-action-btn.edit {
+  background: #10B981 !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .experience-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .exp-title {
+  color: #111827 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .exp-subtitle {
+  color: #6B7280 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .exp-date {
+  color: #9CA3AF !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .exp-desc {
+  color: #4B5563 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .exp-icon-box {
+  background: #F3F4F6 !important;
+  color: #6B7280 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) .icon-action-btn.destructive svg {
+  stroke: #DC2626 !important;
 }

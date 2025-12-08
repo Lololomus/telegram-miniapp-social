@@ -11,9 +11,11 @@ const ProfileSheet = React.lazy(() => import('../shared/ProfileSheet.js').then(m
 
 import {
     t, postJSON, useDebounce, 
-    POPULAR_SKILLS, ALL_RECOGNIZED_SKILLS, // 🔥 Импорт
+    POPULAR_SKILLS, ALL_RECOGNIZED_SKILLS,
     isIOS, QuickFilterTags, ProfileFallback, PhoneShell, EmptyState, TopSpacer
 } from './feed_utils.js';
+
+import { ProfilesManager } from '../shared/react_shared_utils.js';
 
 import { SkeletonList } from '../posts/Skeleton.js'; 
 import FeedList from './FeedList.js';
@@ -84,11 +86,13 @@ function App({ mountInto, overlayHost }) {
       try {
         const resp = await postJSON(`${cfg.backendUrl}/get-all-profiles`, { initData: tg?.initData });
         if (resp?.ok) {
-            const loadedProfiles = resp.profiles || [];
-            setProfiles(loadedProfiles);
-            setFiltered(loadedProfiles);
+          const loadedProfiles = resp.profiles || [];
+          setProfiles(loadedProfiles);
+          setFiltered(loadedProfiles);
+          
+          ProfilesManager.loadMany(loadedProfiles);
         } else {
-            setProfiles([]);
+          setProfiles([]);
         }
       } catch (e) {
         console.error(e);
@@ -279,7 +283,7 @@ function App({ mountInto, overlayHost }) {
     ),
     h(EmptyState, { text: t('feed_empty'), visible: !isLoading && filtered.length === 0, onReset: handleResetFilters }),
     h(Suspense, { fallback: h(ProfileFallback) },
-        h(AnimatePresence, null, selected && h(ProfileSheet, { user: selected, onClose }))
+        h(AnimatePresence, null, selected && h(ProfileSheet, { user: selected, onClose, }))
     ),
     quickFiltersHost && createPortal(
         h(QuickFilterTags, { skills: visibleQuickTags, selected: selectedSkills, onToggle: onToggleSkill, hasSearchText: searchQuery.trim().length > 0 }),

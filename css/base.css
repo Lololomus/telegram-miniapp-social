@@ -1,17 +1,12 @@
 /* css/base.css */
 
-/* ОБНОВЛЕНО: Добавлены стили для "Тост"-уведомлений */
-/* ОБНОВЛЕНО (Glass): Добавлены стили для фона и сброса .screen */
-/* УДАЛЕНО: Стили .status-indicator */
-/* ✅ ИСПРАВЛЕНИЕ (Проблема 1): Добавлены стили для */
-
-/* --- ГЛОБАЛЬНЫЕ СТИЛИ --- */
+/* ============================================
+   1. GLOBAL RESET & VARIABLES
+   ============================================ */
 
 * {
   box-sizing: border-box;
 }
-
-/* ✅ Safe Area для fullscreen режима */
 
 :root {
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
@@ -19,18 +14,17 @@
   --header-offset: 12px;
   --modal-header-offset: 6px;
   --screen-padding-x: 20px;
-
-  /* Универсальные отступы для модалки навыков */
-  --skills-section-gap-y: 18px; /* расстояние между блоками категорий */
-  --skills-tags-gap: 10px; /* gap между тегами и строками тегов */
+  --skills-section-gap-y: 18px;
+  --skills-tags-gap: 10px;
 }
 
+/* ============================================
+   2. BODY
+   ============================================ */
+
 body {
-  /* ДОБАВЬ padding-top для безопасной зоны */
   padding-top: var(--safe-area-inset-top);
   padding-bottom: var(--safe-area-inset-bottom);
-
-  /* Остальные стили body (уже есть) */
   background-color: var(--main-bg-color);
   color: var(--main-text-color);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -44,6 +38,10 @@ body {
   overflow-y: auto;
   position: relative;
 }
+
+/* ============================================
+   3. HEADINGS
+   ============================================ */
 
 h1 {
   font-size: 24px;
@@ -59,15 +57,24 @@ h2 {
   text-align: center;
 }
 
+/* ============================================
+   4. SCREEN LAYOUT
+   ============================================ */
+
 .screen {
   width: 100%;
   display: none;
-  /* Сверху — единый отступ до заголовка, по бокам как раньше */
   padding: var(--header-offset) var(--screen-padding-x) 20px;
   max-width: 600px;
 }
 
-/* Экран приветствия */
+body.theme-glass-overlay .screen {
+  background-color: transparent !important;
+}
+
+/* ============================================
+   5. WELCOME SCREEN
+   ============================================ */
 
 #welcome-container.screen {
   display: none;
@@ -104,12 +111,14 @@ h2 {
   opacity: var(--main-hint-opacity, 1);
 }
 
-/* --- ЭКРАНЫ С ЗАГОЛОВКОМ --- */
+/* ============================================
+   6. HEADERS (Feed, Form, Detail)
+   ============================================ */
 
 .feed-header,
 .form-header {
   display: flex;
-  justify-content: center; /* ИЗМЕНЕНИЕ: space-between -> center */
+  justify-content: center;
   align-items: center;
   width: 100%;
   margin-bottom: 20px;
@@ -118,35 +127,11 @@ h2 {
 .feed-header h1,
 .form-header h1 {
   margin: 0;
-  text-align: center; /* ИЗМЕНЕНИЕ: left -> center */
+  text-align: center;
 }
-
-/* --- ЭКРАНЫ С ЗАГОЛОВКОМ (Кнопки Назад/Мой Профиль) --- */
-
-.header-button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 8px;
-  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #e9e9eb));
-  color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  /* УБРАНЫ flex и gap, т.к. иконки удалены */
-}
-
-.header-button:active {
-  transform: scale(0.98);
-}
-
-/* Стили для SVG и :hover svg УДАЛЕНЫ */
-
-/* --- Стили для хедера чужого профиля (новый дизайн) --- */
 
 .detail-header {
   padding-bottom: 0;
-  /* --- ИЗМЕНЕНИЕ: Добавляем display: flex, т.к. кнопка "Назад" удалена --- */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -165,11 +150,28 @@ h2 {
   color: var(--main-hint-color, var(--tg-theme-hint-color, #999999));
   opacity: var(--main-hint-opacity, 1);
   font-weight: 500;
-  /* --- ИЗМЕНЕНИЕ: Убираем flex: 1 и margin: 0, т.к. родитель теперь flex --- */
   margin: 0;
 }
 
-/* --- Кнопки-иконки в хедере (стиль под Telegram) --- */
+/* ============================================
+   7. BUTTONS - HEADER
+   ============================================ */
+
+.header-button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #e9e9eb));
+  color: var(--main-button-color, var(--tg-theme-button-color, #007bff));
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.header-button:active {
+  transform: scale(0.98);
+}
 
 .header-icon-button {
   flex-shrink: 0;
@@ -189,13 +191,10 @@ h2 {
   justify-content: center;
   cursor: pointer;
   transition: transform 0.2s ease;
-  /* --- ИЗМЕНЕНИЕ: Добавляем absolute, т.к. заголовок теперь по центру --- */
   position: absolute;
-  right: 10px; /* Отступ от края экрана .screen (у которого padding 20px, но мы ставим 10px) */
-  top: 18px; /* Примерный отступ сверху */
+  right: 10px;
+  top: 18px;
 }
-
-/* --- ИЗМЕНЕНИЕ: Позиционируем кнопку "Назад" (если она будет) слева --- */
 
 .header-icon-button.back {
   left: 10px;
@@ -216,9 +215,9 @@ body.theme-dark .header-icon-button {
   color: var(--main-text-color);
 }
 
-/* ВЕТКА theme-custom ДЛЯ header-icon-button УДАЛЕНА */
-
-/* --- ОБЩИЕ КНОПКИ --- */
+/* ============================================
+   8. BUTTONS - ACTION
+   ============================================ */
 
 .action-button {
   width: 100%;
@@ -243,7 +242,11 @@ body.theme-dark .header-icon-button {
   border: 1px solid rgba(107, 114, 128, 0.6);
 }
 
-.sr-only { /* Для доступности */
+/* ============================================
+   9. UTILITY CLASSES
+   ============================================ */
+
+.sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -255,7 +258,9 @@ body.theme-dark .header-icon-button {
   white-space: nowrap;
 }
 
-/* --- 4. ПЛАВНОЕ "ПРОЯВЛЕНИЕ" АВАТАРОК --- */
+/* ============================================
+   10. AVATAR FADE-IN
+   ============================================ */
 
 img[data-avatar] {
   opacity: 0;
@@ -266,7 +271,9 @@ img[data-avatar="loaded"] {
   opacity: 1;
 }
 
-/* CSS для FAB-кнопки "Создать пост" */
+/* ============================================
+   11. FAB CONTAINER
+   ============================================ */
 
 .fab-create-post-container {
   position: fixed;
@@ -275,30 +282,22 @@ img[data-avatar="loaded"] {
   z-index: 100;
 }
 
-/* Стилизуем select (выбор типа поста) как обычный инпут */
-/* ✅ ИЗМЕНЕНИЕ: Этот блок будет стилизован глобально */
-/* select { ... } */
-
-/*
-Этот дублирующийся блок .select УДАЛЕН.
-Стили для .fab-create-post-container УДАЛЕНЫ (они уже есть выше).
-*/
-
-/* --- НОВЫЙ БЛОК: "Тост"-Уведомления --- */
+/* ============================================
+   12. TOAST NOTIFICATIONS
+   ============================================ */
 
 #toast-container {
   position: fixed;
   bottom: 20px;
   left: 20px;
   right: 20px;
-  z-index: 2000; /* Выше всего */
+  z-index: 2000;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  pointer-events: none; /* Контейнер не должен мешать кликам */
-  /* Для корректного позиционирования внутри .screen */
-  max-width: 560px; /* 600px - 40px padding */
+  pointer-events: none;
+  max-width: 560px;
   margin: 0 auto;
 }
 
@@ -317,12 +316,10 @@ img[data-avatar="loaded"] {
   max-width: min(480px, calc(100% - 40px));
 }
 
-/* Состояние скрытия оставляем тем же */
 .toast-item.is-hiding {
   animation: toast-out 0.25s ease-in forwards;
 }
 
-/* Ошибки — ярко-красные */
 .toast-item.error {
   background-color: #FF3B30;
   color: #ffffff;
@@ -350,34 +347,24 @@ img[data-avatar="loaded"] {
   }
 }
 
-/* 1. Фон-градиент */
+/* ============================================
+   13. GLASS BACKGROUND
+   ============================================ */
 
 .glass-background {
-  display: none; /* Скрыт по умолчанию */
+  display: none;
   position: fixed;
   inset: 0;
-  z-index: -1; /* Лежит под всем контентом */
-  /* Красивый градиент (можно настроить) */
+  z-index: -1;
   background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
   background-size: 400% 400%;
   animation: gradient-animation 20s ease infinite;
   opacity: 0.8;
 }
 
-/* 2. Включаем фон, когда активен класс */
-
 body.has-glass-background .glass-background {
   display: block;
 }
-
-/* 3. Сбрасываем фон экранов, когда "Стекло" включено */
-/* !important нужен, чтобы перебить inline-стиль display: block */
-
-body.theme-glass-overlay .screen {
-  background-color: transparent !important;
-}
-
-/* 4. Стили для кнопок-иконок в режиме "Стекло" */
 
 body.theme-glass-overlay .icon-button {
   background: var(--glass-bg-secondary);
@@ -386,9 +373,9 @@ body.theme-glass-overlay .icon-button {
   color: var(--main-text-color);
 }
 
-/* ==================== LIGHT THEME — BASE ELEMENTS ==================== */
-
-/* ==================== 1. WELCOME CARD ==================== */
+/* ============================================
+   14. LIGHT THEME - WELCOME & TOAST
+   ============================================ */
 
 body.theme-light .welcome-card {
   background: #FFFFFF;
@@ -403,24 +390,6 @@ body.theme-light .welcome-card h2 {
 body.theme-light .welcome-card p {
   color: #6B7280;
 }
-
-body.theme-light.theme-glass-overlay .welcome-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: var(--glass-border);
-  box-shadow: var(--glass-shadow);
-}
-
-body.theme-light.theme-glass-overlay .welcome-card h2 {
-  color: #0F172A;
-}
-
-body.theme-light.theme-glass-overlay .welcome-card p {
-  color: #64748B;
-}
-
-/* ==================== 2. TOAST NOTIFICATIONS ==================== */
 
 body.theme-light .toast-item {
   background: #6366F1;
@@ -444,8 +413,6 @@ body.theme-light .toast-item.warning {
   box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
 }
 
-/* ==================== 3. SPINNER / LOADER ==================== */
-
 body.theme-light .spinner {
   border-color: rgba(0, 0, 0, 0.1);
   border-top-color: #6366F1;
@@ -455,8 +422,6 @@ body.theme-light .loading-text {
   color: #6B7280;
 }
 
-/* ==================== 4. EMPTY STATE ==================== */
-
 body.theme-light .empty-state {
   color: #6B7280;
 }
@@ -465,18 +430,36 @@ body.theme-light .empty-state-title {
   color: #111827;
 }
 
+body.theme-light .divider {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================
+   15. LIGHT GLASS MODE
+   ============================================ */
+
+body.theme-light.theme-glass-overlay .welcome-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+body.theme-light.theme-glass-overlay .welcome-card h2 {
+  color: #0F172A;
+}
+
+body.theme-light.theme-glass-overlay .welcome-card p {
+  color: #64748B;
+}
+
 body.theme-light.theme-glass-overlay .empty-state-title {
   color: #0F172A;
 }
 
 body.theme-light.theme-glass-overlay .empty-state {
   color: #64748B;
-}
-
-/* ==================== 5. DIVIDER ==================== */
-
-body.theme-light .divider {
-  background: rgba(0, 0, 0, 0.08);
 }
 
 body.theme-light.theme-glass-overlay .divider {

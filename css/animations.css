@@ -90,28 +90,6 @@
     }
 }
 
-/* --- 7. АНИМАЦИЯ СМЕНЫ ИКОНКИ (ДЛЯ КНОПКИ ПОДПИСАТЬСЯ) --- */
-@keyframes iconSwapIn {
-    from {
-        opacity: 0;
-        transform: rotateY(-90deg) scale(0.8);
-    }
-    to {
-        opacity: 1;
-        transform: rotateY(0) scale(1);
-    }
-}
-@keyframes iconSwapOut {
-    from {
-        opacity: 1;
-        transform: rotateY(0) scale(1);
-    }
-    to {
-        opacity: 0;
-        transform: rotateY(90deg) scale(0.8);
-    }
-}
-
 /* --- 8. АНИМАЦИЯ ПОЯВЛЕНИЯ ТЕГОВ НАВЫКОВ --- */
 @keyframes skillTagFadeIn {
     from {
@@ -136,33 +114,6 @@
     }
 }
 
-/* --- 10. АНИМАЦИИ ДЛЯ КРЫШЕСНОСНОГО ЗАГРУЗЧИКА --- */
-
-/* Появление узла */
-@keyframes nodeAppear {
-    from {
-        opacity: 0;
-        transform: scale(0.5);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* Пульсация узла */
-@keyframes nodePulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-/* Рисование линии */
-@keyframes drawLine {
-    from { stroke-dashoffset: 100; } /* Начинаем с невидимой линии */
-    to { stroke-dashoffset: 0; }   /* Заканчиваем полностью видимой */
-}
-
 /* Исчезновение загрузчика */
 @keyframes loaderFadeOut {
     from {
@@ -172,18 +123,5 @@
     to {
         opacity: 0;
         transform: scale(0.8);
-    }
-}
-
-/* --- (НОВЫЙ БЛОК) Анимация для "Стеклянного" фона --- */
-@keyframes gradient-animation {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
     }
 }

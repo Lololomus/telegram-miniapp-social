@@ -9,8 +9,12 @@
 @import url('modals.css');
 @import url('animations.css');
 
+/* ============================================
+   1. CSS VARIABLES
+   ============================================ */
+
 :root {
-  /* === БАЗОВЫЕ ТОКЕНЫ (для светлой темы и auto) === */
+  /* Base Tokens (Light Theme) */
   --main-bg-color: #ffffff;
   --secondary-bg-color: #f9fafb;
   --main-text-color: #111827;
@@ -18,23 +22,24 @@
   --main-button-color: #6366f1;
   --main-button-text-color: #ffffff;
   
-  /* === ДЛЯ GLASS-РЕЖИМА === */
+  /* Glass Mode Variables */
   --deep-glass-background:
     radial-gradient(circle at 10% 20%, rgba(69, 10, 245, 0.15) 0%, transparent 40%),
     radial-gradient(circle at 90% 50%, rgba(100, 50, 255, 0.12) 0%, transparent 40%),
     radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
     linear-gradient(180deg, #0f172a 0%, #000000 100%);
-  
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: 1px solid rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  
   --header-base-height: 60px;
   --tabbar-height: 80px;
 }
 
+/* ============================================
+   2. BODY BASE
+   ============================================ */
+
 body {
-  /* ПО УМОЛЧАНИЮ: фон из текущей темы (когда стекло ВЫКЛ) */
   background: var(--main-bg-color);
   color: var(--main-text-color);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -45,19 +50,18 @@ body {
   transition: background 0.3s ease;
 }
 
-/* --- РЕЖИМ СТЕКЛА (ВКЛ) --- */
 body.theme-glass-overlay {
-  /* Применяем наш красивый градиент */
   background: var(--deep-glass-background);
-  background-attachment: fixed; /* Фиксируем, чтобы не дергался при скролле */
+  background-attachment: fixed;
 }
 
-/* Убираем старый блок .glass-background, он больше не нужен, так как мы красим body напрямую */
 .glass-background {
   display: none !important;
 }
 
-/* --- 1. ХЕДЕР (ПОИСК) --- */
+/* ============================================
+   3. APP HEADER
+   ============================================ */
 
 .app-header {
   position: fixed;
@@ -75,23 +79,18 @@ body.theme-glass-overlay {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  
   background: var(--glass-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: var(--glass-border);
   box-sizing: border-box;
-  
-  /* ✅ Оптимизированный transition БЕЗ backdrop-filter */
   transition: transform 0.3s ease, opacity 0.2s ease;
-  
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   will-change: transform;
   isolation: isolate;
 }
 
-/* Заголовок в хедере (Hub, People, Settings) */
 .header-title {
   font-size: 17px;
   font-weight: 700;
@@ -103,7 +102,6 @@ body.theme-glass-overlay {
   width: 100%;
 }
 
-/* Ряд поиска (Инпут + Кнопка фильтра) */
 .header-search-row {
   display: flex;
   align-items: center;
@@ -111,7 +109,6 @@ body.theme-glass-overlay {
   width: 100%;
 }
 
-/* Контейнер поиска */
 .header-search-wrapper {
   flex: 1;
   position: relative;
@@ -120,14 +117,13 @@ body.theme-glass-overlay {
   align-items: center;
 }
 
-/* Поле ввода */
 .header-search-input {
   width: 100%;
   height: 100%;
   background-color: rgba(118, 118, 128, 0.24) !important;
   border: none;
   border-radius: 10px;
-  padding: 0 36px !important; /* Место под иконку и крестик */
+  padding: 0 36px !important;
   font-size: 16px;
   color: #ffffff !important;
   outline: none;
@@ -135,7 +131,6 @@ body.theme-glass-overlay {
   appearance: none;
 }
 
-/* Иконка лупы */
 .header-search-icon {
   position: absolute;
   left: 10px;
@@ -148,7 +143,6 @@ body.theme-glass-overlay {
   height: 16px;
 }
 
-/* Кнопка очистки (Крестик) */
 .header-search-clear {
   position: absolute;
   right: 8px;
@@ -167,7 +161,6 @@ body.theme-glass-overlay {
   z-index: 10;
 }
 
-/* Показываем крестик, когда есть класс has-text */
 .header-search-wrapper.has-text .header-search-clear {
   display: flex;
 }
@@ -179,7 +172,6 @@ body.theme-glass-overlay {
   stroke-width: 3;
 }
 
-/* Кнопка фильтра */
 .header-filter-btn {
   width: 40px;
   height: 40px;
@@ -193,19 +185,18 @@ body.theme-glass-overlay {
   cursor: pointer;
 }
 
-/* --- РЕЖИМ "ПРОСТО ОГЛАВЛЕНИЕ" (Для Настроек) --- */
-
 .app-header.simple-mode .header-search-row {
   display: none;
 }
 
 .app-header.simple-mode {
   padding-bottom: 12px;
-  /* Сбрасываем высоту для компактности */
   min-height: auto;
 }
 
-/* --- ЗАГОЛОВОК ВНУТРИ ПРОФИЛЯ --- */
+/* ============================================
+   4. MAIN CONTENT AREA
+   ============================================ */
 
 .profile-internal-title {
   font-size: 22px;
@@ -214,8 +205,6 @@ body.theme-glass-overlay {
   text-align: center;
   color: var(--main-text-color);
 }
-
-/* --- 2. КОНТЕНТ (ЛЕНТА) --- */
 
 .main-content-scrollbox {
   position: absolute;
@@ -226,7 +215,7 @@ body.theme-glass-overlay {
   z-index: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-top: 120px; /* Базовый паддинг, JS пересчитает */
+  padding-top: 120px;
   padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 20px) + 20px);
   padding-left: 16px;
   padding-right: 16px;
@@ -237,7 +226,15 @@ body.theme-glass-overlay {
   height: 0;
 }
 
-/* --- 3. НИЖНИЙ ТАББАР --- */
+.screen {
+  background: transparent !important;
+  min-height: auto;
+  padding: 0;
+}
+
+/* ============================================
+   5. BOTTOM TABBAR
+   ============================================ */
 
 .bottom-tabbar {
   position: fixed;
@@ -251,16 +248,12 @@ body.theme-glass-overlay {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  
   background: var(--glass-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: var(--glass-border);
   box-sizing: border-box;
-  
-  /* ✅ Оптимизированный transition БЕЗ backdrop-filter */
   transition: transform 0.3s ease, opacity 0.2s ease;
-  
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   will-change: transform;
@@ -287,7 +280,6 @@ body.theme-glass-overlay {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ✅ Фикс для иконок в табах */
 .tab-item svg,
 .tab-item img {
   transform: translate3d(0, 0, 0);
@@ -295,7 +287,6 @@ body.theme-glass-overlay {
   will-change: transform;
 }
 
-/* ✅ Фикс для active состояния */
 .tab-item.active {
   color: #e5e7eb;
   transform: translate3d(0, 0, 0);
@@ -306,11 +297,12 @@ body.theme-glass-overlay {
   font-weight: 600;
 }
 
-/* FAB КНОПКА */
+/* ============================================
+   6. FAB BUTTON
+   ============================================ */
 
 .tab-fab-wrapper {
   position: relative;
-  /* Поднимаем кнопку выше (было -28px) */
   top: -35px;
   display: flex;
   justify-content: center;
@@ -325,11 +317,9 @@ body.theme-glass-overlay {
   pointer-events: auto;
   width: 56px;
   height: 56px;
-  border-radius: 18px; /* Squircle форма */
-  /* Яркий синий цвет всегда */
+  border-radius: 18px;
   background: #007aff;
   border: none;
-  /* Яркая тень */
   box-shadow: 0 10px 25px rgba(0, 122, 255, 0.5);
   display: flex;
   align-items: center;
@@ -339,7 +329,6 @@ body.theme-glass-overlay {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Фикс для режима стекла: принудительно оставляем синим */
 body.theme-glass-overlay .tab-fab-button {
   background: #007aff !important;
   box-shadow: 0 10px 25px rgba(0, 122, 255, 0.5) !important;
@@ -351,20 +340,9 @@ body.theme-glass-overlay .tab-fab-button {
   transform: scale(0.9);
 }
 
-/* --- ПРОЧЕЕ --- */
-
-.screen {
-  background: transparent !important;
-  min-height: auto;
-  padding: 0;
-}
-
-.spinner {
-  border-color: rgba(255, 255, 255, 0.1);
-  border-top-color: var(--main-button-color);
-}
-
-/* Меню FAB */
+/* ============================================
+   7. FAB MENU
+   ============================================ */
 
 .fab-menu-popout {
   position: fixed;
@@ -452,7 +430,9 @@ body.theme-glass-overlay .tab-fab-button {
   transition: transform 0.3s;
 }
 
-/* --- СТИЛИ ДЛЯ ПОЛЯ ТЕГОВ И КНОПКИ (РОВНЫЕ) --- */
+/* ============================================
+   8. SKILLS INPUT GROUP
+   ============================================ */
 
 .skills-input-group {
   display: flex;
@@ -501,7 +481,9 @@ body.theme-glass-overlay .tab-fab-button {
   stroke: currentColor;
 }
 
-/* --- ТИПОГРАФИКА: ЕДИНЫЙ СТАНДАРТ ЗАГОЛОВКОВ (20px Bold) --- */
+/* ============================================
+   9. TYPOGRAPHY STANDARD
+   ============================================ */
 
 .header-title,
 .form-header h1,
@@ -517,9 +499,20 @@ body.theme-glass-overlay .tab-fab-button {
   text-align: center !important;
 }
 
-/* === WARM SLATE ТЁМНАЯ ТЕМА (БЕЗ СТЕКЛА) === */
+/* ============================================
+   10. SPINNER
+   ============================================ */
+
+.spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: var(--main-button-color);
+}
+
+/* ============================================
+   11. DARK THEME (No Glass)
+   ============================================ */
+
 body.theme-dark:not(.theme-glass-overlay) {
-  /* Переменные */
   --main-bg-color: #0f0f11;
   --secondary-bg-color: #1a1a1d;
   --main-text-color: #efefef;
@@ -528,21 +521,18 @@ body.theme-dark:not(.theme-glass-overlay) {
   --main-button-text-color: #ffffff;
 }
 
-/* Карточки в ленте (БЕЗ СТЕКЛА) */
 body.theme-dark:not(.theme-glass-overlay) .react-feed-card,
 body.theme-dark:not(.theme-glass-overlay) .feed-card {
   background: #1a1a1d !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Карточки в ленте:active (БЕЗ СТЕКЛА) */
 body.theme-dark:not(.theme-glass-overlay) .react-feed-card:active {
   background: #242429 !important;
   transform: scale(0.98);
 }
 
-/* === ФИКС: СПЛОШНОЙ ФОН БЕЗ СТЕКЛА === */
 body.theme-dark:not(.theme-glass-overlay) .app-header {
   background: #0f0f11 !important;
   backdrop-filter: none !important;
@@ -562,14 +552,13 @@ body.theme-dark:not(.theme-glass-overlay) .tab-item {
 }
 
 body.theme-dark:not(.theme-glass-overlay) .tab-item.active {
-  color: #6366f1; /* ← индиго вместо синего */
+  color: #6366f1;
 }
 
-/* ==========================================
-   FAB OPEN STATE - backdrop-filter
-   ========================================== */
+/* ============================================
+   12. FAB OPEN STATE (Backdrop Filter Off)
+   ============================================ */
 
-/* ❌ При открытии FAB - отключаем backdrop-filter */
 body.fab-is-open .app-header {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -584,24 +573,26 @@ body.fab-is-open .bottom-tabbar {
   transition: none !important;
 }
 
-/* ✅ При закрытии FAB - ЯВНО ВОЗВРАЩАЕМ backdrop-filter */
 body.fab-closing .app-header {
-  backdrop-filter: blur(10px) !important; /* ← ДОБАВИЛИ */
-  -webkit-backdrop-filter: blur(10px) !important; /* ← ДОБАВИЛИ */
-  background: var(--glass-bg) !important; /* ← ДОБАВИЛИ */
-  border-bottom: var(--glass-border) !important; /* ← ДОБАВИЛИ */
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  background: var(--glass-bg) !important;
+  border-bottom: var(--glass-border) !important;
   transition: background 0.2s ease, backdrop-filter 0.2s ease !important;
 }
 
 body.fab-closing .bottom-tabbar {
-  backdrop-filter: blur(10px) !important; /* ← ДОБАВИЛИ */
-  -webkit-backdrop-filter: blur(10px) !important; /* ← ДОБАВИЛИ */
-  background: var(--glass-bg) !important; /* ← ДОБАВИЛИ */
-  border-top: var(--glass-border) !important; /* ← ДОБАВИЛИ */
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  background: var(--glass-bg) !important;
+  border-top: var(--glass-border) !important;
   transition: background 0.2s ease, backdrop-filter 0.2s ease !important;
 }
 
-/* ==================== LIGHT THEME ==================== */
+/* ============================================
+   13. LIGHT THEME BASE
+   ============================================ */
+
 body.theme-light {
   --main-bg-color: #FFFFFF;
   --secondary-bg-color: #F9FAFB;
@@ -611,7 +602,10 @@ body.theme-light {
   --main-button-text-color: #FFFFFF;
 }
 
-/* ==================== LIGHT GLASS MODE ==================== */
+/* ============================================
+   14. LIGHT GLASS MODE
+   ============================================ */
+
 body.theme-light.theme-glass-overlay {
   background:
     radial-gradient(circle at 15% 20%, rgba(236, 72, 153, 0.12) 0%, transparent 35%),
@@ -621,8 +615,6 @@ body.theme-light.theme-glass-overlay {
     radial-gradient(circle at 90% 85%, rgba(251, 146, 60, 0.10) 0%, transparent 35%),
     linear-gradient(135deg, #EDE9FE 0%, #DBEAFE 50%, #FEE2E2 100%);
   background-attachment: fixed;
-
-  /* Glass переменные */
   --glass-bg: rgba(255, 255, 255, 0.70);
   --glass-bg-secondary: rgba(255, 255, 255, 0.50);
   --glass-bg-input: rgba(255, 255, 255, 0.60);
@@ -632,9 +624,10 @@ body.theme-light.theme-glass-overlay {
   --glass-bg-ios-fallback-secondary: rgba(255, 255, 255, 0.85);
 }
 
-/* ==================== HEADER (APP HEADER) ==================== */
+/* ============================================
+   15. LIGHT THEME - HEADER
+   ============================================ */
 
-/* Light без glass */
 body.theme-light .app-header {
   background: #FFFFFF;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -646,7 +639,11 @@ body.theme-light .header-title {
   color: #111827;
 }
 
-/* Light glass */
+body.theme-light.theme-glass-overlay .header-title {
+  color: #0F172A !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
 body.theme-light.theme-glass-overlay .app-header {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
@@ -654,9 +651,10 @@ body.theme-light.theme-glass-overlay .app-header {
   border-bottom: var(--glass-border);
 }
 
-/* ==================== SEARCH BAR ==================== */
+/* ============================================
+   16. LIGHT THEME - SEARCH BAR
+   ============================================ */
 
-/* Light без glass */
 body.theme-light .header-search-input {
   background-color: #F3F4F6 !important;
   color: #111827 !important;
@@ -679,7 +677,6 @@ body.theme-light .header-search-clear svg {
   color: #FFFFFF;
 }
 
-/* Light glass */
 body.theme-light.theme-glass-overlay .header-search-input {
   background: rgba(255, 255, 255, 0.60) !important;
   backdrop-filter: blur(10px);
@@ -698,9 +695,10 @@ body.theme-light.theme-glass-overlay .header-filter-btn {
   border: var(--glass-border);
 }
 
-/* ==================== TABBAR ==================== */
+/* ============================================
+   17. LIGHT THEME - TABBAR
+   ============================================ */
 
-/* Light без glass */
 body.theme-light .bottom-tabbar {
   background: #FFFFFF;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
@@ -720,7 +718,6 @@ body.theme-light .tab-label {
   color: inherit;
 }
 
-/* Light glass */
 body.theme-light.theme-glass-overlay .bottom-tabbar {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
@@ -728,7 +725,9 @@ body.theme-light.theme-glass-overlay .bottom-tabbar {
   border-top: var(--glass-border);
 }
 
-/* ==================== FAB BUTTON ==================== */
+/* ============================================
+   18. LIGHT THEME - FAB BUTTON
+   ============================================ */
 
 body.theme-light .tab-fab-button {
   background: #6366F1 !important;
@@ -741,7 +740,9 @@ body.theme-light.theme-glass-overlay .tab-fab-button {
   box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5) !important;
 }
 
-/* ==================== FAB MENU POPOUT ==================== */
+/* ============================================
+   19. LIGHT THEME - FAB MENU
+   ============================================ */
 
 body.theme-light.theme-glass-overlay .fab-overlay {
   background: rgba(0, 0, 0, 0.30);
@@ -775,7 +776,9 @@ body.theme-light.theme-glass-overlay .fab-icon-bg.red {
   color: #F43F5E;
 }
 
-/* ==================== FAB OPEN STATE ==================== */
+/* ============================================
+   20. LIGHT THEME - FAB OPEN STATE
+   ============================================ */
 
 body.theme-light.fab-is-open .app-header {
   backdrop-filter: none !important;
@@ -801,7 +804,9 @@ body.theme-light.fab-closing .bottom-tabbar {
   background: var(--glass-bg) !important;
 }
 
-/* ==================== SKILLS INPUT GROUP ==================== */
+/* ============================================
+   21. LIGHT THEME - MISC
+   ============================================ */
 
 body.theme-light .skills-input-button {
   background: rgba(0, 0, 0, 0.05) !important;
@@ -816,15 +821,22 @@ body.theme-light.theme-glass-overlay .skills-input-button {
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* ==================== PROFILE INTERNAL TITLE ==================== */
-
 body.theme-light .profile-internal-title {
   color: #111827;
 }
 
-/* ==================== SPINNER ==================== */
-
 body.theme-light .spinner {
   border-color: rgba(0, 0, 0, 0.1);
   border-top-color: #6366F1;
+}
+
+body.theme-light:not(.theme-glass-overlay) .fab-menu-item {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #111827 !important;
+}
+
+body.theme-light:not(.theme-glass-overlay) #glass-toggle-wrapper,
+body.theme-light.theme-glass-overlay #glass-toggle-wrapper {
+  background: transparent !important;
 }

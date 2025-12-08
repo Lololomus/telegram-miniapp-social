@@ -12,8 +12,10 @@ const ProfileSheet = React.lazy(() => import('../shared/ProfileSheet.js').then(m
 import {
   t, postJSON, useDebounce,
   POPULAR_SKILLS, ALL_RECOGNIZED_SKILLS,
-  isIOS, isMobile, QuickFilterTags, ProfileFallback, PhoneShell, EmptyState,
+  isIOS, isMobile, QuickFilterTags, ProfileFallback, PhoneShell, EmptyState
 } from './posts_utils.js';
+
+import { ProfilesManager } from '../shared/react_shared_utils.js';
 
 import { SkeletonList } from './Skeleton.js';
 import PostsList from './PostsList.js';
@@ -332,7 +334,6 @@ function App({ mountInto, overlayHost }) {
   // --- Handlers ---
   const handleOpenProfile = useCallback(async (author) => {
   if (!author || !author.user_id) return;
-  
   if (tg?.HapticFeedback?.impactOccurred) {
     tg.HapticFeedback.impactOccurred('light');
   }
@@ -349,6 +350,7 @@ function App({ mountInto, overlayHost }) {
     });
     
     if (resp?.ok && resp.profile) {
+      ProfilesManager.update(resp.profile.user_id, resp.profile);
       setProfileToShow(prev => {
         if (prev && prev.user_id === author.user_id) return resp.profile;
         return prev;
@@ -611,7 +613,7 @@ function App({ mountInto, overlayHost }) {
         profileToShow && h(ProfileSheet, { 
           key: `profile-${profileToShow.user_id}`, 
           user: profileToShow, 
-          onClose: handleCloseProfile 
+          onClose: handleCloseProfile
         }),
         
         postToShow && h(PostDetailSheet, { 

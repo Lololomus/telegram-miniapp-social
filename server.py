@@ -488,51 +488,58 @@ def get_telegram_user_info():
     except Exception as e:
         return jsonify({"ok": True, "username": None, "user_id": target_user_id})
 
-@app.route("/get-all-profiles", methods=["POST"])
+@app.route("/get-all-profiles", methods=['POST'])
 def get_all_profiles():
-    init_data = request.json.get("initData")
+    init_data = request.json.get('initData')
     user_id = validate_init_data(init_data, BOT_TOKEN)
-    if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
+    if not user_id:
+        return jsonify(ok=False, error='Invalid data'), 403
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # --- ОБНОВЛЕНО: Добавлено p.status в SELECT ---
+        # Запрос с JOIN для получения последней работы
         cursor.execute('''
-            SELECT
+            SELECT 
                 p.user_id, p.first_name, p.bio, p.photo_path, p.skills, p.language_code, p.status,
-                we.job_title,
-                we.company
+                we.job_title, we.company
             FROM profiles p
             LEFT JOIN (
-                SELECT
-                    id, user_id, job_title, company
+                SELECT id, user_id, job_title, company
                 FROM (
-                    SELECT
-                        id, user_id, job_title, company,
-                        ROW_NUMBER() OVER(
-                            PARTITION BY user_id
-                            ORDER BY is_current DESC, id DESC
-                        ) as rn
+                    SELECT id, user_id, job_title, company,
+                           ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY is_current DESC, id DESC) as rn
                     FROM work_experience
                 ) AS ranked_jobs
                 WHERE rn = 1
             ) AS we ON p.user_id = we.user_id
-            WHERE
-                p.user_id != ?
-                AND (
-                    (p.bio IS NOT NULL AND p.bio != '') OR
-                    (p.photo_path IS NOT NULL) OR
-                    (p.skills IS NOT NULL AND p.skills != '[]')
-                )
+            WHERE p.user_id != ?
+              AND (p.bio IS NOT NULL AND p.bio != ''
+                   OR p.photo_path IS NOT NULL
+                   OR p.skills IS NOT NULL AND p.skills != '')
         ''', (user_id,))
         
-        profiles = [dict(row) for row in cursor.fetchall()]
+        profiles = []
+        for row in cursor.fetchall():
+            profile = dict(row)
+            
+            # ⭐ ДОБАВЛЯЕМ: Проверяем подписку для каждого профиля
+            profile['is_followed_by_viewer'] = check_is_followed(conn, user_id, profile['user_id'])
+            
+            # Добавляем счётчики подписок
+            followers_count, following_count = get_follow_counts(conn, profile['user_id'])
+            profile['followers_count'] = followers_count
+            profile['following_count'] = following_count
+            
+            profiles.append(profile)
+        
         conn.close()
-        return jsonify({"ok": True, "profiles": profiles})
+        return jsonify(ok=True, profiles=profiles)
     except Exception as e:
-        if 'conn' in locals() and conn: conn.close()
-        return jsonify({"ok": False, "error": str(e)}), 500
+        if 'conn' in locals() and conn:
+            conn.close()
+        return jsonify(ok=False, error=str(e)), 500
 
 @app.route("/follow", methods=["POST"])
 def follow_user():

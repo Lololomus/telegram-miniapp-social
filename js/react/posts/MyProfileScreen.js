@@ -85,8 +85,8 @@ function MyProfileAppRoot() {
 }
 
 export default function MyProfileScreen({ user, onEditProfile, onOpenPostSheet, onShowQr }) {
-  const colors = getThemeColors(); // Получаем цвета темы
-
+  const [themeKey, setThemeKey] = useState(0);
+  const colors = getThemeColors();
   const [activeTab, setActiveTab] = useState('about');
   const [myPosts, setMyPosts] = useState([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
@@ -99,6 +99,12 @@ export default function MyProfileScreen({ user, onEditProfile, onOpenPostSheet, 
     const handler = () => setLangTick((x) => x + 1);
     document.addEventListener('lang-changed', handler);
     return () => document.removeEventListener('lang-changed', handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setThemeKey(x => x + 1);
+    document.addEventListener('theme-changed', handler);
+    return () => document.removeEventListener('theme-changed', handler);
   }, []);
 
   const statusConf = STATUS_CONFIG[status] || STATUS_CONFIG['networking'];
@@ -347,31 +353,6 @@ export default function MyProfileScreen({ user, onEditProfile, onOpenPostSheet, 
                 'div',
                 { key: p.post_id, className: 'my-post-row' },
                 h(
-                  'button',
-                  {
-                    className: 'my-post-icon-btn destructive',
-                    onClick: () => handleMyPostDelete(p),
-                  },
-                  h(
-                    'svg',
-                    {
-                      width: 20,
-                      height: 20,
-                      viewBox: '0 0 24 24',
-                      fill: 'none',
-                      stroke: 'currentColor',
-                      strokeWidth: 2,
-                      strokeLinecap: 'round',
-                      strokeLinejoin: 'round',
-                    },
-                    h('polyline', { points: '3 6 5 6 21 6' }),
-                    h('path', { d: 'M19 6l-1 14H6L5 6' }),
-                    h('path', { d: 'M10 11v6' }),
-                    h('path', { d: 'M14 11v6' }),
-                    h('path', { d: 'M9 6V4h6v2' })
-                  )
-                ),
-                h(
                   'div',
                   { className: 'my-post-card-wrapper' },
                   h(PostCard, {
@@ -387,25 +368,54 @@ export default function MyProfileScreen({ user, onEditProfile, onOpenPostSheet, 
                   })
                 ),
                 h(
-                  'button',
-                  {
-                    className: 'my-post-icon-btn edit',
-                    onClick: () => handleMyPostEdit(p),
-                  },
+                  'div',
+                  { className: 'my-post-actions' },
                   h(
-                    'svg',
+                    'button',
                     {
-                      width: 20,
-                      height: 20,
-                      viewBox: '0 0 24 24',
-                      fill: 'none',
-                      stroke: 'currentColor',
-                      strokeWidth: 2,
-                      strokeLinecap: 'round',
-                      strokeLinejoin: 'round',
+                      className: 'my-post-icon-btn edit',
+                      onClick: () => handleMyPostEdit(p),
                     },
-                    h('path', { d: 'M12 20h9' }),
-                    h('path', { d: 'M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z' })
+                    h(
+                      'svg',
+                      {
+                        width: 20,
+                        height: 20,
+                        viewBox: '0 0 24 24',
+                        fill: 'none',
+                        stroke: 'currentColor',
+                        strokeWidth: 2,
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                      },
+                      h('path', { d: 'M12 20h9' }),
+                      h('path', { d: 'M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z' })
+                    )
+                  ),
+                  h(
+                    'button',
+                    {
+                      className: 'my-post-icon-btn destructive',
+                      onClick: () => handleMyPostDelete(p),
+                    },
+                    h(
+                      'svg',
+                      {
+                        width: 20,
+                        height: 20,
+                        viewBox: '0 0 24 24',
+                        fill: 'none',
+                        stroke: 'currentColor',
+                        strokeWidth: 2,
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                      },
+                      h('polyline', { points: '3 6 5 6 21 6' }),
+                      h('path', { d: 'M19 6l-1 14H6L5 6' }),
+                      h('path', { d: 'M10 11v6' }),
+                      h('path', { d: 'M14 11v6' }),
+                      h('path', { d: 'M9 6V4h6v2' })
+                    )
                   )
                 )
               )

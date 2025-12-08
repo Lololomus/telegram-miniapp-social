@@ -1,10 +1,8 @@
 /* css/form.css */
 
-/* ОБНОВЛЕНО (Glass): Стекло вынесено в единый слой без theme-light/theme-dark */
-/* ОБНОВЛЕНО: TomSelect удалён, используются нативные select */
-/* ОБНОВЛЕНО: Чекбоксы, динамические секции, счётчик символов */
-
-/* --- ФОРМА РЕДАКТИРОВАНИЯ (БАЗОВОЕ ОФОРМЛЕНИЕ) --- */
+/* ============================================
+   1. FORM CONTAINER BASE
+   ============================================ */
 
 #form-container {
   display: flex;
@@ -24,7 +22,9 @@
   transition: color 0.3s, opacity 0.3s;
 }
 
-/* Базовые поля: input / textarea / select */
+/* ============================================
+   2. INPUTS, TEXTAREA, SELECT BASE
+   ============================================ */
 
 input,
 textarea,
@@ -37,15 +37,30 @@ select {
   background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
   color: var(--main-text-color, var(--tg-theme-text-color, #000000));
   font-family: inherit;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.3s,
-    color 0.3s,
-    box-shadow 0.2s;
+  transition: border-color 0.2s ease, background-color 0.3s, color 0.3s, box-shadow 0.2s;
   resize: vertical;
 }
 
-/* --- Стилизация select --- */
+input::placeholder,
+textarea::placeholder {
+  color: var(--main-hint-color, #999999);
+  opacity: 0.7;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
+}
+
+textarea {
+  min-height: 80px;
+}
+
+/* ============================================
+   3. SELECT STYLING
+   ============================================ */
 
 select {
   -webkit-appearance: none;
@@ -64,35 +79,13 @@ select option {
   padding: 8px;
 }
 
-/* Стрелка для тёмной темы (fallback под старую модель) */
 body.theme-dark select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2398989e' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
 }
 
-/* Placeholder */
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--main-hint-color, #999999);
-  opacity: 0.7;
-}
-
-/* Фокус */
-
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
-}
-
-/* Высота textarea */
-
-textarea {
-  min-height: 80px;
-}
-
-/* --- ЗАГРУЗКА АВАТАРА --- */
+/* ============================================
+   4. AVATAR UPLOAD
+   ============================================ */
 
 .avatar-upload {
   position: relative;
@@ -133,7 +126,9 @@ textarea {
   transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
 
-/* --- Инпут навыков --- */
+/* ============================================
+   5. SKILLS INPUT GROUP
+   ============================================ */
 
 .skills-input-group {
   display: flex;
@@ -144,15 +139,9 @@ textarea {
   flex-grow: 1;
 }
 
-/* Readonly инпут навыков кликабелен */
-
 .skills-input-group input[readonly] {
   cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.3s,
-    color 0.3s,
-    opacity 0.2s;
+  transition: border-color 0.2s ease, background-color 0.3s, color 0.3s, opacity 0.2s;
 }
 
 .skills-input-group:hover input[readonly] {
@@ -170,11 +159,7 @@ textarea {
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
-  transition:
-    background-color 0.3s,
-    color 0.3s,
-    border-color 0.3s,
-    transform 0.1s ease;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s, transform 0.1s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -195,7 +180,9 @@ textarea {
   border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff));
 }
 
-/* === ДИНАМИЧЕСКИЕ СЕКЦИИ === */
+/* ============================================
+   6. DYNAMIC SECTIONS
+   ============================================ */
 
 .form-section {
   margin-top: 25px;
@@ -227,8 +214,6 @@ textarea {
   gap: 15px;
 }
 
-/* Карточка динамического элемента */
-
 .dynamic-item {
   background-color: var(--main-bg-color, var(--tg-theme-bg-color, #ffffff));
   border: 1.5px solid var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef));
@@ -236,16 +221,9 @@ textarea {
   padding: 15px;
   padding-top: 25px;
   position: relative;
-  transition:
-    opacity 0.3s ease-out,
-    transform 0.3s ease-out,
-    background-color 0.3s,
-    border-color 0.3s,
-    box-shadow 0.3s;
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out, background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
   overflow: hidden;
 }
-
-/* Лейблы внутри динамических блоков */
 
 .dynamic-item .form-group label {
   font-size: 13px;
@@ -255,15 +233,11 @@ textarea {
   transition: color 0.3s, opacity 0.3s;
 }
 
-/* Поля внутри динамических блоков */
-
 .dynamic-item input,
 .dynamic-item textarea {
   padding: 12px;
   font-size: 15px;
 }
-
-/* Placeholder внутри динамических блоков */
 
 .dynamic-item input::placeholder,
 .dynamic-item textarea::placeholder {
@@ -271,14 +245,38 @@ textarea {
   opacity: 0.7;
 }
 
-/* Фокус внутри динамических блоков */
-
 .dynamic-item input:focus,
 .dynamic-item textarea:focus {
   border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important;
 }
 
-/* Кнопка удаления */
+.dynamic-item textarea {
+  min-height: 60px;
+}
+
+.dynamic-item.is-adding {
+  opacity: 0;
+  transform: translateY(-20px);
+  max-height: 0 !important;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  margin-bottom: 0;
+}
+
+.dynamic-item.is-removing {
+  opacity: 0;
+  transform: scale(0.95);
+  max-height: 0 !important;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  margin-bottom: 0;
+}
+
+/* ============================================
+   7. DELETE & ADD BUTTONS
+   ============================================ */
 
 .delete-item-button {
   position: absolute;
@@ -296,11 +294,7 @@ textarea {
   cursor: pointer;
   font-weight: bold;
   opacity: 0.7;
-  transition:
-    opacity 0.2s,
-    background-color 0.3s,
-    transform 0.1s ease,
-    color 0.3s;
+  transition: opacity 0.2s, background-color 0.3s, transform 0.1s ease, color 0.3s;
   z-index: 1;
 }
 
@@ -311,8 +305,6 @@ textarea {
 .delete-item-button:active {
   transform: scale(0.9);
 }
-
-/* Кнопка "Добавить" */
 
 .add-item-button {
   display: block;
@@ -326,10 +318,7 @@ textarea {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    background-color 0.3s,
-    color 0.3s;
+  transition: transform 0.2s ease, background-color 0.3s, color 0.3s;
   text-align: center;
 }
 
@@ -337,7 +326,9 @@ textarea {
   transform: scale(0.98);
 }
 
-/* Поле ссылки */
+/* ============================================
+   8. LINKS & DATES
+   ============================================ */
 
 .link-item {
   display: flex;
@@ -353,8 +344,6 @@ textarea {
 .link-item input {
   flex-grow: 1;
 }
-
-/* Группа дат */
 
 .date-input-group {
   margin-bottom: 10px;
@@ -385,7 +374,9 @@ textarea {
   margin-right: 10px;
 }
 
-/* Чекбокс "по наст. время" */
+/* ============================================
+   9. CHECKBOX STYLING
+   ============================================ */
 
 .checkbox-label {
   display: inline-flex;
@@ -400,8 +391,6 @@ textarea {
   line-height: 1;
   transition: color 0.3s;
 }
-
-/* Кастомный чекбокс */
 
 .checkbox-label input[type="checkbox"] {
   appearance: none !important;
@@ -429,8 +418,6 @@ textarea {
   border-color: var(--main-button-color, var(--tg-theme-button-color, #007aff)) !important;
 }
 
-/* Полный сброс ::before */
-
 .checkbox-label input[type="checkbox"]::before {
   content: '' !important;
   display: none !important;
@@ -439,8 +426,6 @@ textarea {
   -webkit-mask: none !important;
   mask: none !important;
 }
-
-/* Сброс ::after по умолчанию */
 
 .checkbox-label input[type="checkbox"]::after {
   content: '' !important;
@@ -455,8 +440,6 @@ textarea {
   position: static;
   transform: none;
 }
-
-/* Галочка при :checked */
 
 .checkbox-label input[type="checkbox"]:checked::after {
   display: block !important;
@@ -475,7 +458,9 @@ textarea {
   opacity: 0.9;
 }
 
-/* Disabled текстовые поля */
+/* ============================================
+   10. DISABLED & CHAR COUNTER
+   ============================================ */
 
 input[type="text"]:disabled {
   background-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) !important;
@@ -484,36 +469,6 @@ input[type="text"]:disabled {
   border-color: var(--secondary-bg-color, var(--tg-theme-secondary-bg-color, #efefef)) !important;
   transition: background-color 0.3s, border-color 0.3s;
 }
-
-/* Уменьшенная высота textarea в динамических блоках */
-
-.dynamic-item textarea {
-  min-height: 60px;
-}
-
-/* Анимация добавления/удаления динамических блоков */
-
-.dynamic-item.is-adding {
-  opacity: 0;
-  transform: translateY(-20px);
-  max-height: 0 !important;
-  padding-top: 0;
-  padding-bottom: 0;
-  border-width: 0;
-  margin-bottom: 0;
-}
-
-.dynamic-item.is-removing {
-  opacity: 0;
-  transform: scale(0.95);
-  max-height: 0 !important;
-  padding-top: 0;
-  padding-bottom: 0;
-  border-width: 0;
-  margin-bottom: 0;
-}
-
-/* --- Счётчик символов --- */
 
 .char-counter {
   display: block;
@@ -532,9 +487,74 @@ input[type="text"]:disabled {
   margin-bottom: 12px;
 }
 
-/* --- СТЕКЛО: ЕДИНЫЙ СЛОЙ ДЛЯ ВСЕХ ТЕМ --- */
+/* ============================================
+   11. EDIT POST SCREEN (React)
+   ============================================ */
 
-/* Поля ввода в стекле */
+.edit-post-screen {
+  background-color: var(--main-bg-color) !important;
+  border-radius: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-shadow: none !important;
+  z-index: 5001 !important;
+}
+
+.edit-post-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  height: calc(env(safe-area-inset-top, 40px) + 60px);
+  padding-top: env(safe-area-inset-top, 40px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 8px !important;
+  background-color: var(--main-bg-color);
+  border-bottom: 1px solid var(--secondary-bg-color);
+}
+
+.edit-post-scroll-content {
+  padding-top: 120px !important;
+  margin-top: 0 !important;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 80px !important;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.fab-modal-save-container {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 560px;
+  z-index: 5002;
+  pointer-events: auto;
+}
+
+/* ============================================
+   12. DARK THEME (No Glass)
+   ============================================ */
+
+body.theme-dark:not(.theme-glass-overlay) .edit-post-screen {
+  background: #0f0f11 !important;
+  backdrop-filter: none !important;
+}
+
+body.theme-dark:not(.theme-glass-overlay) .edit-post-header {
+  background: #0f0f11 !important;
+  backdrop-filter: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ============================================
+   13. GLASS MODE (All Themes)
+   ============================================ */
 
 body.theme-glass-overlay input,
 body.theme-glass-overlay textarea,
@@ -550,7 +570,7 @@ body.theme-glass-overlay select {
 body.theme-glass-overlay input:focus,
 body.theme-glass-overlay textarea:focus,
 body.theme-glass-overlay select:focus {
-  border-color: rgba(255,255,255,0.3) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
   outline: none !important;
   box-shadow: none !important;
 }
@@ -561,13 +581,9 @@ body.theme-glass-overlay textarea::placeholder {
   opacity: 0.7;
 }
 
-/* Стрелка select в режиме стекла (нейтральная светлая) */
-
 body.theme-glass-overlay select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill-opacity='0.7' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
 }
-
-/* Кнопка "Навыки" в стекле */
 
 body.theme-glass-overlay .skills-input-button {
   background-color: var(--glass-bg-input) !important;
@@ -575,8 +591,6 @@ body.theme-glass-overlay .skills-input-button {
   color: var(--main-text-color);
   opacity: 0.8;
 }
-
-/* Динамические секции в стекле */
 
 body.theme-glass-overlay .form-section {
   border-top: none;
@@ -631,7 +645,23 @@ body.theme-glass-overlay input[type="text"]:disabled {
   opacity: 0.5;
 }
 
-/* GLASS MODE TEXT FIXES для тёмного стекла */
+body.theme-glass-overlay .edit-post-screen {
+  background: var(--deep-glass-background) !important;
+  background-attachment: fixed;
+}
+
+body.theme-glass-overlay .edit-post-header {
+  background: transparent !important;
+  backdrop-filter: none;
+  border-bottom: none !important;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+body.theme-glass-overlay .edit-post-header h2 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
 
 body.theme-dark.theme-glass-overlay .form-group label {
   color: #ffffff !important;
@@ -652,93 +682,10 @@ body.theme-dark.theme-glass-overlay .char-counter {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* --- ЭКРАН РЕДАКТИРОВАНИЯ (React Full Screen) --- */
+/* ============================================
+   14. LIGHT THEME BASE
+   ============================================ */
 
-.edit-post-screen {
-  background-color: var(--main-bg-color) !important;
-  border-radius: 0 !important;
-  max-width: 100% !important;
-  width: 100% !important;
-  box-shadow: none !important;
-  z-index: 5001 !important; /* ниже, чем навыки (6000) */
-}
-
-.edit-post-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  height: calc(env(safe-area-inset-top, 40px) + 60px);
-  padding-top: env(safe-area-inset-top, 40px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-bottom: 8px !important;
-  background-color: var(--main-bg-color);
-  border-bottom: 1px solid var(--secondary-bg-color);
-}
-
-.edit-post-scroll-content {
-  padding-top: 120px !important;
-  margin-top: 0 !important;
-  padding-left: 20px;
-  padding-right: 20px;
-  padding-bottom: 80px !important;
-  overflow-y: auto;
-  height: 100%;
-}
-
-/* Режим стекла для экрана редактирования */
-
-body.theme-glass-overlay .edit-post-screen {
-  background: var(--deep-glass-background) !important;
-  background-attachment: fixed;
-}
-
-body.theme-glass-overlay .edit-post-header {
-  background: transparent !important;
-  backdrop-filter: none;
-  border-bottom: none !important;
-  box-shadow: none;
-  pointer-events: none;
-}
-
-body.theme-glass-overlay .edit-post-header h2 {
-  color: #ffffff !important;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-/* FAB контейнер сохранения в модалке */
-
-.fab-modal-save-container {
-  position: fixed;
-  bottom: 25px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 40px);
-  max-width: 560px;
-  z-index: 5002;
-  pointer-events: auto;
-}
-
-/* === ЭКРАН РЕДАКТИРОВАНИЯ БЕЗ СТЕКЛА === */
-body.theme-dark:not(.theme-glass-overlay) .edit-post-screen {
-  background: #0f0f11 !important; /* сплошной фон */
-  backdrop-filter: none !important;
-}
-
-body.theme-dark:not(.theme-glass-overlay) .edit-post-header {
-  background: #0f0f11 !important;
-  backdrop-filter: none !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-}
-
-/* ==================== LIGHT THEME — FORMS ==================== */
-
-/* ==================== 1. INPUTS & TEXTAREAS ==================== */
-
-/* Light без glass */
 body.theme-light input,
 body.theme-light textarea,
 body.theme-light select {
@@ -760,31 +707,16 @@ body.theme-light select:focus {
   outline: none;
 }
 
-/* Light glass */
-body.theme-light.theme-glass-overlay input,
-body.theme-light.theme-glass-overlay textarea,
-body.theme-light.theme-glass-overlay select {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: var(--glass-border);
-  color: #111827;
+body.theme-light label,
+body.theme-light .form-label {
+  color: #374151;
 }
 
-body.theme-light.theme-glass-overlay input::placeholder,
-body.theme-light.theme-glass-overlay textarea::placeholder {
-  color: rgba(0, 0, 0, 0.40);
+body.theme-light .form-hint,
+body.theme-light .form-description {
+  color: #6B7280;
 }
 
-body.theme-light.theme-glass-overlay input:focus,
-body.theme-light.theme-glass-overlay textarea:focus {
-  border-color: #6366F1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
-
-/* ==================== 2. BUTTONS ==================== */
-
-/* Light без glass */
 body.theme-light .action-button {
   background: #6366F1;
   color: #FFFFFF;
@@ -806,7 +738,46 @@ body.theme-light .action-button.secondary:active {
   background: #E5E7EB;
 }
 
-/* Light glass */
+body.theme-light .header-button {
+  background-color: #F3F4F6;
+  color: #6366F1;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================
+   15. LIGHT GLASS MODE
+   ============================================ */
+
+body.theme-light.theme-glass-overlay input,
+body.theme-light.theme-glass-overlay textarea,
+body.theme-light.theme-glass-overlay select {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--glass-border);
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay input::placeholder,
+body.theme-light.theme-glass-overlay textarea::placeholder {
+  color: rgba(0, 0, 0, 0.40);
+}
+
+body.theme-light.theme-glass-overlay input:focus,
+body.theme-light.theme-glass-overlay textarea:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+body.theme-light.theme-glass-overlay label,
+body.theme-light.theme-glass-overlay .form-label {
+  color: #111827;
+}
+
+body.theme-light.theme-glass-overlay .form-hint {
+  color: #64748B;
+}
+
 body.theme-light.theme-glass-overlay .action-button {
   background: #6366F1;
   box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
@@ -822,35 +793,6 @@ body.theme-light.theme-glass-overlay .action-button.secondary {
 
 body.theme-light.theme-glass-overlay .action-button.secondary:active {
   background: rgba(255, 255, 255, 0.65);
-}
-
-/* ==================== 3. FORM LABELS & HINTS ==================== */
-
-body.theme-light label,
-body.theme-light .form-label {
-  color: #374151;
-}
-
-body.theme-light .form-hint,
-body.theme-light .form-description {
-  color: #6B7280;
-}
-
-body.theme-light.theme-glass-overlay label,
-body.theme-light.theme-glass-overlay .form-label {
-  color: #111827;
-}
-
-body.theme-light.theme-glass-overlay .form-hint {
-  color: #64748B;
-}
-
-/* ==================== 4. HEADER BUTTON ==================== */
-
-body.theme-light .header-button {
-  background-color: #F3F4F6;
-  color: #6366F1;
-  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 body.theme-light.theme-glass-overlay .header-button {

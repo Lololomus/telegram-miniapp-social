@@ -123,12 +123,15 @@ export function applyTheme(
 
   // Подсветка выбранной темы в настройках
   if (settingsElements?.themeButtons) {
-    settingsElements.themeButtons.forEach((button) => {
+    settingsElements.themeButtons.forEach(button => {
       if (!button) return;
       const isActive = button.dataset.theme === theme;
       button.classList.toggle('active', isActive);
     });
   }
+  
+  // Диспатчим событие для React-компонентов
+  document.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme, bgColor, buttonColor } }));
 }
 
 /**
