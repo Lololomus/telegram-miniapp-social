@@ -1303,3 +1303,9 @@ body.theme-light.theme-glass-overlay .status-hint-bubble {
 body.theme-light.theme-glass-overlay .status-hint-bubble .status-hint-label {
   color: #0F172A;
 }
+
+create-post-modal .form-header,
+skills-modal .form-header {
+  align-items: center !important;
+  padding-bottom: 0 !important;
+}

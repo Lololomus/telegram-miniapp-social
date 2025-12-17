@@ -729,6 +729,103 @@ export const ProfilesManager = {
   }
 };
 
+// ================================
+// TOP TITLE MANAGER (Vanilla)
+// ================================
+
+const TITLE_KEY_BY_VIEW_ID = {
+  // Tabs / base screens (верхний текст в app-header)
+  'feed-container': 'tab_people',
+  'posts-feed-container': 'tab_hub',
+  'profile-view-container': 'yourprofiletitle',
+  'settings-container': 'settingstitle',
+
+  // Fullscreen screens/modals (верхний текст внутри screen)
+  'form-container': 'editprofiletitle',
+  'create-post-modal': 'createposttitle',
+  'skills-modal': 'skillsmodaltitle',
+
+  // Overlay modal (QR)
+  'qr-code-modal': 'qrtitle',
+};
+
+const OVERLAY_VIEW_IDS = new Set([
+  'create-post-modal',
+  'skills-modal',
+  'qr-code-modal',
+]);
+
+export const TopTitleManager = (() => {
+  let headerTitleEl = null;
+  let tFn = (k) => k;
+
+  let baseViewId = 'posts-feed-container';
+  let overlayStack = [];
+
+  function resolveTitleKey(viewId) {
+    return TITLE_KEY_BY_VIEW_ID[viewId] || null;
+  }
+
+  function getActiveTitleKey() {
+    if (overlayStack.length) {
+      return resolveTitleKey(overlayStack[overlayStack.length - 1]);
+    }
+    return resolveTitleKey(baseViewId);
+  }
+
+  function render() {
+    if (!headerTitleEl) return;
+    const key = getActiveTitleKey();
+    if (!key) return;
+
+    // ВАЖНО: и текст, и data-i18n-key (иначе updateUIText перетрет текст при смене языка)
+    headerTitleEl.dataset.i18nKey = key;
+    headerTitleEl.textContent = tFn(key);
+  }
+
+  function onViewShown(viewId) {
+    if (!viewId) return;
+
+    if (OVERLAY_VIEW_IDS.has(viewId)) {
+      const idx = overlayStack.lastIndexOf(viewId);
+      if (idx === -1) overlayStack.push(viewId);
+      else overlayStack = overlayStack.slice(0, idx + 1);
+    } else {
+      baseViewId = viewId;
+      overlayStack = [];
+    }
+
+    render();
+  }
+
+  function onOverlayShown(viewId) {
+    if (!viewId) return;
+    if (!OVERLAY_VIEW_IDS.has(viewId)) return;
+
+    const idx = overlayStack.lastIndexOf(viewId);
+    if (idx === -1) overlayStack.push(viewId);
+    else overlayStack = overlayStack.slice(0, idx + 1);
+
+    render();
+  }
+
+  function onOverlayHidden(viewId) {
+    if (!viewId) return;
+    overlayStack = overlayStack.filter((x) => x !== viewId);
+    render();
+  }
+
+  function init({ headerTitle, t } = {}) {
+    headerTitleEl = headerTitle || document.getElementById('header-title');
+    tFn = t || tFn;
+    render();
+  }
+
+  return { init, render, onViewShown, onOverlayShown, onOverlayHidden };
+})();
+
+try { window.TopTitleManager = TopTitleManager; } catch (e) {}
+
 /**
  * React Hook для работы с профилем из кэша
  */

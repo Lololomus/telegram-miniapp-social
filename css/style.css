@@ -840,3 +840,214 @@ body.theme-light:not(.theme-glass-overlay) #glass-toggle-wrapper,
 body.theme-light.theme-glass-overlay #glass-toggle-wrapper {
   background: transparent !important;
 }
+
+/* ===== FLOATING HEADER & TABBAR STYLES ===== */
+
+/* 3. APP HEADER - FLOATING VERSION */
+.app-header {
+  position: fixed;
+  /* 🔥 Floating: отступы по бокам */
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  left: 12px;
+  right: 12px;
+  z-index: 50;
+  height: auto;
+  
+  /* 🔥 Скругление углов */
+  border-radius: 20px;
+  
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  
+  /* Glass эффект */
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  /* 🔥 Замена border на box-shadow для floating эффекта */
+  border: none;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.08),
+    0 0 0 0.5px rgba(255, 255, 255, 0.1) inset;
+  
+  box-sizing: border-box;
+  transition: transform 0.3s ease, opacity 0.2s ease;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+  isolation: isolate;
+}
+
+/* 5. BOTTOM TABBAR - FLOATING VERSION */
+.bottom-tabbar {
+  position: fixed;
+  /* 🔥 Floating: отступы по бокам и снизу */
+  bottom: calc(env(safe-area-inset-bottom, 20px) + 12px);
+  left: 12px;
+  right: 12px;
+  z-index: 50;
+  height: auto;
+  
+  /* 🔥 Скругление углов */
+  border-radius: 24px;
+  
+  padding: 10px 8px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  
+  /* Glass эффект */
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  /* 🔥 Замена border на box-shadow */
+  border: none;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 0 0 0.5px rgba(255, 255, 255, 0.1) inset;
+  
+  box-sizing: border-box;
+  transition: transform 0.3s ease, opacity 0.2s ease;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+  isolation: isolate;
+}
+
+/* 4. MAIN CONTENT - Обновляем отступы под floating бары */
+.main-content-scrollbox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  
+  /* 🔥 Отступ сверху под floating header */
+  padding-top: calc(env(safe-area-inset-top, 0px) + 110px);
+  
+  /* 🔥 Отступ снизу под floating tabbar */
+  padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 100px);
+  
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* 6. FAB BUTTON - Адаптация под floating tabbar */
+.tab-fab-wrapper {
+  position: relative;
+  /* 🔥 Увеличиваем отступ вверх для floating стиля */
+  top: -38px;
+  display: flex;
+  justify-content: center;
+  width: 60px;
+  z-index: 60;
+  height: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.tab-fab-button {
+  pointer-events: auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: #007aff;
+  border: none;
+  box-shadow: 
+    0 12px 40px rgba(0, 122, 255, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===== THEME OVERRIDES ===== */
+
+/* DARK THEME (без Glass) */
+body.theme-dark:not(.theme-glass-overlay) .app-header {
+  background: #0f0f11;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 0.5px rgba(255, 255, 255, 0.06) inset;
+}
+
+body.theme-dark:not(.theme-glass-overlay) .bottom-tabbar {
+  background: #0f0f11;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 0.5px rgba(255, 255, 255, 0.06) inset;
+}
+
+/* LIGHT THEME */
+body.theme-light .app-header {
+  background: #FFFFFF;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.06),
+    0 0 0 0.5px rgba(0, 0, 0, 0.08) inset;
+}
+
+body.theme-light .bottom-tabbar {
+  background: #FFFFFF;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 0.5px rgba(0, 0, 0, 0.08) inset;
+}
+
+/* LIGHT GLASS MODE */
+body.theme-light.theme-glass-overlay .app-header {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.08),
+    0 0 0 0.5px rgba(0, 0, 0, 0.08) inset;
+}
+
+body.theme-light.theme-glass-overlay .bottom-tabbar {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 0 0 0.5px rgba(0, 0, 0, 0.08) inset;
+}
+
+/* FAB для Light темы */
+body.theme-light .tab-fab-button {
+  background: #6366F1;
+  box-shadow: 
+    0 12px 40px rgba(99, 102, 241, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+  color: #FFFFFF;
+}
+
+/* 🔥 Адаптация для маленьких экранов */
+@media (max-width: 375px) {
+  .app-header {
+    left: 8px;
+    right: 8px;
+    border-radius: 16px;
+    padding: 10px 12px;
+  }
+  
+  .bottom-tabbar {
+    left: 8px;
+    right: 8px;
+    border-radius: 20px;
+  }
+}

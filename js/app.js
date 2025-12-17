@@ -10,6 +10,7 @@ window.UI = UI;
 
 import { state, SKILL_CATEGORIES } from './app-state.js';
 import { setupDynamicList } from './app-form-helpers.js';
+import { TopTitleManager } from './react/shared/react_shared_utils.js';
 
 window.t = t;
 window.REACT_FEED = true;
@@ -179,6 +180,18 @@ document.addEventListener('DOMContentLoaded', () => {
          skeletonTemplate: document.getElementById('skeleton-card-template')
     };
 
+    TopTitleManager.init({
+        headerTitle: document.getElementById('header-title'),
+        t,
+    });
+
+    const originalShowQrCodeModal = UI.showQrCodeModal;
+    UI.showQrCodeModal = function (qrElements, CONFIG, profile, t) {
+    const res = originalShowQrCodeModal(qrElements, CONFIG, profile, t);
+    TopTitleManager.onOverlayShown('qr-code-modal');
+    return res;
+    };
+
     if (elements.qr.modal && elements.qr.modal.parentNode !== document.body) {
         document.body.appendChild(elements.qr.modal);
     }
@@ -187,6 +200,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const GLASS_KEY = 'glass-enabled';
+
+    function setGlassEnabled(enabled, { saveToLocalStorage = true } = {}) {
+    const isOn = !!enabled;
+
+    applyGlass(isOn);
+
+    if (elements?.settings?.glassToggle) {
+        elements.settings.glassToggle.checked = isOn;
+    }
+
+    if (saveToLocalStorage) {
+        try {
+        localStorage.setItem(GLASS_KEY, isOn ? '1' : '0');
+        } catch (e) {}
+    }
+    }
 
     if (elements.settings.glassToggle) {
     // начальное состояние
@@ -487,17 +516,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
                 
                 const isGlassEnabled = !!state.currentUserProfile.is_glass_enabled;
-                if (elements.settings.glassToggle) {
-                    elements.settings.glassToggle.checked = isGlassEnabled;
-                }
-                
                 const currentTheme = state.currentUserProfile.theme || 'auto';
-                if (isGlassEnabled && (currentTheme === 'light' || currentTheme === 'dark')) {
-                    applyGlass(true);
-                } else if (isGlassEnabled) {
-                    state.currentUserProfile.is_glass_enabled = false;
-                    if (elements.settings.glassToggle) elements.settings.glassToggle.checked = false;
-                    applyGlass(false);
+
+                // стекло разрешено только для явных light/dark
+                const canUseGlass = (currentTheme === 'light' || currentTheme === 'dark');
+
+                if (isGlassEnabled && !canUseGlass) {
+                state.currentUserProfile.is_glass_enabled = false;
+                setGlassEnabled(false);
+                } else {
+                setGlassEnabled(isGlassEnabled);
                 }
 
                 elements.form.nameField.value = state.currentUserProfile.first_name || tg.initDataUnsafe?.user?.first_name || '';
@@ -862,22 +890,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Отступы контента
         if (mainScroll) {
-            if (isFeedMode) {
-                // Ленты: Отступ под большой хедер (~110px)
-                mainScroll.style.paddingTop = 'calc(env(safe-area-inset-top, 40px) + 110px)';
-            } else {
-                // Профиль и Настройки: Хедера нет, минимальный отступ от "челки"
-                mainScroll.style.paddingTop = 'calc(env(safe-area-inset-top, 20px) + 10px)';
-            }
+        if (isFeedMode) {
+            mainScroll.style.paddingTop = "calc(env(safe-area-inset-top, 0px) + 110px)";
+        } else {
+            mainScroll.style.paddingTop = "calc(env(safe-area-inset-top, 0px) + 10px)";
+        }
         }
     };
 
     // Перехватываем стандартный showView
     const originalShowView = UI.showView;
-    UI.showView = function(target, allViews, spinner, tg, t, backAction) {
-        originalShowView(target, allViews, spinner, tg, t, backAction);
-        if (target) updateLayoutVisibility(target.id);
-    };
+    UI.showView = function (target, allViews, spinner, tg, t, backAction) {
+    originalShowView(target, allViews, spinner, tg, t, backAction);
+
+    if (target?.id) {
+        updateLayoutVisibility(target.id);
+        TopTitleManager.onViewShown(target.id);
+    }
+};
 
 
     function setupEventListeners() {
@@ -892,14 +922,11 @@ document.addEventListener('DOMContentLoaded', () => {
             [tabPeople, tabHub, tabProfile, tabSettings].forEach(t => t?.classList.remove('active'));
         };
 
-        const headerTitle = document.getElementById('header-title');
-
         if (tabPeople) {
         tabPeople.addEventListener('click', () => {
             resetTabs();
             tabPeople.classList.add('active');
             loadFeedData();
-            if (headerTitle) headerTitle.textContent = t('tab_people') || 'People';
             if (mainScroll) mainScroll.scrollTop = 0;
         });
         }
@@ -909,7 +936,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resetTabs();
             tabHub.classList.add('active');
             loadPostsFeedData();
-            if (headerTitle) headerTitle.textContent = t('tab_hub') || 'Hub';
             if (mainScroll) mainScroll.scrollTop = 0;
         });
         }
@@ -919,7 +945,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resetTabs();
             tabProfile.classList.add('active');
             UI.showView(elements.profileViewContainer, elements.allViews, elements.spinner, tg, t, null);
-            if (headerTitle) headerTitle.textContent = t('tab_profile') || t('your_profile_title');
             localStorage.setItem('last-active-tab', 'profile');
         });
         }
@@ -929,7 +954,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resetTabs();
             tabSettings.classList.add('active');
             UI.showView(elements.settingsContainer, elements.allViews, elements.spinner, tg, t, null);
-            if (headerTitle) headerTitle.textContent = t('tab_settings') || t('settings_title');
         });
         }
 
@@ -1002,12 +1026,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 UI.showQrCodeModal(elements.qr, state.CONFIG, state.currentUserProfile, t);
             });
         }
-        if (elements.qr.closeButton) {
-            elements.qr.closeButton.addEventListener('click', () => {
-                elements.qr.modal.classList.remove('modal-overlay-animate');
-                setTimeout(() => { elements.qr.modal.style.display = 'none'; }, 200);
-            });
-        }
+        if (elements.qr.closeButton) elements.qr.closeButton.addEventListener('click', () => {
+        elements.qr.modal.classList.remove('modal-overlay-animate');
+
+        TopTitleManager.onOverlayHidden('qr-code-modal');
+
+        setTimeout(() => elements.qr.modal.style.display = 'none', 200);
+        });
 
         if (elements.profile.shareButton) {
             elements.profile.shareButton.addEventListener('click', () => {
@@ -1238,12 +1263,31 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elements.profile.logoutButton) elements.profile.logoutButton.addEventListener('click', () => UI.showView(elements.formContainer, elements.allViews, elements.spinner, tg, t, loadProfileData));
         
         if (elements.settings.glassToggle) {
-            elements.settings.glassToggle.addEventListener('change', async (e) => {
-                const isEnabled = e.target.checked;
-                state.currentUserProfile.is_glass_enabled = isEnabled;
-                applyGlass(isEnabled);
-                try { await api.saveGlassPreference(tg.initData, isEnabled); } catch (error) { console.error("Error saving glass preference:", error); }
-            });
+        elements.settings.glassToggle.addEventListener('change', async (e) => {
+            const isEnabled = !!e.target.checked;
+
+            // 1) Применяем сразу в UI + синхронизируем localStorage
+            setGlassEnabled(isEnabled);
+
+            // 2) Синхронизируем state
+            if (state.currentUserProfile) {
+            state.currentUserProfile.is_glass_enabled = isEnabled;
+            }
+
+            // 3) Пытаемся сохранить на сервер
+            try {
+            await api.saveGlassPreference(tg.initData, isEnabled);
+            } catch (error) {
+            console.error('Error saving glass preference', error);
+
+            // (опционально) откат, чтобы не было состояния "включено, но сервер не сохранил"
+            const rollback = !isEnabled;
+            setGlassEnabled(rollback);
+            if (state.currentUserProfile) {
+                state.currentUserProfile.is_glass_enabled = rollback;
+            }
+            }
+        });
         }
         
         if (elements.postModal.saveButton) {
@@ -1509,12 +1553,9 @@ document.addEventListener('DOMContentLoaded', () => {
             null
             );
 
-            // восстанавливаем стекло
-            const savedGlass = localStorage.getItem('glass-enabled') === '1';
-            applyGlass(savedGlass);
-            if (elements.settings.settings && elements.settings.glassToggle) {
-            elements.settings.glassToggle.checked = savedGlass;
-            }
+            // Стекло уже выставлено в loadProfileData() и сохранено в localStorage через setGlassEnabled().
+            // На всякий случай (если applyTheme дергался позже) повторим из профиля:
+            setGlassEnabled(!!state.currentUserProfile?.is_glass_enabled);
 
             // --- ЛОГИКА СТАРТА ПРИЛОЖЕНИЯ (ПОЛНАЯ ВЕРСИЯ) ---
             const startParam = tg.initDataUnsafe?.start_param;
