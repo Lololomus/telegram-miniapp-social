@@ -165,7 +165,7 @@
   "theme_dark": "Тёмная",
   "theme_custom": "Своя",
   "custom_theme_label": "Своя тема",
-  "glass_mode_label": "Стекло (Beta)",
+  "glass_mode_label": "Стекло",
   "glass_warning": "Внимание! Может работать медленно на старых устройствах.",
   "control_mode_label": "Управление",
   "control_mode_taps": "Кнопки",
@@ -254,5 +254,11 @@
   "action_message": "Написать в телеграмме",
   "action_close": "Закрыть",
   
-  "specialist": "Специалист"
+  "specialist": "Специалист",
+
+  "privacy_section": "Приватность",
+  "privacy_direct_messages": "Закрыть прямые сообщения",
+  "privacy_direct_messages_desc": "Требовать одобрение для переписки",
+  "privacy_posts_approval": "Требовать одобрение откликов",
+  "privacy_posts_approval_desc": "Одобрять, кто может откликаться на посты"
 }

@@ -163,7 +163,7 @@
   "theme_dark": "Dark",
   "theme_custom": "Custom",
   "custom_theme_label": "Custom Theme",
-  "glass_mode_label": "Glass Mode (Beta)",
+  "glass_mode_label": "Glass Mode",
   "glass_warning": "Warning! May affect performance on older devices.",
   "control_mode_label": "Controls",
   "control_mode_taps": "Buttons",
@@ -252,5 +252,11 @@
   "action_message": "Message in Telegram",
   "action_close": "Close",
   
-  "specialist": "Specialist"
+  "specialist": "Specialist",
+
+  "privacy_section": "Privacy",
+  "privacy_direct_messages": "Close Direct Messages",
+  "privacy_direct_messages_desc": "Require approval to chat with you",
+  "privacy_posts_approval": "Require Post Approval",
+  "privacy_posts_approval_desc": "Approve who can respond to your posts"
 }

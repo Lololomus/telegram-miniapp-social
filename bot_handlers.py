@@ -401,6 +401,185 @@ async def notify_skill_match(post_id: int, author_name: str, post_content: str, 
     except Exception as e:
         print(f"Error in notify_skill_match: {e}")
 
+# ============ НОВАЯ ФУНКЦИЯ: Уведомление о запросе на отклик ============
+def notify_response_request(author_id: int, sender_id: int, sender_name: str, 
+                            post_preview: str, message: str, request_id: int):
+    """Уведомляет автора о новом запросе на отклик"""
+    try:
+        import requests
+        
+        text = f"""💬 <b>Новый запрос на отклик</b>
+
+👤 {sender_name} хочет откликнуться на ваш пост:
+"{post_preview}"
+
+<b>Сообщение:</b>
+{message}"""
+        
+        inline_keyboard = {
+            "inline_keyboard": [[
+                {"text": "✅ Принять", "callback_data": f"accept_req:{request_id}"},
+                {"text": "❌ Отклонить", "callback_data": f"reject_req:{request_id}"}
+            ]]
+        }
+        
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": author_id,
+            "text": text,
+            "parse_mode": "HTML",
+            "reply_markup": inline_keyboard
+        }
+        
+        response = requests.post(url, json=payload, timeout=5)
+        
+        if not response.ok:
+            print(f"⚠️ Failed to send response request notification: {response.text}")
+            
+    except Exception as e:
+        print(f"❌ Error in notify_response_request: {e}")
+
+
+# ============ CALLBACK HANDLERS ============
+@dp.callback_query(F.data.startswith("accept_req:"))
+async def callback_accept_request(callback: types.CallbackQuery):
+    """Обработка принятия запроса"""
+    try:
+        request_id = int(callback.data.split(":")[1])
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Получаем данные запроса
+        cursor.execute("""
+            SELECT from_user_id, to_user_id, post_id
+            FROM response_requests
+            WHERE id = ?
+        """, (request_id,))
+        
+        req = cursor.fetchone()
+        
+        if not req:
+            await callback.answer("❌ Запрос не найден", show_alert=True)
+            conn.close()
+            return
+        
+        from_user_id = req['from_user_id']
+        to_user_id = req['to_user_id']
+        
+        # Проверяем, что это автор
+        if callback.from_user.id != to_user_id:
+            await callback.answer("❌ Это не ваш запрос", show_alert=True)
+            conn.close()
+            return
+        
+        # Обновляем статус
+        cursor.execute("""
+            UPDATE response_requests 
+            SET status = 'accepted'
+            WHERE id = ?
+        """, (request_id,))
+        
+        # Получаем username автора
+        cursor.execute("SELECT telegram_username, first_name FROM profiles WHERE user_id = ?", (to_user_id,))
+        author = cursor.fetchone()
+        
+        conn.commit()
+        conn.close()
+        
+        # Редактируем сообщение
+        await callback.message.edit_text(
+            callback.message.text + "\n\n✅ <b>Запрос принят</b>",
+            parse_mode="HTML"
+        )
+        
+        # Уведомляем отправителя
+        author_name = author['first_name'] if author else "Автор"
+        author_username = author['telegram_username'] if author else None
+        
+        notify_text = f"✅ <b>{author_name}</b> принял ваш запрос!\n\nМожете написать ему:"
+        
+        if author_username:
+            notify_keyboard = {
+                "inline_keyboard": [[
+                    {"text": "💬 Написать в ЛС", "url": f"https://t.me/{author_username}"}
+                ]]
+            }
+        else:
+            notify_text += "\n\n⚠️ Автор не указал username"
+            notify_keyboard = None
+        
+        # Отправляем уведомление
+        import requests
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": from_user_id,
+            "text": notify_text,
+            "parse_mode": "HTML"
+        }
+        if notify_keyboard:
+            payload["reply_markup"] = notify_keyboard
+        
+        requests.post(url, json=payload, timeout=5)
+        
+        await callback.answer("✅ Запрос принят")
+        
+    except Exception as e:
+        print(f"❌ Error in callback_accept_request: {e}")
+        await callback.answer("❌ Ошибка", show_alert=True)
+
+
+@dp.callback_query(F.data.startswith("reject_req:"))
+async def callback_reject_request(callback: types.CallbackQuery):
+    """Обработка отклонения запроса (молча)"""
+    try:
+        request_id = int(callback.data.split(":")[1])
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Получаем данные запроса
+        cursor.execute("""
+            SELECT to_user_id
+            FROM response_requests
+            WHERE id = ?
+        """, (request_id,))
+        
+        req = cursor.fetchone()
+        
+        if not req:
+            await callback.answer("❌ Запрос не найден", show_alert=True)
+            conn.close()
+            return
+        
+        # Проверяем, что это автор
+        if callback.from_user.id != req['to_user_id']:
+            await callback.answer("❌ Это не ваш запрос", show_alert=True)
+            conn.close()
+            return
+        
+        # Обновляем статус
+        cursor.execute("""
+            UPDATE response_requests 
+            SET status = 'rejected'
+            WHERE id = ?
+        """, (request_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        # Редактируем сообщение
+        await callback.message.edit_text(
+            callback.message.text + "\n\n❌ <b>Запрос отклонён</b>",
+            parse_mode="HTML"
+        )
+        
+        await callback.answer("✅ Запрос отклонён")
+        
+    except Exception as e:
+        print(f"❌ Error in callback_reject_request: {e}")
+        await callback.answer("❌ Ошибка", show_alert=True)
+
 def get_bot_info():
     return {
         'bot_username': BOT_USERNAME,

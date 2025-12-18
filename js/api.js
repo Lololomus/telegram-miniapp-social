@@ -276,3 +276,51 @@ export async function getPostById(initData, post_id) {
     });
     return await handleResponse(response);
 }
+
+/**
+ * Проверяет возможность откликнуться на пост
+ */
+export async function checkCanRespond(initData, post_id) {
+  const response = await fetch(`${CONFIG.backendUrl}/api/check-can-respond`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: initData, post_id: post_id })
+  });
+  return await handleResponse(response);
+}
+
+/**
+ * Отправляет запрос на отклик
+ */
+export async function respondToPost(initData, post_id, message) {
+  const response = await fetch(`${CONFIG.backendUrl}/api/respond-post`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: initData, post_id: post_id, message: message })
+  });
+  return await handleResponse(response);
+}
+
+/**
+ * Сохраняет настройку "Закрыть прямые сообщения"
+ */
+export async function saveDirectMessagesPrivacy(initData, isDisabled) {
+  const response = await fetch(`${CONFIG.backendUrl}/api/save-direct-messages-privacy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: initData, is_disabled: isDisabled })
+  });
+  return await handleResponse(response);
+}
+
+/**
+ * Сохраняет настройку "Требовать одобрение откликов"
+ */
+export async function savePostsApprovalPrivacy(initData, isRequired) {
+  const response = await fetch(`${CONFIG.backendUrl}/api/save-posts-approval-privacy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: initData, is_required: isRequired })
+  });
+  return await handleResponse(response);
+}

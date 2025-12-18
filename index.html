@@ -196,12 +196,36 @@
                     </div>
 
                     <div id="glass-toggle-wrapper" class="glass-toggle-group">
-                    <label>Стекло</label>
+                    <label data-i18n-key="glassmodelabel">Glass Mode</label>
                     <label class="toggle-switch">
-                        <input id="glass-toggle-switch" class="toggle-switch-checkbox" type="checkbox" />
+                        <input id="glass-toggle-switch" class="toggle-switch-checkbox" type="checkbox">
                         <span class="toggle-switch-label"></span>
                     </label>
                     </div>
+            </div>
+            <!-- ========== PRIVACY SECTION ========== -->
+            <div class="settings-group">
+            <label data-i18n-key="privacy_section">Privacy</label>
+            
+            <!-- Direct Messages Toggle -->
+            <div class="glass-toggle-group">
+                <label data-i18n-key="privacy_direct_messages">Close Direct Messages</label>
+                <label class="toggle-switch">
+                <input id="privacy-direct-messages-toggle" class="toggle-switch-checkbox" type="checkbox">
+                <span class="toggle-switch-label"></span>
+                </label>
+            </div>
+            <p style="font-size: 13px; color: var(--text-tertiary); margin: 6px 0 16px 0;" data-i18n-key="privacy_direct_messages_desc">Require approval to chat with you</p>
+            
+            <!-- Posts Approval Toggle -->
+            <div class="glass-toggle-group">
+                <label data-i18n-key="privacy_posts_approval">Require Post Approval</label>
+                <label class="toggle-switch">
+                <input id="privacy-posts-approval-toggle" class="toggle-switch-checkbox" type="checkbox">
+                <span class="toggle-switch-label"></span>
+                </label>
+            </div>
+            <p style="font-size: 13px; color: var(--text-tertiary); margin: 6px 0 0 0;" data-i18n-key="privacy_posts_approval_desc">Approve who can respond to your posts</p>
             </div>
             <div id="custom-theme-group" class="settings-group" style="display: none;">
                 <label data-i18n-key="custom_theme_label">Цвета</label>

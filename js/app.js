@@ -530,6 +530,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 elements.form.nameField.value = state.currentUserProfile.first_name || tg.initDataUnsafe?.user?.first_name || '';
                 elements.form.bioField.value = state.currentUserProfile.bio || '';
+
+                // ========== PRIVACY TOGGLES INIT ==========
+                const privacyDirectMessagesToggle = document.getElementById('privacy-direct-messages-toggle');
+                const privacyPostsApprovalToggle = document.getElementById('privacy-posts-approval-toggle');
+
+                if (privacyDirectMessagesToggle) {
+                privacyDirectMessagesToggle.checked = !!state.currentUserProfile.is_direct_messages_disabled;
+                }
+
+                if (privacyPostsApprovalToggle) {
+                privacyPostsApprovalToggle.checked = !!state.currentUserProfile.is_posts_approval_required;
+                }
                 
                 try {
                     const skills = state.currentUserProfile.skills ? JSON.parse(state.currentUserProfile.skills) : [];
@@ -1328,6 +1340,62 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.currentUserProfile) {
                 state.currentUserProfile.is_glass_enabled = rollback;
             }
+            }
+        });
+        }
+
+        // ========== PRIVACY TOGGLES ==========
+        const privacyDirectMessagesToggle = document.getElementById('privacy-direct-messages-toggle');
+        const privacyPostsApprovalToggle = document.getElementById('privacy-posts-approval-toggle');
+
+        if (privacyDirectMessagesToggle) {
+        privacyDirectMessagesToggle.addEventListener('change', async (e) => {
+            const isEnabled = e.target.checked;
+            
+            try {
+            const resp = await api.saveDirectMessagesPrivacy(tg.initData, isEnabled);
+            
+            if (resp && resp.ok) {
+                if (state.currentUserProfile) {
+                state.currentUserProfile.is_direct_messages_disabled = isEnabled ? 1 : 0;
+                }
+                
+                if (tg?.HapticFeedback?.notificationOccurred) {
+                tg.HapticFeedback.notificationOccurred('success');
+                }
+            } else {
+                e.target.checked = !isEnabled;
+                UI.showToast(t('error_saving_settings') || 'Error saving settings', true);
+            }
+            } catch (error) {
+            e.target.checked = !isEnabled;
+            UI.showToast(t('error_saving_settings') || 'Error saving settings', true);
+            }
+        });
+        }
+
+        if (privacyPostsApprovalToggle) {
+        privacyPostsApprovalToggle.addEventListener('change', async (e) => {
+            const isEnabled = e.target.checked;
+            
+            try {
+            const resp = await api.savePostsApprovalPrivacy(tg.initData, isEnabled);
+            
+            if (resp && resp.ok) {
+                if (state.currentUserProfile) {
+                state.currentUserProfile.is_posts_approval_required = isEnabled ? 1 : 0;
+                }
+                
+                if (tg?.HapticFeedback?.notificationOccurred) {
+                tg.HapticFeedback.notificationOccurred('success');
+                }
+            } else {
+                e.target.checked = !isEnabled;
+                UI.showToast(t('error_saving_settings') || 'Error saving settings', true);
+            }
+            } catch (error) {
+            e.target.checked = !isEnabled;
+            UI.showToast(t('error_saving_settings') || 'Error saving settings', true);
             }
         });
         }

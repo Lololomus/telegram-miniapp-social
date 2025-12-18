@@ -23,6 +23,7 @@ import PostContextMenu from './PostContextMenu.js';
 import EditPostScreen from './EditPostScreen.js';
 import PostDetailSheet from './PostDetailSheet.js';
 
+const RespondSheet = React.lazy(() => import('../react/shared/RespondSheet.js').then(m => ({ default: m.default })));
 const quickFiltersHost = document.getElementById('posts-quick-filters');
 
 function App({ mountInto, overlayHost }) {
@@ -48,6 +49,7 @@ function App({ mountInto, overlayHost }) {
   const [showEmptyState, setShowEmptyState] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const listContainerRef = useRef(null);
+  const [respondSheet, setRespondSheet] = React.useState(null);
 
   // Открытие редактора поста из профиля (MyProfileScreen)
   useEffect(() => {
@@ -392,10 +394,88 @@ function App({ mountInto, overlayHost }) {
     setMenuLayout(layout);
   }, []);
 
-  const handleRespond = useCallback((post) => {
+  const handleRespond = React.useCallback(async (post) => {
     setContextMenuState({ post: null, targetElement: null });
-    tg.showAlert(t('action_respond_toast'));
-  }, []);
+    setPostToShow(null);
+    
+    if (!post || !post.author) return;
+    
+    try {
+      const checkResp = await window.postJSON(
+        `${cfg.backendUrl}/api/check-can-respond`,
+        { initData: tg?.initData, post_id: post.post_id }
+      );
+      
+      if (!checkResp.ok || !checkResp.can_respond) {
+        if (tg?.showAlert) {
+          tg.showAlert(checkResp.message || 'Вы уже отправили запрос');
+        }
+        return;
+      }
+      
+      const authorResp = await window.postJSON(
+        `${cfg.backendUrl}/get-user-by-id`,
+        { initData: tg?.initData, target_user_id: post.author.user_id }
+      );
+      
+      if (!authorResp.ok || !authorResp.profile) {
+        if (tg?.showAlert) {
+          tg.showAlert('Ошибка загрузки профиля автора');
+        }
+        return;
+      }
+      
+      const author = authorResp.profile;
+      
+      // Если закрытый ИЛИ нет username → форма
+      if (author.is_posts_approval_required || !author.telegram_username) {
+        setRespondSheet({ post, mode: 'form', author });
+      } else {
+        // Если открытый И есть username → модалка
+        setRespondSheet({ post, mode: 'open', author });
+      }
+      
+    } catch (e) {
+      console.error('Error in handleRespond:', e);
+      if (tg?.showAlert) {
+        tg.showAlert('Ошибка проверки');
+      }
+    }
+  }, [cfg]);
+
+  const handleRespondSubmit = React.useCallback(async (post, message) => {
+    try {
+      const resp = await window.postJSON(
+        `${cfg.backendUrl}/api/respond-post`,
+        { initData: tg?.initData, post_id: post.post_id, message: message }
+      );
+      
+      if (!resp.ok) {
+        throw new Error(resp.error || 'Ошибка отправки');
+      }
+      
+      if (window.UI && typeof window.UI.showToast === 'function') {
+        window.UI.showToast(t('request_sent') || 'Запрос отправлен', false);
+      } else if (tg?.showAlert) {
+        tg.showAlert(t('request_sent') || 'Запрос отправлен');
+      }
+      
+    } catch (e) {
+      throw e;
+    }
+  }, [cfg]);
+
+  // В рендере:
+  respondSheet && h(React.Suspense, { fallback: null },
+    h(RespondSheet, {
+      key: `respond-${respondSheet.post.post_id}`,
+      post: respondSheet.post,
+      mode: respondSheet.mode,
+      authorUsername: respondSheet.author?.telegram_username,
+      onSubmit: (message) => handleRespondSubmit(respondSheet.post, message),
+      onClose: () => setRespondSheet(null)
+    })
+  )
 
   const handleRepost = useCallback((post) => {
     setContextMenuState({ post: null, targetElement: null });

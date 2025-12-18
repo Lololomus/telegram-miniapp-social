@@ -39,6 +39,34 @@ def create_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS profiles (
+        user_id INTEGER PRIMARY KEY,
+        first_name TEXT,
+        bio TEXT,
+        link1 TEXT,
+        link2 TEXT,
+        link3 TEXT,
+        link4 TEXT,
+        link5 TEXT,
+        photo_path TEXT,
+        skills TEXT,
+        language_code TEXT DEFAULT 'ru',
+        theme TEXT DEFAULT 'auto',
+        custom_theme TEXT,
+        is_glass_enabled INTEGER DEFAULT 1,
+        is_direct_messages_disabled INTEGER DEFAULT 0,
+        is_posts_approval_required INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'networking',
+        followers_count INTEGER DEFAULT 0,
+        following_count INTEGER DEFAULT 0,
+        is_private INTEGER DEFAULT 0,
+        telegram_username TEXT,
+        last_active TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+""")
     print("✅ Таблица profiles")
     
     # Таблица опыта работы

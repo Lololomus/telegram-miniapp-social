@@ -743,13 +743,15 @@ def create_post():
 
 @app.route("/api/get-posts-feed", methods=["POST"])
 def get_posts_feed():
-    init_data = request.json.get("initData")
-    user_id = validate_init_data(init_data, BOT_TOKEN)
-    if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
+    data = request.json
+    user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
+    if not user_id:
+        return jsonify({"ok": False, "error": "Invalid data"}), 403
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # --- ОБНОВЛЕНО: Select experience_years ---
+        
         cursor.execute('''
             SELECT 
                 p.post_id, p.user_id, p.post_type, p.content, p.full_description, p.skill_tags, p.experience_years,
@@ -758,27 +760,33 @@ def get_posts_feed():
                 pr.photo_path as author_photo_path
             FROM posts p
             JOIN profiles pr ON p.user_id = pr.user_id
+            WHERE p.is_deleted = 0
             ORDER BY p.created_at DESC
-            LIMIT 50 
+            LIMIT 50
         ''')
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
         posts = []
-        for row in cursor.fetchall():
+        for row in rows:
             post = dict(row)
             try:
                 post['skill_tags'] = json.loads(post['skill_tags'])
             except:
                 post['skill_tags'] = []
+            
             post['author'] = {
                 'user_id': post['user_id'],
                 'first_name': post.pop('author_first_name'),
                 'photo_path': post.pop('author_photo_path')
             }
             posts.append(post)
-        conn.close()
+        
         return jsonify({"ok": True, "posts": posts})
+        
     except Exception as e:
-        print(f"❌ ОШИБКА /api/get-posts-feed: {e}")
-        if 'conn' in locals() and conn: conn.close()
+        print(f"❌ Error in get_posts_feed: {e}")
         return jsonify({"ok": False, "error": str(e)}), 500
 
 @app.route("/api/get-my-posts", methods=["POST"])
@@ -816,32 +824,6 @@ def get_my_posts():
             posts.append(post)
         conn.close()
         return jsonify({"ok": True, "posts": posts})
-    except Exception as e:
-        if 'conn' in locals() and conn: conn.close()
-        return jsonify({"ok": False, "error": str(e)}), 500
-
-@app.route("/api/delete-post", methods=["POST"])
-def delete_post():
-    data = request.json
-    user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
-    if not user_id: return jsonify({"ok": False, "error": "Invalid data"}), 403
-    post_id = data.get("post_id")
-    if not post_id: return jsonify({"ok": False, "error": "Missing post_id"}), 400
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT user_id FROM posts WHERE post_id = ?", (post_id,))
-        post = cursor.fetchone()
-        if not post:
-            conn.close()
-            return jsonify({"ok": False, "error": "Post not found"}), 404
-        if post['user_id'] != user_id:
-            conn.close()
-            return jsonify({"ok": False, "error": "Not authorized"}), 403
-        cursor.execute("DELETE FROM posts WHERE post_id = ?", (post_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({"ok": True})
     except Exception as e:
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -905,6 +887,229 @@ def update_post():
         if 'conn' in locals() and conn: conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
+# ============ НОВЫЙ ENDPOINT: Проверка возможности отклика ============
+@app.route("/api/check-can-respond", methods=["POST"])
+def check_can_respond():
+    """Проверяет, может ли пользователь откликнуться на пост"""
+    data = request.json
+    user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
+    if not user_id:
+        return jsonify({"ok": False, "error": "Invalid data"}), 403
+    
+    post_id = data.get("post_id")
+    if not post_id:
+        return jsonify({"ok": False, "error": "Missing post_id"}), 400
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Проверяем последний запрос
+        cursor.execute("""
+            SELECT status, created_at 
+            FROM response_requests 
+            WHERE post_id = ? AND from_user_id = ?
+            ORDER BY created_at DESC LIMIT 1
+        """, (post_id, user_id))
+        
+        last_request = cursor.fetchone()
+        conn.close()
+        
+        if not last_request:
+            return jsonify({"ok": True, "can_respond": True})
+        
+        status = last_request['status']
+        created_at = last_request['created_at']
+        
+        # Если отклонён — блокировка навсегда
+        if status == 'rejected':
+            return jsonify({
+                "ok": True, 
+                "can_respond": False,
+                "reason": "rejected",
+                "message": "Ваш запрос был отклонён"
+            })
+        
+        # Проверяем таймаут 24 часа
+        from datetime import datetime, timedelta
+        created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+        now = datetime.now(timezone.utc)
+        
+        if (now - created_dt) < timedelta(hours=24):
+            hours_left = 24 - int((now - created_dt).total_seconds() / 3600)
+            return jsonify({
+                "ok": True,
+                "can_respond": False,
+                "reason": "timeout",
+                "message": f"Повторная отправка через {hours_left} ч",
+                "hours_left": hours_left
+            })
+        
+        # Можно откликнуться
+        return jsonify({"ok": True, "can_respond": True})
+        
+    except Exception as e:
+        print(f"❌ Error in check_can_respond: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ============ НОВЫЙ ENDPOINT: Отклик на пост ============
+@app.route("/api/respond-post", methods=["POST"])
+def respond_post():
+    """Создание отклика на пост"""
+    data = request.json
+    user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
+    if not user_id:
+        return jsonify({"ok": False, "error": "Invalid data"}), 403
+    
+    post_id = data.get("post_id")
+    message = data.get("message", "").strip()
+    
+    if not post_id:
+        return jsonify({"ok": False, "error": "Missing post_id"}), 400
+    
+    # Валидация длины сообщения
+    if len(message) > 200:
+        return jsonify({"ok": False, "error": "Message too long (max 200)"}), 400
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Получаем пост и автора
+        cursor.execute("""
+            SELECT p.user_id, p.content, p.is_deleted,
+                   pr.first_name as author_name,
+                   pr.is_posts_approval_required
+            FROM posts p
+            JOIN profiles pr ON p.user_id = pr.user_id
+            WHERE p.post_id = ?
+        """, (post_id,))
+        
+        post = cursor.fetchone()
+        
+        if not post:
+            conn.close()
+            return jsonify({"ok": False, "error": "Post not found"}), 404
+        
+        if post['is_deleted']:
+            conn.close()
+            return jsonify({"ok": False, "error": "Post was deleted"}), 404
+        
+        author_id = post['user_id']
+        
+        # Нельзя откликнуться на свой пост
+        if author_id == user_id:
+            conn.close()
+            return jsonify({"ok": False, "error": "Cannot respond to your own post"}), 400
+        
+        # Проверяем дубликаты и таймауты
+        cursor.execute("""
+            SELECT status, created_at 
+            FROM response_requests 
+            WHERE post_id = ? AND from_user_id = ?
+            ORDER BY created_at DESC LIMIT 1
+        """, (post_id, user_id))
+        
+        last_request = cursor.fetchone()
+        
+        if last_request:
+            status = last_request['status']
+            
+            if status == 'rejected':
+                conn.close()
+                return jsonify({"ok": False, "error": "Your request was rejected"}), 403
+            
+            from datetime import datetime, timedelta
+            created_dt = datetime.fromisoformat(last_request['created_at'].replace('Z', '+00:00'))
+            now = datetime.now(timezone.utc)
+            
+            if (now - created_dt) < timedelta(hours=24):
+                conn.close()
+                hours_left = 24 - int((now - created_dt).total_seconds() / 3600)
+                return jsonify({
+                    "ok": False, 
+                    "error": f"Please wait {hours_left} hours before resending"
+                }), 429
+        
+        # Создаём запрос
+        final_message = message if message else "Пользователь ничего не написал"
+        
+        cursor.execute("""
+            INSERT INTO response_requests (post_id, from_user_id, to_user_id, message, status)
+            VALUES (?, ?, ?, ?, 'pending')
+        """, (post_id, user_id, author_id, final_message))
+        
+        request_id = cursor.lastrowid
+        
+        conn.commit()
+        conn.close()
+        
+        # Отправляем уведомление автору
+        try:
+            sender_name = get_user_name_for_bot(user_id)
+            post_preview = post['content'][:50] + "..." if len(post['content']) > 50 else post['content']
+            
+            bot_handlers.notify_response_request(
+                author_id=author_id,
+                sender_id=user_id,
+                sender_name=sender_name,
+                post_preview=post_preview,
+                message=final_message,
+                request_id=request_id
+            )
+        except Exception as e:
+            print(f"⚠️ Failed to send notification: {e}")
+        
+        return jsonify({"ok": True, "request_id": request_id})
+        
+    except Exception as e:
+        print(f"❌ Error in respond_post: {e}")
+        if 'conn' in locals() and conn:
+            conn.close()
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ============ ОБНОВЛЕНИЕ: /api/delete-post (пометка вместо удаления) ============
+@app.route("/api/delete-post", methods=["POST"])
+def delete_post():
+    data = request.json
+    user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
+    if not user_id:
+        return jsonify({"ok": False, "error": "Invalid data"}), 403
+    
+    post_id = data.get("post_id")
+    if not post_id:
+        return jsonify({"ok": False, "error": "Missing post_id"}), 400
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT user_id FROM posts WHERE post_id = ?", (post_id,))
+        post = cursor.fetchone()
+        
+        if not post:
+            conn.close()
+            return jsonify({"ok": False, "error": "Post not found"}), 404
+        
+        if post['user_id'] != user_id:
+            conn.close()
+            return jsonify({"ok": False, "error": "Not authorized"}), 403
+        
+        # ✅ ИЗМЕНЕНИЕ: Помечаем как удалённый вместо DELETE
+        cursor.execute("UPDATE posts SET is_deleted = 1 WHERE post_id = ?", (post_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"ok": True})
+        
+    except Exception as e:
+        if 'conn' in locals() and conn:
+            conn.close()
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 @app.route("/api/save-glass-preference", methods=["POST"])
 def save_glass_preference():
     data = request.json
@@ -930,6 +1135,69 @@ def save_glass_preference():
         return jsonify({"ok": True})
     except Exception as e:
         if 'conn' in locals() and conn: conn.close()
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+# ============ PRIVACY SETTINGS ============
+
+@app.route("/api/save-direct-messages-privacy", methods=["POST"])
+def save_direct_messages_privacy():
+    """Сохранить настройку 'Закрыть прямые сообщения'"""
+    data = request.json
+    user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
+    if not user_id:
+        return jsonify({"ok": False, "error": "Invalid data"}), 403
+    
+    is_disabled = 1 if data.get("is_disabled") else 0
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE profiles 
+            SET is_direct_messages_disabled = ?
+            WHERE user_id = ?
+        """, (is_disabled, user_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"ok": True})
+        
+    except Exception as e:
+        if 'conn' in locals() and conn:
+            conn.close()
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/save-posts-approval-privacy", methods=["POST"])
+def save_posts_approval_privacy():
+    """Сохранить настройку 'Требовать одобрение откликов'"""
+    data = request.json
+    user_id = validate_init_data(data.get("initData"), BOT_TOKEN)
+    if not user_id:
+        return jsonify({"ok": False, "error": "Invalid data"}), 403
+    
+    is_required = 1 if data.get("is_required") else 0
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE profiles 
+            SET is_posts_approval_required = ?
+            WHERE user_id = ?
+        """, (is_required, user_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"ok": True})
+        
+    except Exception as e:
+        if 'conn' in locals() and conn:
+            conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
 @app.route("/api/set-status", methods=["POST"])
