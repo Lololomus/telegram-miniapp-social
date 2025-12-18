@@ -1,191 +1,229 @@
-# serv_create.py
-# УДАЛЕНО: Колонки last_seen и nationality_code
-
 import sqlite3
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-DB_NAME = os.getenv("DB_NAME", "profiles.db")
+DB_NAME = os.getenv('DB_NAME', 'database.db')
 
-conn = sqlite3.connect(DB_NAME)
-cursor = conn.cursor()
-
-# --- Таблица Профилей (Проверка существующих колонок) ---
-print("--- Checking 'profiles' table ---")
-# (Этот блок остается без изменений, как в твоем файле)
-# Убедимся, что основная таблица существует
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS profiles (
-    user_id INTEGER PRIMARY KEY,
-    first_name TEXT DEFAULT NULL,
-    bio TEXT,
-    link1 TEXT,
-    link2 TEXT,
-    photo_path TEXT,
-    theme TEXT DEFAULT 'auto',
-    custom_theme TEXT DEFAULT NULL,
-    -- last_seen DATETIME DEFAULT NULL, (УДАЛЕНО)
-    skills TEXT DEFAULT NULL,
-    language_code TEXT DEFAULT 'ru',
-    -- nationality_code TEXT DEFAULT NULL, (УДАЛЕНО)
+def create_database():
+    """Создание всех таблиц базы данных"""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
     
-    -- --- НОВОЕ ПОЛЕ ---
-    is_glass_enabled INTEGER DEFAULT 0
-)
-''')
-print("✅ Table 'profiles' base structure OK.")
-
-# Проверка и добавление колонок (если вдруг их нет)
-columns_to_check = [
-    ('first_name', 'TEXT DEFAULT NULL'),
-    ('bio', 'TEXT'),
-    ('link1', 'TEXT'),
-    ('link2', 'TEXT'),
-    ('link3', 'TEXT DEFAULT NULL'),
-    ('link4', 'TEXT DEFAULT NULL'),
-    ('link5', 'TEXT DEFAULT NULL'),
-    ('photo_path', 'TEXT'),
-    ('theme', 'TEXT DEFAULT "auto"'),
-    ('custom_theme', 'TEXT DEFAULT NULL'),
-    # ('last_seen', 'DATETIME DEFAULT NULL'), (УДАЛЕНО)
-    ('skills', 'TEXT DEFAULT NULL'),
-    ('language_code', 'TEXT DEFAULT "ru"'),
-    # ('nationality_code', 'TEXT DEFAULT NULL'), (УДАЛЕНО)
-    ('is_glass_enabled', 'INTEGER DEFAULT 0')
-]
-cursor.execute("PRAGMA table_info(profiles)")
-existing_columns = [row[1] for row in cursor.fetchall()]
-for col_name, col_type in columns_to_check:
-    if col_name not in existing_columns:
+    cursor.execute("PRAGMA foreign_keys = ON")
+    print("🔧 Создание/обновление базы данных...")
+    
+    # Таблица профилей
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS profiles (
+            user_id INTEGER PRIMARY KEY,
+            first_name TEXT,
+            bio TEXT,
+            link1 TEXT,
+            link2 TEXT,
+            link3 TEXT,
+            link4 TEXT,
+            link5 TEXT,
+            photo_path TEXT,
+            skills TEXT,
+            language_code TEXT DEFAULT 'ru',
+            theme TEXT DEFAULT 'auto',
+            custom_theme TEXT,
+            is_glass_enabled INTEGER DEFAULT 1,
+            status TEXT DEFAULT 'networking',
+            followers_count INTEGER DEFAULT 0,
+            following_count INTEGER DEFAULT 0,
+            is_private INTEGER DEFAULT 0,
+            telegram_username TEXT,
+            last_active TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    print("✅ Таблица profiles")
+    
+    # Таблица опыта работы
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS work_experience (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            job_title TEXT,
+            company TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            is_current INTEGER DEFAULT 0,
+            description TEXT,
+            FOREIGN KEY (user_id) REFERENCES profiles(user_id) ON DELETE CASCADE
+        )
+    ''')
+    print("✅ Таблица work_experience")
+    
+    # Таблица образования
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS education (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            institution TEXT,
+            degree TEXT,
+            field_of_study TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            FOREIGN KEY (user_id) REFERENCES profiles(user_id) ON DELETE CASCADE
+        )
+    ''')
+    print("✅ Таблица education")
+    
+    # Таблица подписок
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS follows (
+            follower_id INTEGER NOT NULL,
+            following_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (follower_id, following_id),
+            FOREIGN KEY (follower_id) REFERENCES profiles(user_id) ON DELETE CASCADE,
+            FOREIGN KEY (following_id) REFERENCES profiles(user_id) ON DELETE CASCADE
+        )
+    ''')
+    print("✅ Таблица follows")
+    
+    # Таблица постов
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS posts (
+            post_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            post_type TEXT NOT NULL,
+            content TEXT NOT NULL,
+            full_description TEXT,
+            skill_tags TEXT,
+            experience_years TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES profiles(user_id) ON DELETE CASCADE
+        )
+    ''')
+    print("✅ Таблица posts")
+    
+    # Таблица уведомлений
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            from_user_id INTEGER,
+            post_id INTEGER,
+            message TEXT,
+            is_read INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES profiles(user_id) ON DELETE CASCADE,
+            FOREIGN KEY (from_user_id) REFERENCES profiles(user_id) ON DELETE CASCADE,
+            FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE
+        )
+    ''')
+    print("✅ Таблица notifications")
+    
+    # Таблица логов уведомлений
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notification_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            date TEXT NOT NULL,
+            post_id INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_notif_user_date 
+        ON notification_log(user_id, date, type)
+    ''')
+    print("✅ Таблица notification_log")
+    
+    # Таблица запросов на отклик
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS response_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_id INTEGER NOT NULL,
+            from_user_id INTEGER NOT NULL,
+            to_user_id INTEGER NOT NULL,
+            message TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE,
+            FOREIGN KEY (from_user_id) REFERENCES profiles(user_id) ON DELETE CASCADE,
+            FOREIGN KEY (to_user_id) REFERENCES profiles(user_id) ON DELETE CASCADE
+        )
+    ''')
+    print("✅ Таблица response_requests")
+    
+    # Таблица жалоб
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reporter_id INTEGER NOT NULL,
+            target_type TEXT NOT NULL,
+            target_id INTEGER NOT NULL,
+            reason TEXT,
+            status TEXT DEFAULT 'pending',
+            resolved_by INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            resolved_at TIMESTAMP,
+            FOREIGN KEY (reporter_id) REFERENCES profiles(user_id) ON DELETE CASCADE
+        )
+    ''')
+    print("✅ Таблица reports")
+    
+    # Таблица банов
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS bans (
+            user_id INTEGER PRIMARY KEY,
+            banned_by INTEGER NOT NULL,
+            reason TEXT,
+            ban_type TEXT DEFAULT 'shadow',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES profiles(user_id) ON DELETE CASCADE
+        )
+    ''')
+    print("✅ Таблица bans")
+    
+    # Индексы
+    print("\n🔧 Создание индексов...")
+    indexes = [
+        ("idx_notifications_user", "CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read)"),
+        ("idx_response_requests_status", "CREATE INDEX IF NOT EXISTS idx_response_requests_status ON response_requests(to_user_id, status)"),
+        ("idx_reports_status", "CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status)"),
+        ("idx_posts_created", "CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC)")
+    ]
+    
+    for idx_name, idx_sql in indexes:
         try:
-            cursor.execute(f"ALTER TABLE profiles ADD COLUMN {col_name} {col_type}")
-            print(f"✅ Column '{col_name}' added to 'profiles'.")
+            cursor.execute(idx_sql)
+            print(f" ✅ Индекс {idx_name}")
         except sqlite3.OperationalError as e:
-            print(f"⚠️ Error adding column '{col_name}': {e}")
-    else:
-        print(f"ℹ️ Column '{col_name}' already exists in 'profiles'.")
-
-
-# --- Таблица Опыта Работы ---
-print("\n--- Creating 'work_experience' table ---")
-# (Этот блок остается без изменений)
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS work_experience (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    job_title TEXT,
-    company TEXT,
-    start_date TEXT,
-    end_date TEXT,
-    description TEXT,
-    is_current INTEGER DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES profiles (user_id) ON DELETE CASCADE
-)
-''')
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_work_experience_user_id ON work_experience (user_id)")
-print("✅ Table 'work_experience' created or already exists.")
-
-
-# --- Таблица Образования ---
-print("\n--- Creating 'education' table ---")
-# (Этот блок остается без изменений)
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS education (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    institution TEXT,
-    degree TEXT,
-    field_of_study TEXT,
-    start_date TEXT,
-    end_date TEXT,
-    description TEXT,
-    FOREIGN KEY (user_id) REFERENCES profiles (user_id) ON DELETE CASCADE
-)
-''')
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_education_user_id ON education (user_id)")
-print("✅ Table 'education' created or already exists.")
-
-# --- Таблица Подписок (Follows) ---
-print("\n--- Creating 'follows' table ---")
-# (Этот блок остается без изменений)
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS follows (
-    follower_id INTEGER NOT NULL,
-    following_id INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            print(f" ⚠️ Индекс {idx_name}: {e}")
     
-    PRIMARY KEY (follower_id, following_id),
-    FOREIGN KEY (follower_id) REFERENCES profiles (user_id) ON DELETE CASCADE,
-    FOREIGN KEY (following_id) REFERENCES profiles (user_id) ON DELETE CASCADE
-)
-''')
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_follows_follower_id ON follows (follower_id)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_follows_following_id ON follows (following_id)")
-print("✅ Table 'follows' created or already exists.")
-
-
-# --- (НОВЫЙ БЛОК) Таблица Постов (Запросов) ---
-print("\n--- Creating 'posts' table ---")
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS posts (
-    post_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    -- Тип запроса: 'looking' (Ищу), 'offering' (Предлагаю), 'showcase' (Демонстрация)
-    post_type TEXT NOT NULL,
-    -- Текст запроса
-    content TEXT NOT NULL,
+    conn.commit()
+    conn.close()
     
-    -- --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-    -- Добавляем недостающее поле из миграции
-    full_description TEXT DEFAULT NULL,
-    
-    -- Навыки, связанные с этим постом (храним как JSON-массив)
-    skill_tags TEXT DEFAULT '[]',
+    print("\n" + "="*60)
+    print("✅ БАЗА ДАННЫХ УСПЕШНО СОЗДАНА/ОБНОВЛЕНА!")
+    print("="*60)
+    print(f"📁 Файл: {DB_NAME}")
+    print("\n📊 Таблицы:")
+    print(" • profiles")
+    print(" • work_experience")
+    print(" • education")
+    print(" • follows")
+    print(" • posts")
+    print(" • notifications")
+    print(" • notification_log")
+    print(" • response_requests")
+    print(" • reports")
+    print(" • bans")
+    print("\n🚀 Готово к работе с ботом!")
+    print("="*60)
 
-    -- --- ИСПРАВЛЕНИЕ ДЛЯ IPHONE ---
-    -- Меняем DEFAULT CURRENT_TIMESTAMP (плохой формат 'YYYY-MM-DD HH:MM:SS')
-    -- на формат ISO 8601 ('YYYY-MM-DDTHH:MM:SSZ'), который понимает Safari
-    created_at DATETIME DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ', 'NOW')),
-    -- --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-    
-    FOREIGN KEY (user_id) REFERENCES profiles (user_id) ON DELETE CASCADE
-)
-''')
-# Индекс для быстрой выборки постов по пользователю
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts (user_id)")
-# Индекс для быстрой сортировки ленты по дате
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts (created_at DESC)")
-print("✅ Table 'posts' (for Networking Hub) created or already exists.")
-# --- КОНЕЦ НОВОГО БЛОКА ---
-
-# --- МИГРАЦИЯ: Добавляем колонку 'experience_years' ---
-cursor.execute("PRAGMA table_info(posts)")
-posts_columns = [row[1] for row in cursor.fetchall()]
-
-if 'experience_years' not in posts_columns:
+if __name__ == '__main__':
     try:
-        # Добавляем текстовое поле для хранения диапазона (например, "1-3 года")
-        cursor.execute("ALTER TABLE posts ADD COLUMN experience_years TEXT DEFAULT NULL")
-        print("✅ Column 'experience_years' added to 'posts'.")
-    except sqlite3.OperationalError as e:
-        print(f"⚠️ Error adding column 'experience_years': {e}")
-else:
-    print("ℹ️ Column 'experience_years' already exists in 'posts'.")
-
-# --- МИГРАЦИЯ: Добавляем колонку 'status' в profiles ---
-cursor.execute("PRAGMA table_info(profiles)")
-profiles_columns = [row[1] for row in cursor.fetchall()]
-
-if 'status' not in profiles_columns:
-    try:
-        # По умолчанию 'networking' (Фиолетовый)
-        cursor.execute("ALTER TABLE profiles ADD COLUMN status TEXT DEFAULT 'networking'")
-        print("✅ Column 'status' added to 'profiles'.")
-    except sqlite3.OperationalError as e:
-        print(f"⚠️ Error adding column 'status': {e}")
-
-conn.commit()
-conn.close()
-
-print(f"\n✅ Database '{DB_NAME}' schema check complete.")
+        create_database()
+    except Exception as e:
+        print(f"\n❌ ОШИБКА: {e}")
+        import traceback
+        traceback.print_exc()

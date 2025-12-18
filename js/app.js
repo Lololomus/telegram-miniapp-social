@@ -1241,6 +1241,48 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // ===== ОБРАБОТЧИК ЗАГРУЗКИ ФОТО =====
+        if (elements.form.photoInput && elements.form.avatarPreview) {
+            elements.form.photoInput.addEventListener('change', (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                
+                // Валидация типа файла
+                if (!file.type.startsWith('image/')) {
+                    UI.showToast(t('error_invalid_file_type') || 'Только изображения', true);
+                    elements.form.photoInput.value = ''; // Сброс input
+                    return;
+                }
+                
+                // Валидация размера (5MB)
+                const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+                if (file.size > MAX_SIZE) {
+                    UI.showToast(t('error_file_too_large') || 'Файл слишком большой (макс 5MB)', true);
+                    elements.form.photoInput.value = '';
+                    return;
+                }
+                
+                // Показываем превью
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    elements.form.avatarPreview.src = event.target.result;
+                    elements.form.avatarPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+                
+                // Сохраняем файл в state
+                state.selectedFile = file;
+                
+                // Показываем кнопку сохранения
+                tg.MainButton.show();
+                
+                // Haptic feedback
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            });
+        }
+
         tg.MainButton.onClick(() => {
             if (elements.formContainer.style.display === 'block') {
                 saveProfileData();
@@ -1585,38 +1627,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         UI.showToast('Ошибка загрузки поста', true); 
                     }
 
-                } else {
-                    // --- ОТКРЫТИЕ ПРОФИЛЯ ---
+                } else { 
+                    // --- PEOPLE: открываем ленту + ProfileSheet ---
                     const targetUserId = startParam;
-                    // Переходим в PEOPLE
                     const tabPeople = document.getElementById('tab-people');
                     if(tabPeople) tabPeople.click();
                     
                     try {
                         const userResult = await api.loadTargetUserProfile(tg.initData, targetUserId);
                         if (userResult.ok && userResult.profile) {
-                            setTimeout(() => {
-                                // Событие может слушать FeedApp (если реализуем) или просто старая логика
-                                // В текущей архитектуре FeedApp это пока не обрабатывает, но логика остается для совместимости
-                                document.dispatchEvent(new CustomEvent('open-deep-link-profile', { detail: { user: userResult.profile } }));
-                                
-                                // ПРЯМОЙ ВЫЗОВ (Fallback): Показываем профиль поверх ленты
-                                state.currentViewedUserId = userResult.profile.user_id;
-                                UI.showUserDetailView(
-                                    userResult.profile, 
-                                    elements.detail, 
-                                    state.CONFIG, 
-                                    t, 
-                                    (container, skills, btn) => UI.renderSkillTags(container, skills, btn, t), 
-                                    state.currentUserProfile.user_id
-                                );
-                                UI.showView(elements.userDetailContainer, elements.allViews, elements.spinner, tg, t, loadFeedData);
-                            }, 500);
+                        // ✅ Только отправляем событие для FeedApp
+                        setTimeout(() => {
+                            document.dispatchEvent(new CustomEvent('open-deep-link-profile', { detail: { user: userResult.profile } }));
+                        }, 300);
+                        } else {
+                        UI.showToast(t('errorprofilenotfound'), true);
                         }
-                    } catch (e) { 
-                        UI.showToast(t('error_profile_not_found'), true); 
+                    } catch (e) {
+                        UI.showToast(t('errorprofilenotfold'), true);
                     }
-                }
+                    }
                 state.targetUserIdFromLink = null;
             
             // 2. Если не зарегистрирован -> Welcome Screen

@@ -234,6 +234,20 @@ function App({ mountInto, overlayHost }) {
   setFiltered(next);
 }, [profiles, debouncedSearchQuery, selectedSkills, statusFilter]);
 
+  // ============= DEEP LINK =============
+  useEffect(() => {
+    const handleDeepLink = (event) => {
+      if (event.detail?.user) {
+        setSelected(event.detail.user);
+      }
+    };
+    
+    document.addEventListener('open-deep-link-profile', handleDeepLink);
+    
+    return () => {
+      document.removeEventListener('open-deep-link-profile', handleDeepLink);
+    };
+  }, []);
 
   // --- UI Хэндлеры ---
   const onToggleSkill = useCallback((skill) => {

@@ -1,7 +1,4 @@
 # server.py
-# ОБНОВЛЕНО: Добавлена поддержка поля experience_years для постов
-# ОБНОВЛЕНО: Добавлена валидация на стороне сервера
-# ОБНОВЛЕНО (Glass): Добавлен эндпоинт /api/save-glass-preference
 
 import sqlite3
 import hmac
@@ -15,6 +12,8 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+import threading
+import bot_handlers
 
 load_dotenv()
 
@@ -22,6 +21,8 @@ load_dotenv()
 APP_ROOT = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 CORS(app)
+
+BOT, DP = bot_handlers.init_bot()
 
 UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
 DB_NAME = os.getenv("DB_NAME")
@@ -58,7 +59,7 @@ TRANSLATIONS = {
     }
 }
 
-# --- НОВЫЙ БЛОК: Лимиты валидации ---
+# --- Лимиты валидации ---
 VALIDATION_LIMITS = {
     # Профиль
     'first_name': 100,
@@ -76,8 +77,18 @@ VALIDATION_LIMITS = {
     # --- НОВОЕ ПОЛЕ ---
     'post_experience': 50 # Например "1-3 года"
 }
-# --- КОНЕЦ НОВОГО БЛОКА ---
 
+def get_user_name_for_bot(user_id):
+    """Helper для бота"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT first_name FROM profiles WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return row['first_name'] if row else 'Пользователь'
+    except:
+        return 'Пользователь'
 
 # --- Маршруты для фронтенда ---
 @app.route('/')
@@ -99,12 +110,13 @@ def serve_locales(filename):
 # --- Маршруты API ---
 @app.route('/config')
 def get_config():
-    return jsonify({
+    config = {
         'backendUrl': BACKEND_URL,
         'botUsername': os.getenv('BOT_USERNAME'),
-        'appSlug': os.getenv('APP_SLUG'),
-        'validationLimits': VALIDATION_LIMITS 
-    })
+        'appSlug': os.getenv('APP_SLUG', 'app'),
+        'validationLimits': VALIDATION_LIMITS
+    }
+    return jsonify(config)
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
@@ -148,11 +160,55 @@ def send_telegram_message(user_id, profile_data, photo_path, lang='ru'):
     except Exception as e:
         print(f"Ошибка отправки сообщения: {e}")
 
+def validate_initdata(initdata: str, bottoken: str):
+    """
+    Валидация initData от Telegram WebApp
+    Возвращает user_id если валидация прошла, иначе None
+    """
+    try:
+        # Парсим initData
+        parsed_data = dict(item.split('=') for item in initdata.split('&'))
+        received_hash = parsed_data.pop('hash')
+        
+        # Извлекаем user_id
+        user_data_json = unquote(parsed_data.get('user', ''))
+        user_data = json.loads(user_data_json)
+        user_id = user_data.get('id')
+        
+        # Проверяем подпись
+        data_check_string = '\n'.join(
+            f"{key}={unquote(value)}" 
+            for key, value in sorted(parsed_data.items())
+        )
+        
+        secret_key = hmac.new(
+            "WebAppData".encode(), 
+            bottoken.encode(), 
+            hashlib.sha256
+        ).digest()
+        
+        calculated_hash = hmac.new(
+            secret_key, 
+            data_check_string.encode(), 
+            hashlib.sha256
+        ).hexdigest()
+        
+        # Проверяем совпадение
+        if calculated_hash != received_hash:
+            return None
+            
+        return user_id
+        
+    except Exception as e:
+        print(f"⚠️ Validation error: {e}")
+        return None
+
 # --- Вспомогательные функции для БД ---
 def get_db_connection():
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_NAME, timeout=10.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode=WAL")
     return conn
 
 ALLOWED_TABLES = ['work_experience', 'education']
@@ -545,22 +601,48 @@ def get_all_profiles():
 def follow_user():
     data = request.json
     viewer_id = validate_init_data(data.get("initData"), BOT_TOKEN)
-    if not viewer_id: return jsonify({"ok": False, "error": "Invalid viewer data"}), 403
+    if not viewer_id:
+        return jsonify({"ok": False, "error": "Invalid data"}), 403
+    
     target_user_id = data.get("target_user_id")
-    if not target_user_id or target_user_id == viewer_id:
-        return jsonify({"ok": False, "error": "Invalid target user"}), 400
+    if not target_user_id:
+        return jsonify({"ok": False, "error": "Target user ID not provided"}), 400
+    
+    if viewer_id == target_user_id:
+        return jsonify({"ok": False, "error": "Cannot follow yourself"}), 400
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # Проверка существования подписки
         cursor.execute(
-            "INSERT OR IGNORE INTO follows (follower_id, following_id) VALUES (?, ?)",
+            "SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?",
             (viewer_id, target_user_id)
         )
+        exists = cursor.fetchone()
+        
+        if exists:
+            conn.close()
+            return jsonify({"ok": False, "error": "Already following"}), 400
+        
+        # Создаём подписку
+        cursor.execute(
+            "INSERT INTO follows (follower_id, following_id) VALUES (?, ?)",
+            (viewer_id, target_user_id)
+        )
+        
         conn.commit()
         conn.close()
+        
+        follower_name = get_user_name_for_bot(viewer_id)
+        bot_handlers.notify_new_follower(target_user_id, viewer_id, follower_name)
+        
         return jsonify({"ok": True})
+        
     except Exception as e:
-        if 'conn' in locals() and conn: conn.close()
+        if 'conn' in locals() and conn:
+            conn.close()
         return jsonify({"ok": False, "error": str(e)}), 500
 
 @app.route("/unfollow", methods=["POST"])
@@ -618,14 +700,42 @@ def create_post():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # --- ОБНОВЛЕНО: Insert experience_years ---
-        cursor.execute(
-            "INSERT INTO posts (user_id, post_type, content, full_description, skill_tags, experience_years) VALUES (?, ?, ?, ?, ?, ?)",
-            (user_id, post_type, content, full_description, skill_tags_json, experience_years)
-        )
+        cursor.execute('''
+            INSERT INTO posts (user_id, post_type, content, full_description, skill_tags, experience_years)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (user_id, post_type, content, full_description, skill_tags_json, experience_years))
+
+        post_id = cursor.lastrowid
+
+        cursor.execute("SELECT first_name FROM profiles WHERE user_id = ?", (user_id,))
+        author_row = cursor.fetchone()
+        author_name = author_row['first_name'] if author_row else "Пользователь"
+
         conn.commit()
         conn.close()
-        return jsonify({"ok": True})
+
+        try:
+            import asyncio
+            skill_tags = data.get('skill_tags', [])
+            
+            asyncio.run(bot_handlers.notify_followers_new_post(
+                author_id=user_id,
+                author_name=author_name,
+                post_id=post_id,
+                post_content=content
+            ))
+            
+            if skill_tags:
+                asyncio.run(bot_handlers.notify_skill_match(
+                    post_id=post_id,
+                    author_name=author_name,
+                    post_content=content,
+                    skill_tags=skill_tags
+                ))
+        except Exception as e:
+            print(f"⚠️ Failed to send notifications: {e}")
+
+        return jsonify(ok=True)
     except Exception as e:
         print(f"❌ ОШИБКА /api/create-post: {e}")
         if 'conn' in locals() and conn: conn.close()
@@ -844,6 +954,34 @@ def set_status():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
-if __name__ == "__main__":
-    print("[SECURITY] Security fixes enabled: MAX_CONTENT_LENGTH, file MIME check, table whitelist")
-    app.run("0.0.0.0", port=APP_PORT, threaded=True)
+if __name__ == '__main__':
+    print("\n" + "="*50)
+    print("🚀 ЗАПУСК СЕРВЕРА + БОТА")
+    print("="*50)
+
+    def run_bot():
+        import asyncio
+        
+        async def bot_main():
+            # Удаляем webhook
+            await BOT.delete_webhook(drop_pending_updates=True)
+            print("🗑️ Webhook удалён")
+            print("🤖 Запуск бота (polling)...")
+            
+            # Запускаем polling (это блокирующая операция)
+            await DP.start_polling(BOT, skip_updates=True)
+        
+        asyncio.run(bot_main())
+
+    # Запускаем бота в фоновом потоке
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
+
+    import time
+    time.sleep(2)
+
+    print(f"💡 Flask на порту {APP_PORT}")
+    print(f"🤖 Бот: @{bot_handlers.get_bot_info()['bot_username']}")
+    print("="*50 + "\n")
+
+    app.run('0.0.0.0', port=APP_PORT, threaded=True)
